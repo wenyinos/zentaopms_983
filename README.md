@@ -4,11 +4,12 @@ English | [中文](Readme_zh.md)
 
 <p align="center">
   <a href="https://www.php.net"><img src="https://img.shields.io/badge/php-%3E=5.6-brightgreen.svg?maxAge=2592000" alt="PHP Version"></a>
-  <a href="https://github.com/easysoft/zentaopms/releases/latest"><img src="https://img.shields.io/github/release/easysoft/zentaopms.svg" alt="Latest Version"></a>
   <a href="mailto:chunsheng@easycorp.ltd"><img src="https://img.shields.io/badge/Email-chunsheng@easycorp.ltd-ea644a" alt="Email" /></a>
   <a href="https://github.com/easysoft/zentaopms/blob/master/COPYING"><img src="https://img.shields.io/badge/License-AGPL%20or%20ZPL-blue" alt="ZenTao License"></a>
   <a href="https://www.zentao.pm"><img src="https://img.shields.io/badge/Website-www.zentao.pm-blue" alt="ZenTao Website"></a>
 </p>
+
+# Old version of ZenTao PMS 9.8.3
 
 # Introduction
 
@@ -58,24 +59,5 @@ ZenTao Biz, ZenTao Max, and ZenTao Cloud are available for you if ZenTao Opensou
 
 > [Learn more about the comparison between ZenTao Opensource, ZenTao Biz, and ZenTao Max](https://www.zentao.pm/page/vs.html).
 
-## ZenTao Biz
-
-ZenTao Biz has more powerful functions based on the ZenTao Open Source. It also expands horizontally based on the project management process and covers more roles.
-
-On the one hand, ZenTao Biz provides more complete services for enterprises and its enhanced functions are more suitable for the internal process management of the companies.
-
-On the other hand, ZenTao Biz has more added functions such as operation and maintenance management, OA office management, feedback management, as well as document version management, and online preview. It can support the customer's related work more effectively outside the development process, and provide more comprehensive support for the project management process.
-
-## ZenTao Max
-
-ZenTao Max, the most advanced ZenTao version, allows users to easily monitor and track the entire process of project management. It also helps improve the robustness and maturity of enterprises to greatly increase the probability of project success.
-
-The features such as process control, process definition, project measurement, issue management, risk management, quality assurance, and project reporting are strong enhanced in ZenTao Max. It's also supported the implementation of CMMI standards, help enterprises pass CMMI assessment.
-
-## ZenTao Cloud
-
-> Learn more about [ZenTao Cloud](https://www.zentao.pm/page/saas-pricing.html).
-
-ZenTao Cloud provides a flexible solution for users who prefer the SaaS service and running businesses anywhere and anytime. It's easy to use and super convenient in that it only needs one click to activate an account. Besides, ZenTao Cloud requires no maintenance and will keep updating automatically. With HTTPS agreement, your data will keep safe and no worry about information disclosure. Even better, data on ZenTao Cloud will backup automatically and users can download the backup file at any time.
 
 </details>
