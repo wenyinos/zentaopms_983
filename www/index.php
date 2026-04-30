@@ -12,7 +12,8 @@
  * @link        http://www.zentao.net
  */
 /* Set the error reporting. */
-error_reporting(0);
+error_reporting(E_ALL);
+ini_set('display_errors', 'On');
 
 /* Start output buffer. */
 ob_start();
@@ -40,7 +41,7 @@ if(isset($_GET['mode']) and $_GET['mode'] == 'getconfig') die(helper::removeUTF8
 
 /* Check for need upgrade. */
 $config->installedVersion = $common->loadModel('setting')->getVersion();
-if(((is_numeric($config->version{0}) and is_numeric($config->installedVersion{0})) or $config->version{0} == $config->installedVersion{0}) and version_compare($config->version, $config->installedVersion, '>')) die(header('location: upgrade.php'));
+if(((is_numeric($config->version[0]) and is_numeric($config->installedVersion[0])) or $config->version[0] == $config->installedVersion[0]) and version_compare($config->version, $config->installedVersion, '>')) die(header('location: upgrade.php'));
 
 /* Remove install.php and upgrade.php. */
 if(file_exists('install.php') or file_exists('upgrade.php'))

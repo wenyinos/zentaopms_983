@@ -12,7 +12,7 @@
  */
 
 /* 保证在命令行环境也能运行。Make sure to run in ztcli env. */
-if(!class_exists('config')){class config{}}
+if(!class_exists('config')){#[AllowDynamicProperties] class config{}}
 if(!function_exists('getWebRoot')){function getWebRoot(){}}
 
 /* 基本设置。Basic settings. */
