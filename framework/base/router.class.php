@@ -2239,7 +2239,7 @@ class baseRouter
          **/
         if(preg_match('/[^\x00-\x80]/', $message)) $message = helper::convertEncoding($message, 'gbk');
         $errorLog  = "\n" . date('H:i:s') . " $message in <strong>$file</strong> on line <strong>$line</strong> ";
-        $errorLog .= "when visiting <strong>" . htmlspecialchars($this->getURI()) . "</strong>\n";
+        $errorLog .= "when visiting <strong>" . htmlspecialchars((string)$this->getURI()) . "</strong>\n";
 
         /* 
          * 为了安全起见，对公网环境隐藏脚本路径。
@@ -2261,7 +2261,7 @@ class baseRouter
          * 如果debug > 1，显示warning, notice级别的错误。
          * If the debug > 1, show warning, notice error.
          **/
-        if($level == E_NOTICE or $level == E_WARNING or $level == E_STRICT or $level == 8192) // 8192: E_DEPRECATED
+        if($level == E_NOTICE or $level == E_WARNING or $level == 8192) // 8192: E_DEPRECATED
         {
             if(!empty($this->config->debug) and $this->config->debug > 1)
             {
@@ -2317,6 +2317,7 @@ class baseRouter
  * 
  * @package framework
  */
+#[AllowDynamicProperties]
 class config
 { 
     /**
@@ -2389,6 +2390,7 @@ class language
  * 
  * @package framework
  */
+#[AllowDynamicProperties]
 class super
 {
     /**
