@@ -12,8 +12,14 @@
     <?php commonModel::printBreadMenu($this->moduleName, isset($position) ? $position : ''); ?>
   </div>
   <div id='poweredby'>
+  <?php
+  $phpVersion = PHP_VERSION;
+  $phpBranch  = PHP_MAJOR_VERSION . '.' . PHP_MINOR_VERSION;
+  $phpLink    = "https://www.php.net/releases/{$phpBranch}/en.php";
+  ?>
   <a href='<?php echo $lang->website;?>' target='_blank' class='text-primary'><i class='icon-zentao'></i> <?php echo $lang->zentaoPMS . $config->version;?></a> &nbsp;
-    <?php echo $lang->proVersion;?>
+    <a href='https://github.com/wenyinos/zentaopms_983' target='_blank'>WenYinOS</a> &nbsp;
+    <a href='<?php echo $phpLink;?>' target='_blank'>PHP <?php echo $phpVersion;?></a> &nbsp;
     <?php commonModel::printNotifyLink();?>
   </div>
 </div>
