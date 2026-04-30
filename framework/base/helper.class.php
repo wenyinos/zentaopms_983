@@ -33,11 +33,25 @@ class baseHelper
     static public function setMember($objName, $key, $value)
     {
         global $$objName;
-        if(!is_object($$objName) or empty($key)) return false;
-        $key   = str_replace('.', '->', $key);
-        $value = serialize($value);
-        $code  = ("{${$objName}}->{$key}=unserialize(<<<EOT\n$value\nEOT\n);");
-        eval($code);
+        if(!is_object($$objName) or empty($key) or !is_string($key)) return false;
+
+        $keys   = explode('.', $key);
+        $member = &$$objName;
+        $last   = count($keys) - 1;
+
+        foreach($keys as $index => $name)
+        {
+            if($name === '') return false;
+            if($index === $last)
+            {
+                $member->$name = $value;
+                return true;
+            }
+
+            if(!isset($member->$name) or !is_object($member->$name)) $member->$name = new stdclass();
+            $member = &$member->$name;
+        }
+
         return true;
     }
 
