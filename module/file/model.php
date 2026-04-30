@@ -559,7 +559,7 @@ class fileModel extends model
                 while($line)
                 {
                     /* the cell has '"', the delimiter is '",'. */
-                    if($line{0} == '"')
+                    if($line[0] == '"')
                     {
                         $pos = strpos($line, '",');
                         if($pos === false)

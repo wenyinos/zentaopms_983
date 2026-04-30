@@ -1,4 +1,3 @@
-<?php
 public function hello2()
 {
     echo $this->loadExtension('test')->hello();    // Load testMisc class from test.class.php in ext/model/class.
