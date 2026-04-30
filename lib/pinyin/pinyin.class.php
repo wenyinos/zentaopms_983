@@ -43,7 +43,7 @@ class pinyin
      */
     public function prepare($string)
     {
-        $string = preg_replace_callback('/[a-z0-9_-]+/i', create_function('$matches', 'return "\t" . $matches[0];'), $string);
+        $string = preg_replace_callback('/[a-z0-9_-]+/i', function($matches) { return "\t" . $matches[0]; }, $string);
         return preg_replace("/[^\p{Han}\p{P}\p{Z}\p{M}\p{N}\p{L}\t]/u", '', $string);
     }
 

@@ -159,7 +159,7 @@ class HTMLPurifier_Encoder
 
         $len = strlen($str);
         for ($i = 0; $i < $len; $i++) {
-            $in = ord($str{$i});
+            $in = ord($str[$i]);
             $char .= $str[$i]; // append byte to char
             if (0 == $mState) {
                 // When mState is zero we expect either a US-ASCII character
@@ -399,7 +399,7 @@ class HTMLPurifier_Encoder
             $str = strtr($str, self::testEncodingSupportsASCII($encoding));
             return $str;
         } elseif ($encoding === 'iso-8859-1') {
-            $str = utf8_encode($str);
+            $str = mb_convert_encoding($str, 'UTF-8', 'ISO-8859-1');
             return $str;
         }
         $bug = HTMLPurifier_Encoder::testIconvTruncateBug();
@@ -451,7 +451,7 @@ class HTMLPurifier_Encoder
             $str = self::iconv('utf-8', $encoding . '//IGNORE', $str);
             return $str;
         } elseif ($encoding === 'iso-8859-1') {
-            $str = utf8_decode($str);
+            $str = mb_convert_encoding($str, 'ISO-8859-1', 'UTF-8');
             return $str;
         }
         trigger_error('Encoding not supported', E_USER_ERROR);

@@ -12,6 +12,7 @@
  *  May you find forgiveness for yourself and forgive others.
  *  May you share freely, never taking more than you give.
  */
+#[AllowDynamicProperties]
 class baseRouter
 {
     /**
@@ -582,7 +583,6 @@ class baseRouter
         $this->cookie  = new super('cookie');
         $this->session = new super('session');
 
-        unset($GLOBALS);
         unset($_REQUEST);
 
         $_FILES  = validater::filterFiles();
@@ -1357,7 +1357,7 @@ class baseRouter
         if(empty($extFiles) and empty($hookFiles)) return $mainModelFile;
 
         /* 计算合并之后的modelFile路径。Compute the merged model file path. */
-        $extModelPrefix  = ($siteExtended and !empty($this->siteCode)) ? $this->siteCode{0} . DS . $this->siteCode : '';
+        $extModelPrefix  = ($siteExtended and !empty($this->siteCode)) ? $this->siteCode[0] . DS . $this->siteCode : '';
         $mergedModelDir  = $this->getTmpRoot() . 'model' . DS . ($extModelPrefix ? $extModelPrefix . DS : '');
         $mergedModelFile = $mergedModelDir . $moduleName . '.php';
         if(!is_dir($mergedModelDir)) mkdir($mergedModelDir, 0755, true);

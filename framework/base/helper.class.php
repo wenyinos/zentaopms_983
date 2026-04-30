@@ -213,14 +213,11 @@ class baseHelper
     {
         if(is_array($idList)) 
         {
-            if(!function_exists('get_magic_quotes_gpc') or !get_magic_quotes_gpc())
-            {
-                foreach($idList as $key=>$value) $idList[$key] = addslashes($value); 
-            }
+            foreach($idList as $key=>$value) $idList[$key] = addslashes($value); 
             return "IN ('" . join("','", $idList) . "')";
         }
 
-        if(!function_exists('get_magic_quotes_gpc') or !get_magic_quotes_gpc()) $idList = addslashes($idList);
+        $idList = addslashes($idList);
         return "IN ('" . str_replace(',', "','", str_replace(' ', '', $idList)) . "')";
     }
 
@@ -263,7 +260,7 @@ class baseHelper
      */
     static public function jsonEncode($data)
     {
-        return (function_exists('get_magic_quotes_gpc') and get_magic_quotes_gpc()) ? addslashes(json_encode($data)) : json_encode($data);
+        return json_encode($data);
     }
 
     /**

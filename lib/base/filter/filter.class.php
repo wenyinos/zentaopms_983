@@ -1014,8 +1014,6 @@ class baseFixer
         $fields = $this->processFields($fieldName);
         foreach($fields as $fieldName)
         {
-            if(function_exists('get_magic_quotes_gpc') and get_magic_quotes_gpc()) $this->data->$fieldName = stripslashes($this->data->$fieldName);
-
             if(!in_array($fieldName, $this->stripedFields))
             {
                 if(!defined('RUN_MODE') or RUN_MODE != 'admin')

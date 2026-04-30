@@ -68,7 +68,7 @@ class ubb
             function getEmot($match)
             {
                 global $emotPath;
-                $arr=split(',',$match[1]);
+                $arr=explode(',',$match[1]);
                 if(!isset($arr[1])){$arr[1]=$arr[0];$arr[0]='default';}
                 $path=$emotPath.$arr[0].'/'.$arr[1].'.gif';
                 return '<img src="'.$path.'" alt="'.$arr[1].'" />';

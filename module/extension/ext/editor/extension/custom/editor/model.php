@@ -336,7 +336,6 @@ class editorModel extends model
         $evils       = array('eval', 'exec', 'passthru', 'proc_open', 'shell_exec', 'system', '$$', 'include', 'require', 'assert', 'javascript', 'onclick');
         $gibbedEvils = array('e v a l', 'e x e c', ' p a s s t h r u', ' p r o c _ o p e n', 's h e l l _ e x e c', 's y s t e m', '$ $', 'i n c l u d e', 'r e q u i r e', 'a s s e r t', 'j a v a s c r i p t', 'o n c l i c k');
         $fileContent = str_ireplace($gibbedEvils, $evils, $fileContent);
-        if(get_magic_quotes_gpc()) $fileContent = stripslashes($fileContent);
 
         file_put_contents($filePath, $fileContent);
     }

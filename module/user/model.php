@@ -719,7 +719,7 @@ class userModel extends model
      */
     public function authorize($account)
     {
-        $account = filter_var($account, FILTER_SANITIZE_STRING);
+        $account = filter_var($account, FILTER_SANITIZE_FULL_SPECIAL_CHARS);
         if(!$account) return false;
 
         $rights = array();
