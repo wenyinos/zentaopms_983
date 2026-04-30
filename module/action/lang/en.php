@@ -206,6 +206,8 @@ $lang->action->label->entry       = 'Entry|entry|browse|';
 $lang->action->label->webhook     = 'Webhook|webhook|browse|';
 $lang->action->label->space       = ' ';
 
+$lang->action->search = new stdclass();
+
 /* Object type. */
 $lang->action->search->objectTypeList['']            = '';    
 $lang->action->search->objectTypeList['product']     = $lang->productCommon;
