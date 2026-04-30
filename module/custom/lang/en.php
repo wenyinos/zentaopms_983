@@ -75,6 +75,7 @@ $lang->custom->user->fields['roleList']   = 'Role';
 $lang->custom->user->fields['statusList'] = 'Status';
 $lang->custom->user->fields['deleted']    = 'Show deleted user';
 
+$lang->custom->block = new stdClass();
 $lang->custom->block->fields['closed'] = 'Closed Block';
 
 $lang->custom->currentLang = 'Current Language';

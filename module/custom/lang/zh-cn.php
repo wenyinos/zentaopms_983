@@ -75,6 +75,7 @@ $lang->custom->user->fields['roleList']   = '职位';
 $lang->custom->user->fields['statusList'] = '状态';
 $lang->custom->user->fields['deleted']    = '列出已删除用户';
 
+$lang->custom->block = new stdClass();
 $lang->custom->block->fields['closed'] = '关闭的区块';
 
 $lang->custom->currentLang = '适用当前语言';
