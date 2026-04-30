@@ -1688,7 +1688,7 @@ class baseRouter
         }
 
         /* 调用该方法   Call the method. */
-        call_user_func_array(array($module, $methodName), $this->params);
+        call_user_func_array(array($module, $methodName), array_values((array)$this->params));
         return $module;
     }
 

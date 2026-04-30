@@ -677,7 +677,7 @@ class commonModel extends model
             $modelClass = class_exists("ext{$module}Model") ? "ext{$module}Model" : $module . "Model";
             if(class_exists($modelClass) and is_callable(array($modelClass, 'isClickable')))
             {
-                $clickable = call_user_func_array(array($modelClass, 'isClickable'), array('object' => $object, 'method' => $method));
+                $clickable = call_user_func_array(array($modelClass, 'isClickable'), array_values(array('object' => $object, 'method' => $method)));
             }
         }
 

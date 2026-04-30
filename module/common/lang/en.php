@@ -147,9 +147,6 @@ $lang->lang = 'Language';
 
 /* 风格列表。*/
 $lang->theme                 = 'Theme';
-$lang->themes['default']     = 'Default';
-$lang->themes['green']       = 'Green';
-$lang->themes['red']         = 'Red';
 $lang->themes['lightblue']   = 'Bright Blue';
 $lang->themes['blackberry']  = 'Blackberry';
 

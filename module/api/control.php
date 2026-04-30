@@ -47,7 +47,7 @@ class api extends control
 
         parse_str($newParams, $params);
         $module = $this->loadModel($moduleName);
-        $result = call_user_func_array(array(&$module, $methodName), $params);
+        $result = call_user_func_array(array(&$module, $methodName), array_values((array)$params));
         if(dao::isError()) die(json_encode(dao::getError()));
         $output['status'] = $result ? 'success' : 'fail';
         $output['data']   = json_encode($result);

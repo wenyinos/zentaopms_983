@@ -35,7 +35,7 @@ $config->sessionVar  = 'zentaosid';         // 请求类型为GET：session变�
 $config->views       = ',html,json,mhtml,'; // 支持的视图类型。                       Supported view formats.
 
 /* 支持的主题和语言。Supported thems and languages. */
-$config->themes['default'] = 'green';
+$config->themes['default'] = 'lightblue';
 $config->langs['zh-cn']    = '简体';
 $config->langs['zh-tw']    = '繁體';
 $config->langs['en']       = 'English';
@@ -47,7 +47,7 @@ $config->devicePrefix['mhtml'] = '';
 $config->default = new stdclass();
 $config->default->view   = 'html';        //默认视图。 Default view.
 $config->default->lang   = 'en';          //默认语言。 Default language.
-$config->default->theme  = 'default';     //默认主题。 Default theme.
+$config->default->theme  = 'lightblue';   //默认主题。 Default theme.
 $config->default->module = 'index';       //默认模块。 Default module.
 $config->default->method = 'index';       //默认方法。 Default method.
 
