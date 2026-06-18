@@ -582,7 +582,7 @@ function required_loader($unamestr = '')
     $os_ver_parts = preg_split('@\.@',$os_ver);
 
     $loader_sfix = (($os_code == 'win') ? 'dll' : 'so');
-    $file = "ioncube_loader_${os_code}_${php_major_version}.${loader_sfix}";
+    $file = "ioncube_loader_{$os_code}_{$php_major_version}.{$loader_sfix}";
 
     if ($os_code == 'win') {
         $os_name = 'Windows';
@@ -598,7 +598,7 @@ function required_loader($unamestr = '')
             $os_name = $os_names[0];
             $os_name_qual = $os_name;
         }
-        $file_ts = "ioncube_loader_${os_code}_${php_major_version}_ts.${loader_sfix}";
+        $file_ts = "ioncube_loader_{$os_code}_{$php_major_version}_ts.{$loader_sfix}";
     }
 
     return array(
@@ -970,7 +970,7 @@ function get_loader_name()
     $php_family = substr($php_version,0,3);
 
     $loader_sfix = (($os_key == 'win') ? '.dll' : (($sys['THREAD_SAFE'])?'_ts.so':'.so'));
-    $loader_name="ioncube_loader_${os_key}_${php_family}${loader_sfix}";
+    $loader_name="ioncube_loader_{$os_key}_{$php_family}{$loader_sfix}";
 
     return $loader_name;
 }
@@ -1108,7 +1108,7 @@ function all_ini_contents()
     $sys = get_sysinfo();
     $output = '';
 
-    $output .= ";;; *MAIN INI FILE AT ${sys['PHP_INI']}* ;;;" . PHP_EOL;
+    $output .= ";;; *MAIN INI FILE AT {$sys['PHP_INI']}* ;;;" . PHP_EOL;
     $output .= get_file_contents($sys['PHP_INI']);
     $other_inis = get_additional_ini_files();
     foreach ($other_inis as $inif) {
@@ -1508,7 +1508,7 @@ function loader_download_instructions()
         list($basename,$multiple_os_versions) = unix_package_name(); 
         if ($basename == "") {
             echo '<li>从<a href="' . LOADERS_PAGE . '" target="loaders">这里</a>下载一个 ' . $loader['osname'] . ' ' . $loader['arch'] . ' Loaders包.';
-            echo "<br>您的系统可能是${loader['wordsize']}位${loader['osnamequal']}。如果该程序在${loader['osname']}不可用，更早的版本的Loaders应该能够运行。注意：您需要重新安装兼容库。";
+            echo "<br>您的系统可能是{$loader['wordsize']}位{$loader['osnamequal']}。如果该程序在{$loader['osname']}不可用，更早的版本的Loaders应该能够运行。注意：您需要重新安装兼容库。";
             echo '<br>如果你不能找到一个合适的Loaders，请联系我们 <a href="'. SUPPORT_SITE . '">获得支持和帮助</a>.';
         } else {
             echo '<li>下载一个' . $loader['osnamequal'] . ' ' . $loader['arch'] . '的Loaders包：'; 
@@ -1518,10 +1518,10 @@ function loader_download_instructions()
                 $archives = array('tar.gz','tar.bz2','ipf.zip');
             }
             echo make_archive_list($basename,$archives);
-            echo "<p>注意：确保Windows installer在远程${loader['osname']}服务器上可用。<br>";
+            echo "<p>注意：确保Windows installer在远程{$loader['osname']}服务器上可用。<br>";
             echo "</p>";
             if ($multiple_os_versions && !$exact_match) {
-                echo "<p>注意：您可能需要重新安装${loader['osname']}兼容库。</p>";
+                echo "<p>注意：您可能需要重新安装{$loader['osname']}兼容库。</p>";
             }
         }
     }
@@ -1762,12 +1762,12 @@ function zend_extension_instructions($server_type,$loader_dir)
         }
     } elseif (!empty($sysinfo['PHP_INI'])) {
         if (empty($sysinfo['PHP_INI_DIR'])) {
-            echo "<li>Edit the file <code>${sysinfo['PHP_INI']}</code>";
+            echo "<li>Edit the file <code>{$sysinfo['PHP_INI']}</code>";
         } else {
             $php_ini_path = find_additional_ioncube_ini();
             if (empty($php_ini_path)) {
                 $php_ini_name = ADDITIONAL_INI_FILE_NAME;
-                echo "<li><a href=\"$base&amp;page=phpconfig&amp;download=1&amp;newlinesonly=1&amp;ininame=$php_ini_name&amp;stype=$server_type_code\">保存 $php_ini_name</a>，拷贝到ini目录, <code>${sysinfo['PHP_INI_DIR']}</code>";
+                echo "<li><a href=\"$base&amp;page=phpconfig&amp;download=1&amp;newlinesonly=1&amp;ininame=$php_ini_name&amp;stype=$server_type_code\">保存 $php_ini_name</a>，拷贝到ini目录, <code>{$sysinfo['PHP_INI_DIR']}</code>";
                 $editing_ini = false;
             } else {
                 $php_ini_name = basename($php_ini_path);
@@ -1797,7 +1797,7 @@ function server_restart_instructions()
     $base = get_base_address();
 
     if ($sysinfo['SS']) {
-        echo "<li>重启${sysinfo['SS']} 服务器程序.</li>";
+        echo "<li>重启{$sysinfo['SS']} 服务器程序.</li>";
     } else {
         echo "<li>重启服务器程序。</li>";
     }
@@ -2299,7 +2299,7 @@ function loader_compatibility_test($loader_location)
                 $loader_compiler = 'VC6';
             }
             if ($loader_compiler != $sysinfo['PHP_COMPILER']) {
-                $errors[ERROR_LOADER_WIN_COMPILER_MISMATCH] = "该loader用 $loader_compiler 编译，这里需要用 ${sysinfo['PHP_COMPILER']}编译。";
+                $errors[ERROR_LOADER_WIN_COMPILER_MISMATCH] = "该loader用 $loader_compiler 编译，这里需要用 {$sysinfo['PHP_COMPILER']}编译。";
             }
         }
     } else {
@@ -2479,7 +2479,7 @@ function run()
         $page = get_default_page();
     } 
 
-    $fn = "${page}_page";
+    $fn = "{$page}_page";
     $fn();
 
     @session_write_close();
@@ -3143,9 +3143,9 @@ function ini_loader_warnings()
     } else {
         $loader_dir_pair = correct_loader_wrong_location();
         if (!empty($loader_dir_pair)) {
-            $advice = "在<code>${loader_dir_pair['loader']}</code>已经找到可用的loader。"; 
+            $advice = "在<code>{$loader_dir_pair['loader']}</code>已经找到可用的loader。";
             if ($loader_dir_pair['loader'] != $loader_dir_pair['newloc']) {
-                $advice .= " 你可能想将loader文件 <code>${loader_dir_pair['loader']}</code> 复制到 <code>${loader_dir_pair['newloc']}</code>。";
+                $advice .= " 你可能想将loader文件 <code>{$loader_dir_pair['loader']}</code> 复制到 <code>{$loader_dir_pair['newloc']}</code>。";
             }
             $warnings[] = $advice;
         }
