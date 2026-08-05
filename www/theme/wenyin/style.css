@@ -1,0 +1,163 @@
+/*!
+ * WenYin - WenYinOS 主题样式（紫色系）
+ * 参考配色：https://wenyinos.com/
+ * 主题 key: wenyin
+ *
+ * 结构以 lightblue 主题为模板：仅覆盖主色相关选择器，
+ * 其余样式由 theme/default/style.css 提供。
+ */
+
+/* ==================== 基础色板 ==================== */
+/* 主色（按钮/链接/激活态） */
+a{color:#6f42c1}
+a:hover,a:focus{color:#3b2266}
+
+/* ==================== 按钮 ==================== */
+.btn-primary{color:#fff;background-color:#6f42c1;border-color:#4a2c82}
+.btn-primary:hover,.btn-primary:focus,.btn-primary:active,.btn-primary.active,.open .dropdown-toggle.btn-primary{color:#fff;background-color:#5a33a5;border-color:#3b2266;-webkit-box-shadow:0 2px 1px rgba(0,0,0,.1);-moz-box-shadow:0 2px 1px rgba(0,0,0,.1);box-shadow:0 2px 1px rgba(0,0,0,.1)}
+.btn-primary:active,.btn-primary.active,.open .dropdown-toggle.btn-primary{background-image:none;-webkit-box-shadow:inset 0 1px 2px rgba(0,0,0,.1);-moz-box-shadow:inset 0 1px 2px rgba(0,0,0,.1);box-shadow:inset 0 1px 2px rgba(0,0,0,.1)}
+.btn-primary.disabled,.btn-primary[disabled],fieldset[disabled] .btn-primary,.btn-primary.disabled:hover,.btn-primary[disabled]:hover,fieldset[disabled] .btn-primary:hover,.btn-primary.disabled:focus,.btn-primary[disabled]:focus,fieldset[disabled] .btn-primary:focus,.btn-primary.disabled:active,.btn-primary[disabled]:active,fieldset[disabled] .btn-primary:active,.btn-primary.disabled.active,.btn-primary[disabled].active,fieldset[disabled] .btn-primary.active{background-color:#6f42c1;border-color:#8a63d0}
+.btn-primary:hover,.btn-primary:focus,.btn-primary:active,.btn-primary.active,.open .dropdown-toggle.btn-primary{color:#fff;background-color:#5a33a5;border-color:#3b2266}
+.btn-primary.disabled,.btn-primary[disabled],fieldset[disabled] .btn-primary,.btn-primary.disabled:hover,.btn-primary[disabled]:hover,fieldset[disabled] .btn-primary:hover,.btn-primary.disabled:focus,.btn-primary[disabled]:focus,fieldset[disabled] .btn-primary:focus,.btn-primary.disabled:active,.btn-primary[disabled]:active,fieldset[disabled] .btn-primary:active,.btn-primary.disabled.active,.btn-primary[disabled].active,fieldset[disabled] .btn-primary.active{background-color:#6f42c1;border-color:#8a63d0}
+.btn-link{color:#6f42c1}
+.btn-link:hover,.btn-link:focus{color:#3b2266}
+.btn-link[disabled]:hover,fieldset[disabled] .btn-link:hover,.btn-link[disabled]:focus,fieldset[disabled] .btn-link:focus{color:#ddd}
+
+/* ==================== 标签 ==================== */
+.label-primary{background-color:#6f42c1}
+.label-primary[href]:hover,.label-primary[href]:focus{color:#fff;background-color:#5a33a5}
+.label-primary.label-circle{color:#6f42c1;background:0 0;border:1px solid #6f42c1}
+.label-primary[href]:hover,.label-primary[href]:focus{background-color:#5a33a5}
+.btn-primary .label-badge,.btn-primary .label-dot{background-color:#b9a3e3}
+
+/* ==================== 文字/背景色 ==================== */
+.text-primary{color:#6f42c1}
+.text-primary:hover{color:#5a33a5}
+.text-muted a:hover,.text-muted a:active{color:#6f42c1}
+.text-link:hover,.text-link:active{color:#6f42c1}
+.bg-primary{background-color:#6f42c1}
+a.bg-primary:hover{background-color:#5a33a5}
+.highlight-primary{background-color:#f3edf9}
+a.highlight-primary:hover{background-color:#e5dcf2}
+
+/* ==================== 表单焦点 ==================== */
+.form-control:focus{border-color:#6f42c1;outline:0;-webkit-box-shadow:inset 0 1px 1px rgba(0,0,0,.075),0 0 8px rgba(111,66,193,.6);-moz-box-shadow:inset 0 1px 1px rgba(0,0,0,.075),0 0 8px rgba(111,66,193,.6);box-shadow:inset 0 1px 1px rgba(0,0,0,.075),0 0 8px rgba(111,66,193,.6)}
+.form-control:focus{border-color:#6f42c1;-webkit-box-shadow:inset 0 1px 1px rgba(0,0,0,.075),0 0 8px rgba(111,66,193,.6);-moz-box-shadow:inset 0 1px 1px rgba(0,0,0,.075),0 0 8px rgba(111,66,193,.6);box-shadow:inset 0 1px 1px rgba(0,0,0,.075),0 0 8px rgba(111,66,193,.6)}
+
+/* ==================== 列表组 ==================== */
+a.list-group-item:hover,a.list-group-item:focus{color:#333;text-decoration:none;background-color:#f3edf9}
+.list-group-item.active,.list-group-item.active:hover,.list-group-item.active:focus{background-color:#6f42c1;border-color:#6f42c1}
+
+/* ==================== 导航栏 ==================== */
+.navbar-inverse{background-color:#4a2c82;border-color:#3b2266}
+.navbar-inverse .navbar-nav>li.nav-heading{background-color:#3b2266}
+.navbar-inverse .navbar-nav>li>a:hover,.navbar-inverse .navbar-nav>li>a:focus{background-color:#5a3e8e}
+.navbar-inverse .navbar-nav>.active>a,.navbar-inverse .navbar-nav>.active>a:hover,.navbar-inverse .navbar-nav>.active>a:focus{background-color:#6f42c1}
+.navbar-inverse .navbar-toggle{border-color:#6f42c1}
+.navbar-inverse .navbar-toggle:hover,.navbar-inverse .navbar-toggle:focus{background-color:#3b2266}
+.navbar-inverse .navbar-collapse,.navbar-inverse .navbar-form{border-color:#3b2266}
+.navbar-inverse .navbar-nav>.open>a,.navbar-inverse .navbar-nav>.open>a:hover,.navbar-inverse .navbar-nav>.open>a:focus{background-color:#6f42c1}
+@media (max-width:767px){.navbar-inverse .navbar-nav .open .dropdown-menu>.dropdown-header{border-color:#3b2266}.navbar-inverse .navbar-nav .open .dropdown-menu>li>a:hover,.navbar-inverse .navbar-nav .open .dropdown-menu>li>a:focus{background-color:#5a3e8e}.navbar-inverse .navbar-nav .open .dropdown-menu>.active>a,.navbar-inverse .navbar-nav .open .dropdown-menu>.active>a:hover,.navbar-inverse .navbar-nav .open .dropdown-menu>.active>a:focus{background-color:#6f42c1}}
+.navbar-fixed-left.navbar-inverse .navbar-header,.navbar-fixed-left.navbar-inverse .navbar-nav{border-bottom:1px solid #6f42c1;-webkit-box-shadow:inset 0 -1px 0 #3b2266;-moz-box-shadow:inset 0 -1px 0 #3b2266;box-shadow:inset 0 -1px 0 #3b2266}
+.navbar-fixed-left.navbar-inverse.navbar-collapsed .navbar-nav>li.nav-heading:hover{color:#eaeaea;background-color:#3b2266}
+
+/* ==================== 导航链接 ==================== */
+.nav>li>a:hover,.nav>li>a:focus{color:#3b2266}
+.nav .open>a,.nav .open>a:hover,.nav .open>a:focus{border-color:#6f42c1}
+.nav .open>a .caret,.nav .open>a:hover .caret,.nav .open>a:focus .caret{border-top-color:#3b2266;border-bottom-color:#3b2266}
+.nav-pills>li.active>a,.nav-pills>li.active>a:hover,.nav-pills>li.active>a:focus{background-color:#6f42c1}
+.nav-primary>li.active>a,.nav-primary>li.active>a:hover,.nav-primary>li.active>a:focus{background-color:#6f42c1;border-color:#6f42c1}
+.nav-secondary>li.active>a,.nav-secondary>li.active>a:hover,.nav-secondary>li.active>a:focus{color:#6f42c1;border-bottom-color:#6f42c1}
+.nav-secondary>li.active>a .caret,.nav-secondary>li.active>a:hover .caret,.nav-secondary>li.active>a:focus .caret{border-top-color:#6f42c1;border-bottom-color:#6f42c1}
+.nav-stacked.nav-secondary>li.active>a,.nav-stacked.nav-secondary>li.active>a:hover,.nav-stacked.nav-secondary>li.active>a:focus{-webkit-box-shadow:inset -2px 0 0 #6f42c1;-moz-box-shadow:inset -2px 0 0 #6f42c1;box-shadow:inset -2px 0 0 #6f42c1}
+.nav .caret{border-top-color:#6f42c1;border-bottom-color:#6f42c1}
+.nav a:hover .caret{border-top-color:#3b2266;border-bottom-color:#3b2266}
+
+/* ==================== 分页/面板 ==================== */
+.pager>.active>a,.pager>.active>span,.pager>.active>a:hover,.pager>.active>span:hover,.pager>.active>a:focus,.pager>.active>span:focus{background-color:#6f42c1}
+.panel-primary{border-color:#6f42c1}
+.panel-primary>.panel-heading{color:#fff;background-color:#6f42c1;border-color:#6f42c1}
+.panel-primary>.panel-heading+.panel-collapse .panel-body{border-top-color:#6f42c1}
+.panel-primary>.panel-footer+.panel-collapse .panel-body{border-bottom-color:#6f42c1}
+.panel-primary>.panel-heading+.panel-collapse .panel-body{border-top-color:#6f42c1}
+.panel-primary>.panel-footer+.panel-collapse .panel-body{border-bottom-color:#6f42c1}
+
+/* ==================== 表格 ==================== */
+.table-hover>tbody>tr:hover>td,.table-hover>tbody>tr:hover>th{background-color:#f3edf9}
+.table tr>td.active,.table tr>th.active,.table tr.active>td,.table tr.active>th{background-color:#f3edf9}
+table.tablesorter thead tr .headerSortUp:after,table.tablesorter thead tr .headerSortDown:after{color:#6f42c1!important}
+.tablesorter thead tr .headerSortUp:after,.tablesorter thead tr .headerSortDown:after{color:#6f42c1}
+
+/* ==================== Chosen 组件 ==================== */
+.chosen-container-single .chosen-search:focus{border-color:#6f42c1!important}
+.chosen-container .chosen-results li.highlighted{background-color:#6f42c1!important}
+.chosen-container-active .chosen-single{border-color:#6f42c1!important}
+.chosen-container-active.chosen-with-drop .chosen-single{border-color:#cbcbcb!important;border-color:rgba(0,0,0,.15)!important}
+.chosen-container-active .chosen-choices{border-color:#6f42c1!important}
+.chosen-container .chosen-results li.highlighted{color:#ffe!important}
+
+/* ==================== 下拉菜单 ==================== */
+.dropdown-menu>li>a:hover,.dropdown-menu>li>a:focus{background-color:#6f42c1}
+.dropdown-menu>.active>a,.dropdown-menu>.active>a:hover,.dropdown-menu>.active>a:focus{background-color:#6f42c1}
+.dropdown-submenu:hover>a,.dropdown-submenu:focus>a{background-color:#6f42c1}
+.dropdown-submenu:hover>a:after{border-left-color:#fff}
+.dropdown-menu>li>a:hover,.dropdown-menu>li>a:focus{color:#fff}
+.dropdown-menu>.active>a,.dropdown-menu>.active>a:hover,.dropdown-menu>.active>a:focus{color:#6f42c1;background-color:#e5e5e5}
+.dropdown-submenu:hover>a,.dropdown-submenu:focus>a{color:#fff}
+.dropdown-submenu:hover>a:after{border-left-color:#fff}
+
+/* ==================== 日期选择器 ==================== */
+.datetimepicker td.day.today{background-color:#e48600!important;border-color:#e48600!important}
+.datetimepicker td.day.active{background-color:#6f42c1!important;border-color:#5a33a5!important}
+.datetimepicker td.day.active:hover{background-color:#5a33a5!important}
+.datetimepicker td.day.today:hover,.datetimepicker td.day.today.active:hover{background-color:#b16800!important}
+
+/* ==================== 编辑器 ==================== */
+.ke-container.focus{border-color:#6f42c1!important;-webkit-box-shadow:inset 0 1px 1px rgba(0,0,0,.075),0 0 8px rgba(111,66,193,.6)!important;-moz-box-shadow:inset 0 1px 1px rgba(0,0,0,.075),0 0 8px rgba(111,66,193,.6)!important;box-shadow:inset 0 1px 1px rgba(0,0,0,.075),0 0 8px rgba(111,66,193,.6)!important}
+.ke-menu-item-on{background-color:#6f42c1!important}
+.ke-colorpicker-cell-on{background-color:#6f42c1!important}
+.ke-input-text:focus{border-color:#6f42c1!important;-webkit-box-shadow:inset 0 1px 1px rgba(0,0,0,.075),0 0 8px rgba(111,66,193,.6)!important;-moz-box-shadow:inset 0 1px 1px rgba(0,0,0,.075),0 0 8px rgba(111,66,193,.6)!important;box-shadow:inset 0 1px 1px rgba(0,0,0,.075),0 0 8px rgba(111,66,193,.6)!important}
+
+/* ==================== 其他 ==================== */
+.messager-primary{background-color:#6f42c1}
+.comment:hover>.content>.actions>a{color:#6f42c1}
+.card:hover a,a.card:hover{color:#3b2266}
+
+/* ==================== ZenTao 专属布局 ==================== */
+#modulemenu .nav>li>a,#modulemenu .nav>li>.dropdown>a{color:#6f42c1!important}
+#header{background:linear-gradient(160deg,#4a2c82 0%,#6f42c1 50%,#8b5fd6 100%)!important}
+#modulemenu li{color:#444}
+#modulemenu li.active>a,#modulemenu li.active>a:hover{color:#444}
+#mainmenu li>a{background:#5a3e8e!important}
+#mainmenu li>a:hover{background:#6f42c1!important}
+#mainmenu li.active>a,#mainmenu li.active>a:hover{color:#444!important;background-color:#f8f4fc!important}
+#mainmenu #searchbox .dropdown-menu li>a{background:#fff!important}
+#mainmenu #searchbox .dropdown-menu li>a:hover{color:#3b2266;background:#f3edf9!important}
+#topnav>.dropdown:hover,#topnav>.dropdown.open,#topnav>a:hover{background:#6f42c1}
+caption,#featurebar,#titlebar{background-color:#f3edf9}
+.btn-icon{color:#6f42c1!important}
+.btn-icon:hover{color:#4a2c82!important}
+.btn-icon.text-danger,.btn-icon.text-danger>i{color:#d2322d}
+.btn-icon.text-danger:hover{color:#fff;background:#d2322d}
+.btn-icon.text-danger:hover>i{color:#fff}
+#featurebar>.actions .btn:not(.btn-primary),#titlebar>.actions .btn:not(.btn-primary),.main>.actions:not(.actions-form) .btn:not(.btn-primary){color:#6f42c1!important}
+#searchlite,#searchmore{color:#6f42c1!important}
+#searchlite:hover,#searchmore:hover{color:#4a2c82!important}
+.treeview li:hover .hitarea:before{color:#6f42c1!important}
+.list-group-item.active,.list-group-item.active:hover{color:#fff}
+body.m-user-login{background:linear-gradient(160deg,#4a2c82 0%,#6f42c1 50%,#8b5fd6 100%)}
+table,#wrap .outer,#modulemenu li>a{border-radius:6px;-moz-border-radius:6px;-webkit-border-radius:6px}
+#mainmenu li>a,#featurebar,.outer>table.table-1>caption{border-top-left-radius:6px;border-top-right-radius:6px;border-bottom-right-radius:0;border-bottom-left-radius:0;-webkit-border-top-left-radius:6px;-webkit-border-top-right-radius:6px;-webkit-border-bottom-right-radius:0;-webkit-border-bottom-left-radius:0;-moz-border-radius-topleft:6px;-moz-border-radius-topright:6px;-moz-border-radius-bottomright:0;-moz-border-radius-bottomleft:0}
+#mainmenu #searchbox .dropdown-menu li>a{background:#fff!important}
+#mainmenu #searchbox .dropdown-menu li>a:hover{color:#3b2266;background:#f3edf9!important}
+
+/* ==================== WenYinOS 风格增强 ==================== */
+/* 页面背景：淡紫白，主文字：深紫墨 */
+body{background-color:#fcfafd;color:#2d2140}
+/* 字体栈：优先 Noto Sans SC，保持系统回退 */
+body,button,input,select,textarea{font-family:'Noto Sans SC',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'PingFang SC','Hiragino Sans GB','Microsoft YaHei',sans-serif}
+/* 输入框柔和边框 */
+.form-control,.chosen-container-single .chosen-single,.chosen-container .chosen-choices{border-color:#e5ddf0}
+/* 基础库 default/style.css 中残留的大写蓝色，统一覆盖为紫色 */
+.btn.text-primary{color:#6f42c1}
+.datepicker-wrapper:hover:before{color:#6f42c1}
