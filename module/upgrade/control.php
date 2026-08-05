@@ -143,9 +143,6 @@ class upgrade extends control
         if(empty($needProcess) or $processed == 'yes')
         {
             $this->loadModel('setting')->updateVersion($this->config->version);
-
-            @unlink($this->app->getAppRoot() . 'www/install.php');
-            @unlink($this->app->getAppRoot() . 'www/upgrade.php');
         }
     }
 

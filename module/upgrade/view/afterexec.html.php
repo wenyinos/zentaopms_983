@@ -20,6 +20,9 @@
         <strong><?php echo $lang->upgrade->success?></strong>
         <span class='pull-right'><?php echo html::a('index.php', $lang->upgrade->tohome, '', "class='btn btn-sm' id='tohome'")?></span>
       </div>
+      <div class='alert alert-warning mgb-10'>
+        <div class='content'><strong>安全提示：</strong>升级已完成，出于安全考虑请手动删除 <code>www/install.php</code> 和 <code>www/upgrade.php</code> 两个文件。</div>
+      </div>
       <div class='panel adbox'>
         <div class='panel-heading'><strong><?php echo $lang->install->promotion?></strong></div>
         <div class='panel-body row'>

@@ -527,6 +527,7 @@ class installModel extends model
             if(!$this->dbh->query($table)) return false;
         }
 
+        $config = new stdclass();
         $config->module  = 'common';
         $config->owner   = 'system';
         $config->section = 'global';

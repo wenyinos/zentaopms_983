@@ -20,6 +20,11 @@
         <i class='icon-ok-sign'></i>
         <div class='content'><?php echo nl2br(sprintf($lang->install->joinZentao, $config->version, $this->createLink('admin', 'register'), $this->createLink('admin', 'bind'), inlink('step6')));?></div>
       </div>
+      <?php if(!empty($needDeleteInstallFile)):?>
+      <div class='alert alert-warning mgb-10'>
+        <div class='content'><strong>安全提示：</strong>安装已完成，出于安全考虑请手动删除 <code>www/install.php</code> 和 <code>www/upgrade.php</code> 两个文件。</div>
+      </div>
+      <?php endif;?>
     </div>
     <div class='modal-footer'>
       <?php 

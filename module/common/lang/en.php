@@ -149,6 +149,7 @@ $lang->lang = 'Language';
 $lang->theme                 = 'Theme';
 $lang->themes['lightblue']   = 'Bright Blue';
 $lang->themes['blackberry']  = 'Blackberry';
+$lang->themes['wenyin']      = 'WenYin';
 
 /* 首页菜单设置。*/
 $lang->index = new stdclass();

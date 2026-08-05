@@ -62,6 +62,12 @@ $lang->moduleOrder[200] = 'message';
 
 $lang->resource = new stdclass();
 
+/* PHP8 兼容：以下模块对象未在 common lang 初始化，若自身模块 lang 未加载时使用会报 "on null" 错误。 */
+foreach(array('datatable', 'svn', 'git', 'tree', 'api', 'file', 'misc') as $module)
+{
+    if(!isset($lang->$module)) $lang->$module = new stdclass();
+}
+
 /* Index module. */
 $lang->resource->index = new stdclass();
 $lang->resource->index->index = 'index';

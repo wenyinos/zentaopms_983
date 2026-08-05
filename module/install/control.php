@@ -184,10 +184,9 @@ class install extends control
     public function step5()
     {
         $this->view->title = $this->lang->install->success;
+        $this->view->needDeleteInstallFile = true;
         $this->display();
 
-        unlink($this->app->getAppRoot() . 'www/install.php');
-        unlink($this->app->getAppRoot() . 'www/upgrade.php');
         unset($_SESSION['installing']);
         session_destroy();
     }
