@@ -29,4 +29,35 @@ if(!empty($wyCfg['enabled']))
 			die(header('location: ' . $wyCfg['loginUrl']));
 		}
 	}
+
+	// 4) 单点登出轻量校验（M-2）：已登录用户写操作（POST）每 30 分钟校验一次中心票据有效性。
+	//    中心已登出/撤票（2xxx）→ 静默本地登出；站点准入被撤销（1xxx）→ 本地登出并定向回中心
+	if($wyUser->isLogon() and $this->server->request_method === 'POST'
+		and (empty($_SESSION['wy_sso_checked_at']) or time() - intval($_SESSION['wy_sso_checked_at']) > 1800))
+	{
+		$_SESSION['wy_sso_checked_at'] = time();
+		$wyTicket = (string)$this->cookie->wy_auth;
+		if($wyTicket !== '')
+		{
+			$wyCheck = $wyUser->wyauthApi('ticket', array('ticket' => $wyTicket));
+			if($wyCheck !== null)
+			{
+				$wyCode = isset($wyCheck['code']) ? intval($wyCheck['code']) : -1;
+				if($wyCode !== 0)
+				{
+					// 本地登出（同原生 logout 的本地部分；票据已失效无需 revoke）
+					session_destroy();
+					setcookie('za', false);
+					setcookie('zp', false);
+					unset($_SESSION['wy_sso_checked_at']);
+
+					if($wyCode > 0 && $wyCode < 2000)
+					{
+						die(header('location: ' . $wyCfg['loginUrl']));
+					}
+					// 2xxx（中心已登出/撤票）：静默降级为游客继续本请求
+				}
+			}
+		}
+	}
 }
