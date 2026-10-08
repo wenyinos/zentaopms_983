@@ -12,6 +12,13 @@ WenYinOS 禅道项目管理系统基于经典 ZenTao 单体架构，采用 PHP +
 - 文档与知识管理
 - 用户、组织与日常协作支持
 
+## 统一认证（wenyinos SSO）
+
+本项目已接入**玟茵开源社区统一认证中心**：禅道的登录页与退出均定向到认证中心，在 <https://wenyinos.com/auth/> 登录后访问禅道自动通行——一个账号同时覆盖社区论坛与禅道；禅道内修改的密码 / 资料会同步回中心。
+
+- 接入组件：[`module/user/ext/`](./module/user/ext/) — 配置项与**总开关**（改一个配置文件的 `'enabled' => true/false` 即启停，停用立即恢复原生登录）见其 [README](./module/user/ext/README.md)。
+- 需在 `config/my.php` 开启：`$config->framework->extensionLevel = 1;`
+
 ## 快速启动
 ### 1. 启动本地 Web 服务
 ```bash

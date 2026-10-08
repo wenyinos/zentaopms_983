@@ -12,6 +12,13 @@ WenYinOS ZenTaoPMS is a PHP + MySQL project management system based on the class
 - Document and knowledge management
 - User, organization, and daily collaboration support
 
+## Unified Authentication (wenyinos SSO)
+
+This build integrates with the **WenYin Open Source Community unified authentication center**: the ZenTao login page and logout are redirected to the central auth service, with automatic sign-in when you are already logged in on <https://wenyinos.com/auth/> — one account covers both the community forum and ZenTao. Password/profile changes made in ZenTao are synchronized back to the center.
+
+- Connector: [`module/user/ext/`](./module/user/ext/) — configuration and the **on/off switch** (`'enabled' => true/false` in one config file, which restores the native login instantly) are documented in its [README](./module/user/ext/README.md).
+- Requires `$config->framework->extensionLevel = 1;` in `config/my.php`.
+
 ## Quick Start
 ### 1. Run a local web server
 ```bash
