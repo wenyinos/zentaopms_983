@@ -55,6 +55,35 @@ public function wyauthApi($action, $data)
 	return $result;
 }
 
+// ============ 密码双层哈希（bcrypt(md5(明文))，安全报告 H-1） ============
+// 历史存储为无盐 md5(明文)；已离线批量升级为双层哈希。
+// 以下三个辅助方法供本类及 hook 调用（public 以便 checkPriv hook 经 loadModel 访问）。
+
+public function wyauthPasswordHash($password_md5)
+{
+	return password_hash((string)$password_md5, PASSWORD_BCRYPT);
+}
+
+public function wyauthPasswordVerify($password_md5, $stored)
+{
+	$stored = (string)$stored;
+	if(strlen($stored) === 32) return $stored === (string)$password_md5;   // 兼容历史 md5 值（纵深防御）
+	return password_verify((string)$password_md5, $stored);
+}
+
+// 写后修正：原生写入路径（admin 建号/改用户等）若落库为 32 位 md5，原地升级为双层哈希（幂等）
+public function wyauthFixStoredPassword($account)
+{
+	$account = trim((string)$account);
+	if($account === '') return;
+	$record = $this->dao->select('id,password')->from(TABLE_USER)->where('account')->eq($account)->fetch();
+	if(!$record) return;
+	if(strlen((string)$record->password) === 32 and ctype_xdigit((string)$record->password))
+	{
+		$this->dao->update(TABLE_USER)->set('password')->eq($this->wyauthPasswordHash($record->password))->where('id')->eq($record->id)->exec();
+	}
+}
+
 // 用户 upsert（中心权威）：不存在则建号（visits=1），存在则按需同步密码；
 // 并按 zentao_groups 数组重写 zt_usergroup；返回最新 user 记录
 public function wyauthUpsert($payload)
@@ -72,7 +101,7 @@ public function wyauthUpsert($payload)
 	{
 		$data = new stdclass();
 		$data->account  = $account;
-		$data->password = $password_md5;
+		$data->password = $password_md5 !== '' ? $this->wyauthPasswordHash($password_md5) : '';
 		$data->realname = !empty($payload['realname']) ? $payload['realname'] : $account;
 		$data->email    = isset($payload['email']) ? $payload['email'] : '';
 		$data->role     = 'dev';
@@ -85,7 +114,7 @@ public function wyauthUpsert($payload)
 	}
 	else
 	{
-		if($password_md5 !== '') $this->dao->update(TABLE_USER)->set('password')->eq($password_md5)->where('id')->eq($user->id)->exec();
+		if($password_md5 !== '') $this->dao->update(TABLE_USER)->set('password')->eq($this->wyauthPasswordHash($password_md5))->where('id')->eq($user->id)->exec();
 		if(intval($user->visits) == 0) $this->dao->update(TABLE_USER)->set('visits')->eq(1)->where('id')->eq($user->id)->exec();
 
 		// 中心权威回传：昵称/邮箱以中心为准同步到本地
@@ -210,36 +239,57 @@ public function wyauthRevoke()
 
 // ============ 反向同步：分站改密/改资料推回中心 ============
 
-// 覆盖原生 updatePassword：个人改密成功后推送中心（总开关停用时不推送，行为同原生）
+// 覆盖原生 updatePassword：个人改密成功后推送中心（携带旧密码校验），并升级库值为双层哈希
 public function updatePassword($userID)
 {
 	$result = parent::updatePassword($userID);
-	if(!dao::isError() and !empty($this->config->user->wyauth['enabled']))
+	if(!dao::isError())
 	{
+		// parent 刚写入的密码为 md5(明文)（32 位）：先行推送中心，再升级为双层
 		$user = $this->dao->select('*')->from(TABLE_USER)->where('id')->eq((int)$userID)->fetch();
-		if($user) $this->wyauthApi('password', array('account' => $user->account, 'password' => $user->password));
+		if($user)
+		{
+			if(!empty($this->config->user->wyauth['enabled']))
+			{
+				$payload = array('account' => $user->account, 'password' => $user->password);
+				$old = isset($this->post->originalPassword) ? (string)$this->post->originalPassword : '';
+				if($old !== '') $payload['old_password'] = md5($old);   // H-2：自助改密携带旧密码校验
+				$this->wyauthApi('password', $payload);
+			}
+			$this->wyauthFixStoredPassword($user->account);
+		}
 	}
 	return $result;
 }
 
-// 覆盖原生 update：编辑用户/资料成功后推送中心（密码/邮箱/昵称一并带；总开关停用时不推送）
+// 覆盖原生 update：编辑用户/资料成功后推送中心（密码仅在本次改密时携带；总开关停用时不推送）
 public function update($userID)
 {
 	$result = parent::update($userID);
 	if(!dao::isError() and !empty($this->config->user->wyauth['enabled']))
 	{
 		$user = $this->dao->select('*')->from(TABLE_USER)->where('id')->eq((int)$userID)->fetch();
-		if($user) $this->wyauthApi('password', array(
-			'account' => $user->account,
-			'password' => $user->password,
-			'email' => (string)$user->email,
-			'realname' => (string)$user->realname,
-			'mobile' => (string)$user->mobile,
-			'qq' => (string)$user->qq,
-			'gender' => (string)$user->gender,
-			'birthday' => $user->birthday !== '0000-00-00' ? (string)$user->birthday : '',
-		));
+		if($user)
+		{
+			$payload = array(
+				'account' => $user->account,
+				'email' => (string)$user->email,
+				'realname' => (string)$user->realname,
+				'mobile' => (string)$user->mobile,
+				'qq' => (string)$user->qq,
+				'gender' => (string)$user->gender,
+				'birthday' => $user->birthday !== '0000-00-00' ? (string)$user->birthday : '',
+			);
+			// 密码仅在本次提交了改密时携带（parent 刚写库为 md5(明文) 32 位；admin 场景无旧密码，不带校验）
+			if(isset($this->post->password1) and $this->post->password1 != false) $payload['password'] = $user->password;
+			$this->wyauthApi('password', $payload);
+		}
 	}
+
+	// 写后修正：parent 若把密码写为 32 位 md5（admin 改密），升级为双层哈希
+	$fixedUser = $this->dao->select('account')->from(TABLE_USER)->where('id')->eq((int)$userID)->fetch();
+	if($fixedUser) $this->wyauthFixStoredPassword($fixedUser->account);
+
 	return $result;
 }
 
@@ -265,4 +315,76 @@ public function authorize($account)
 		$rights[strtolower($row['module'])][strtolower($row['method'])] = true;
 	}
 	return array('rights' => $rights, 'acls' => $acls);
+}
+
+// 覆盖原生 create：admin 建号后若密码落库为 32 位 md5（原生写法），写后修正为双层哈希
+public function create()
+{
+	$result = parent::create();
+
+	$account = isset($this->post->account) ? trim((string)$this->post->account) : '';
+	if($account !== '') $this->wyauthFixStoredPassword($account);
+
+	return $result;
+}
+
+// 覆盖原生 identify：本地验证支持双层哈希（bcrypt(md5(明文))）。
+// 原生 SQL 以 password = md5($password) 预筛，双层值无法命中，故改为先按账号取记录、在 PHP 层校验；
+// 32 位（auth hash）与 40 位（sha1）路径保持原生逻辑（库值作为"密钥"参与计算，与格式无关）
+public function identify($account, $password)
+{
+	if(!$account or !$password) return false;
+
+	/* 先按账号取出记录（密码在下方 PHP 层校验） */
+	$record = $this->dao->select('*')->from(TABLE_USER)
+		->where('account')->eq($account)
+		->andWhere('deleted')->eq(0)
+		->fetch();
+
+	/* If the length of $password is 32 or 40, checking by the auth hash. */
+	$user = false;
+	if($record)
+	{
+		$passwordLength = strlen($password);
+		if($passwordLength < 32)
+		{
+			// 明文交互登录：双层哈希校验（兼容历史 32 位 md5 值）
+			if($this->wyauthPasswordVerify(md5($password), $record->password)) $user = $record;
+		}
+		elseif($passwordLength == 32)
+		{
+			$hash = $this->session->rand ? md5($record->password . $this->session->rand) : $record->password;
+			$user = $password == $hash ? $record : '';
+		}
+		elseif($passwordLength == 40)
+		{
+			$hash = sha1($record->account . $record->password . $record->last);
+			$user = $password == $hash ? $record : '';
+		}
+		if(!$user and md5($password) == $record->password) $user = $record;
+	}
+
+	if($user)
+	{
+		$ip   = $this->server->remote_addr;
+		$last = $this->server->request_time;
+
+		$user->lastTime       = $user->last;
+		$user->last           = date(DT_DATETIME1, $last);
+		$user->admin          = strpos($this->app->company->admins, ",{$user->account},") !== false;
+		$user->modifyPassword = ($user->visits == 0 and !empty($this->config->safe->modifyPasswordFirstLogin));
+		if($user->modifyPassword) $user->modifyPasswordReason = 'modifyPasswordFirstLogin';
+		if(!$user->modifyPassword and !empty($this->config->safe->changeWeak))
+		{
+			$user->modifyPassword = $this->loadModel('admin')->checkWeak($user);
+			if($user->modifyPassword) $user->modifyPasswordReason = 'weak';
+		}
+
+		$this->dao->update(TABLE_USER)->set('visits = visits + 1')->set('ip')->eq($ip)->set('last')->eq($last)->where('account')->eq($account)->exec();
+
+		/* Create cycle todo in login. */
+		$todoList = $this->dao->select('*')->from(TABLE_TODO)->where('cycle')->eq(1)->andWhere('account')->eq($user->account)->fetchAll('id');
+		$this->loadModel('todo')->createByCycle($todoList);
+	}
+	return $user;
 }
