@@ -30,6 +30,59 @@ if(!empty($wyCfg['enabled']))
 		}
 	}
 
+	// 3.5) 账号切换/中心退出的一致性保障：本地已登录时，比对本请求票据与上次兑换记录。
+	//      票据变更（换账号）→ 重新兑换切换到新身份；票据清除（中心已退出）/失效 → 本地登出；
+	//      中心不可达 → 保持现状（降级静默）。票据未变时零网络开销。
+	if($wyUser->isLogon())
+	{
+		$wyCur = (string)$this->cookie->wy_auth;
+		$wyRec = isset($_SESSION['wy_sso_ticket_cur']) ? (string)$_SESSION['wy_sso_ticket_cur'] : '';
+		if($wyCur !== $wyRec)
+		{
+			if($wyCur === '')
+			{
+				// 中心票据已清除（中心已退出）→ 本地登出并定向回中心（避免本请求按旧登录态渲染）
+				$_SESSION = array();
+				session_destroy();
+				setcookie('za', false);
+				setcookie('zp', false);
+				die(header('location: ' . $wyCfg['loginUrl']));
+			}
+			else
+			{
+				$wyResp = $wyUser->wyauthApi('ticket', array('ticket' => $wyCur));
+				if($wyResp !== null)
+				{
+					$wyCode = isset($wyResp['code']) ? intval($wyResp['code']) : -1;
+					if($wyCode === 0)
+					{
+						// 新票据有效且非当前身份 → 切换为新账号（传入响应，避免重复请求）
+						$wyUser->identifyByWyAuth($wyResp);
+					}
+					elseif($wyCode > 0 && $wyCode < 2000)
+					{
+						// 新票据业务拒绝（未开通/禁用/不存在）→ 本地登出并定向回中心
+						$_SESSION = array();
+						session_destroy();
+						setcookie('za', false);
+						setcookie('zp', false);
+						die(header('location: ' . $wyCfg['loginUrl']));
+					}
+					else
+					{
+						// 票据无效/过期（2xxx）/协议异常（3xxx）→ 本地登出并定向回中心
+						$_SESSION = array();
+						session_destroy();
+						setcookie('za', false);
+						setcookie('zp', false);
+						die(header('location: ' . $wyCfg['loginUrl']));
+					}
+				}
+				// null（中心不可达）→ 保持现状（降级静默）
+			}
+		}
+	}
+
 	// 4) 单点登出轻量校验（M-2）：已登录用户写操作（POST）每 30 分钟校验一次中心票据有效性。
 	//    中心已登出/撤票（2xxx）→ 静默本地登出；站点准入被撤销（1xxx）→ 本地登出并定向回中心
 	if($wyUser->isLogon() and $this->server->request_method === 'POST'
@@ -46,6 +99,7 @@ if(!empty($wyCfg['enabled']))
 				if($wyCode !== 0)
 				{
 					// 本地登出（同原生 logout 的本地部分；票据已失效无需 revoke）
+					$_SESSION = array();   // 先清空内存，避免本请求结束时重新写回（复活）
 					session_destroy();
 					setcookie('za', false);
 					setcookie('zp', false);

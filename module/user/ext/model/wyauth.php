@@ -187,7 +187,7 @@ public function wyauthVerifyAndSync($account, $password_md5)
 //          false=静默（票据无效/过期/中心不可达）
 // 负缓存按票据值记录：同一业务拒绝票据不重复请求中心（命中即 denied）；
 // 换新票据（重新登录中心）后自动重试；中心退出（票据清除）后本方法不再触发
-public function identifyByWyAuth()
+public function identifyByWyAuth($resp = false)
 {
 	if(empty($this->config->user->wyauth['enabled'])) return false;   // 总开关停用
 
@@ -195,7 +195,7 @@ public function identifyByWyAuth()
 	if($ticket === '') return false;
 	if(isset($_SESSION['wy_sso_denied_ticket']) && $_SESSION['wy_sso_denied_ticket'] === $ticket) return 'denied';
 
-	$resp = $this->wyauthApi('ticket', array('ticket' => $ticket));
+	if($resp === false) $resp = $this->wyauthApi('ticket', array('ticket' => $ticket));   // 调用方可传入已获取的响应，避免重复请求
 	if($resp === null) return false;
 
 	$code = isset($resp['code']) ? intval($resp['code']) : -1;
@@ -214,6 +214,7 @@ public function identifyByWyAuth()
 	if(!$user) return false;
 
 	unset($_SESSION['wy_sso_denied_ticket']);
+	$_SESSION['wy_sso_ticket_cur'] = $ticket;   // 记录本次票据（供一致性比对）
 	$user->lastTime       = $user->last;
 	$user->admin          = strpos($this->app->company->admins, ",{$user->account},") !== false;
 	$user->modifyPassword = false;   // upsert 已保证 visits>=1，跳过强制改密
