@@ -1,0 +1,55 @@
+/* wenyinos 禅道移动端适配（≤767px；viewport 由 header 声明，无需额外处理） */
+@media (max-width: 767px)
+{
+    /* ---- 基础防溢出 ---- */
+    img, canvas, video { max-width: 100%; height: auto; }
+    pre, code { white-space: pre-wrap; word-break: break-all; }
+
+    /* ---- 顶栏：紧凑 ---- */
+    #topbar { padding: 4px 8px; }
+    #topbar #companyname { font-size: 13px; line-height: 1.35; white-space: normal; }
+    #topnav { font-size: 12px; line-height: 1.8; }
+    #topnav a { padding: 0 4px; }
+
+    /* ---- 主导航 / 二级导航：横向滚动、不换行 ---- */
+    #mainmenu, #modulemenu { white-space: nowrap; overflow-x: auto; -webkit-overflow-scrolling: touch; padding-left: 4px; padding-right: 4px; }
+    #mainmenu > a, #mainmenu .nav > li > a, #modulemenu > a, #modulemenu .nav > li > a { padding: 6px 8px; font-size: 13px; }
+
+    /* ---- 系统提示条：允许折行（长路径等） ---- */
+    .alert { white-space: normal; overflow-wrap: anywhere; max-width: 100%; }
+
+    /* ---- 流程图组件：容器内横滑 ---- */
+    .flowchart { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
+    /* ---- 数据表：单元格不折行（超长内容省略；完整内容见详情页） ---- */
+    .table-data > thead > tr > th, .table-data > tbody > tr > td { white-space: nowrap; }
+    /* 详情/表单：标签列不折行 */
+    .table-form > tbody > tr > th { white-space: nowrap; }
+
+    /* ---- 侧栏 + 主区：窄屏纵向堆叠；主区去掉为侧栏预留的左边距并自滚（防裸表格撑破页面） ---- */
+    .side { position: static !important; width: 100% !important; }
+    .main { margin-left: 0 !important; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    /* 行表格布局（row-table：列表/详情页侧栏 + 主区）全部子级堆叠 */
+    .row-table, .row-table > * { display: block !important; width: 100% !important; }
+    .col-side { width: 100% !important; }
+
+    /* ---- dashboard 栅格归一为单列（含拖拽布局的历史残留宽度） ---- */
+    .dashboard .row > [class*="col-"] { width: 100%; float: none; }
+    .dashboard .panel-block, .dashboard .panel { width: 100% !important; }
+
+    /* ---- 面板体内横滑优化 ---- */
+    .panel-body { -webkit-overflow-scrolling: touch; }
+
+    /* ---- 内容区边距收紧 ---- */
+    .outer { padding-left: 6px; padding-right: 6px; }
+    .row { margin-left: -6px; margin-right: -6px; }
+    [class*="col-"] { padding-left: 6px; padding-right: 6px; }
+
+    /* ---- 表单：控件全宽、纵向堆叠 ---- */
+    .form-group { margin-bottom: 10px; }
+    input[type="text"], input[type="password"], input[type="number"], input[type="email"], input[type="date"], select, textarea { max-width: 100%; }
+    .input-group { max-width: 100%; }
+
+    /* ---- 底部 ---- */
+    #footer { font-size: 12px; }
+}
