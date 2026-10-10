@@ -38,3 +38,15 @@ Current history includes short messages (for example `update`, `first commit`). 
 - Never commit secrets or environment-specific overrides from `config/my.php`.
 - Treat `www/data/` and `tmp/` as runtime data.
 - Prefer changes in `extension/` when customizing behavior to reduce upgrade risk.
+
+## MCP Integration (zentao-mcp)
+
+`zentao-mcp/` provides an MCP server that lets AI agents maintain ZenTao project management from git commits (task/story/bug linking, task status flow, effort logging).
+
+- ZenTao side: `module/mcp/` endpoints + `module/common/ext/model/mcp.php` (open-method extension); client side: `zentao-mcp/` (25 tools covering task/story/bug lifecycle, queries, effort reports and commit sync).
+- Auth: HMAC-signed requests with timestamp freshness (±300s), no user session involved. Secrets live in `module/mcp/.env` and `zentao-mcp/.env` (both gitignored). Optional `MCP_READONLY` / `MCP_IPS` hardening; write calls are audited to `tmp/mcp/access-YYYYMMDD.log`.
+- Agent workflow: after development work, run `zentao_get_git_commits` → update tasks with `zentao_start_task` / `zentao_record_effort` / `zentao_finish_task` (pass each commit's `authorAccount` as `actor` in multi-user repos) → write links with `zentao_sync_commits`. Commit messages reference objects with `task #N`, `story #N`, `bug #N` markers.
+- After editing files under `module/common/ext/`, clear `tmp/model/*.php` (extension merge cache) and reload php-fpm.
+- Do not expose the ZenTao `api`/`editor` entry points (debug interfaces) in web server configs; the MCP endpoints are self-contained.
+- See `zentao-mcp/README.md` for deployment, configuration and the full tool list.
+
