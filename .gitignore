@@ -3,7 +3,7 @@ tmp/
 www/data/upload/1/
 module/user/ext/.env
 module/mcp/.env
-zentao-mcp/.env
-zentao-mcp/.state-*.json
+zentao-mcp-py/.env
+__pycache__/
 .mcp.json
 .qoder/

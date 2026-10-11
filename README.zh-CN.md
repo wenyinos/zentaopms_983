@@ -19,6 +19,14 @@ WenYinOS 禅道项目管理系统基于经典 ZenTao 单体架构，采用 PHP +
 - 接入组件：[`module/user/ext/`](./module/user/ext/) — 配置项与**总开关**（改一个配置文件的 `'enabled' => true/false` 即启停，停用立即恢复原生登录）见其 [README](./module/user/ext/README.md)。
 - 需在 `config/my.php` 开启：`$config->framework->extensionLevel = 1;`
 
+## MCP 集成（zentao-mcp）
+
+本项目内置 MCP（Model Context Protocol）服务，AI agent 可依据 git 提交记录直接维护禅道项目管理——提交关联任务 / 需求 / Bug、驱动任务状态流转与工时记录。
+
+- 客户端：[`zentao-mcp-py/`](./zentao-mcp-py/) — 单文件 Python 客户端（仅标准库；只需 `python3` 与 `git`），兼容任意 stdio MCP 客户端（Qoder、Claude Desktop、Cursor 等）。
+- 服务端：[`module/mcp/`](./module/mcp/) — 自包含 HMAC 鉴权端点（时效校验 ±300 秒，不经用户会话）；作者映射、仓库同步点、提交日志组装均在服务端；可选 `MCP_READONLY` / `MCP_IPS` 加固。
+- 接入配置与完整工具清单（25 个）：见 [`zentao-mcp-py/README.md`](./zentao-mcp-py/README.md) 与 [`AGENTS.md`](./AGENTS.md)。
+
 ## 快速启动
 ### 1. 启动本地 Web 服务
 ```bash

@@ -70,6 +70,34 @@ class mcpModel extends model
         return true;
     }
 
+    public function authorMap()
+    {
+        $raw = $this->getEnv('GIT_AUTHOR_MAP');
+        $map = array();
+        if($raw === '') return $map;
+
+        foreach(explode(',', $raw) as $pair)
+        {
+            $pair = trim($pair);
+            if($pair === '' or strpos($pair, ':') === false) continue;
+            list($key, $account) = explode(':', $pair, 2);
+            $map[strtolower(trim($key))] = trim($account);
+        }
+        return $map;
+    }
+
+    public function authorAccount($name, $email)
+    {
+        $map = $this->authorMap();
+        if(empty($map)) return '';
+
+        $emailKey = strtolower(trim((string)$email));
+        $nameKey  = strtolower(trim((string)$name));
+        if($emailKey !== '' && isset($map[$emailKey])) return $map[$emailKey];
+        if($nameKey !== '' && isset($map[$nameKey]))   return $map[$nameKey];
+        return '';
+    }
+
     /* ============ 任务查询 ============ */
 
     public function getTask($taskID)
@@ -252,24 +280,60 @@ class mcpModel extends model
 
     /* ============ 提交同步 ============ */
 
-    public function syncCommits($logs, $repoRoot)
+    public function syncStateKey($repoRoot)
+    {
+        return 'repo_' . substr(md5($repoRoot), 0, 25); // zt_config.key 为 char(30)：5 + 25 恰好占满
+    }
+
+    public function getSyncState($repoRoot)
+    {
+        if($repoRoot === '') return '';
+        return (string)$this->loadModel('setting')->getItem('owner=system&module=mcp&section=sync&key=' . $this->syncStateKey($repoRoot));
+    }
+
+    public function advanceSyncState($repoRoot, $hash)
+    {
+        if($repoRoot === '' or $hash === '') return;
+        $this->loadModel('setting')->setItem('system.mcp.sync.' . $this->syncStateKey($repoRoot), $hash);
+    }
+
+    public function buildLogLines($commit)
+    {
+        $msg   = str_replace('*_*', ' * * ', (string)$commit['msg']);
+        $lines = array((string)$commit['name'] . '*_*' . (string)$commit['date'] . '*_*' . (string)$commit['hash'] . '*_*' . $msg);
+        if(!empty($commit['files']) and is_array($commit['files']))
+        {
+            foreach($commit['files'] as $file)
+            {
+                $file = trim((string)$file);
+                if($file === '') continue;
+                $lines[] = $file . '|M';
+            }
+        }
+        return $lines;
+    }
+
+    public function syncCommits($commits, $repoRoot)
     {
         $gitModel = $this->loadModel('git');
         $results  = array();
-        foreach($logs as $logLines)
+        $newest   = '';
+        foreach($commits as $commit)
         {
-            if(empty($logLines) || !is_array($logLines)) continue;
+            if(!is_array($commit) or empty($commit['hash'])) continue;
 
-            $log     = $gitModel->convertLog($logLines);
+            $log     = $gitModel->convertLog($this->buildLogLines($commit));
             $objects = $gitModel->parseComment($log->msg);
             if($objects) $gitModel->saveAction2PMS($objects, $log, $repoRoot);
 
+            if($newest === '') $newest = (string)$commit['hash'];
             $results[] = array(
                 'revision' => substr($log->revision, 0, 10),
                 'msg'      => $log->msg,
                 'objects'  => $objects ? $objects : array(),
             );
         }
+        if($newest !== '') $this->advanceSyncState($repoRoot, $newest);
         return $results;
     }
 }

@@ -352,17 +352,50 @@ class mcp extends control
 
     /* ============ 提交同步 ============ */
 
+    public function mapAuthors()
+    {
+        $mcp     = $this->loadModel('mcp');
+        $commits = json_decode((string)$this->post->commits, true);
+        if(!is_array($commits)) $this->deny('commits must be a JSON array');
+
+        $result = array();
+        foreach($commits as $commit)
+        {
+            if(!is_array($commit)) continue;
+            $commit['authorAccount'] = $mcp->authorAccount(
+                isset($commit['name']) ? $commit['name'] : '',
+                isset($commit['email']) ? $commit['email'] : ''
+            );
+            $result[] = $commit;
+        }
+        $this->ok(array('commits' => $result));
+    }
+
+    public function getSyncState()
+    {
+        $mcp      = $this->loadModel('mcp');
+        $repoRoot = trim((string)$mcp->getQueryParam('repoRoot'));
+        if($repoRoot === '') $this->deny('repoRoot required');
+        $this->ok(array('lastHash' => $mcp->getSyncState($repoRoot)));
+    }
+
     public function syncCommits()
     {
         $this->writeGuard();
         $mcp = $this->actor();
 
-        $commits  = json_decode((string)$this->post->commits, true);
+        $commits = json_decode((string)$this->post->commits, true);
         if(!is_array($commits)) $this->deny('commits must be a JSON array');
-        $repoRoot = (string)$this->post->repoRoot;
+
+        $first = reset($commits);
+        if(is_array($first) && !isset($first['hash'])) $this->deny('LEGACY_FORMAT: structured commits required, please update client');
+
+        $repoRoot = trim((string)$this->post->repoRoot);
+        if($repoRoot === '') $this->deny('repoRoot required');
 
         $result = $mcp->syncCommits($commits, $repoRoot);
-        $mcp->auditLog('syncCommits', 'count=' . count($result));
+        $state  = (is_array($first) && !empty($first['hash'])) ? ' state=' . substr((string)$first['hash'], 0, 10) : '';
+        $mcp->auditLog('syncCommits', 'count=' . count($result) . $state);
         $this->ok($result);
     }
 }

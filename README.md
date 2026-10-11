@@ -19,6 +19,14 @@ This build integrates with the **WenYin Open Source Community unified authentica
 - Connector: [`module/user/ext/`](./module/user/ext/) — configuration and the **on/off switch** (`'enabled' => true/false` in one config file, which restores the native login instantly) are documented in its [README](./module/user/ext/README.md).
 - Requires `$config->framework->extensionLevel = 1;` in `config/my.php`.
 
+## MCP Integration (zentao-mcp)
+
+This build ships an MCP (Model Context Protocol) service that lets AI agents maintain ZenTao project management directly from git commits — linking commits to tasks/stories/bugs, driving task status flow and logging effort.
+
+- Client: [`zentao-mcp-py/`](./zentao-mcp-py/) — a single-file Python client (standard library only; requires just `python3` and `git`). Works with any stdio MCP host (Qoder, Claude Desktop, Cursor, ...).
+- Server side: [`module/mcp/`](./module/mcp/) — self-contained HMAC-authenticated endpoints (timestamp freshness ±300s, no user session). Author mapping, per-repo sync state and commit-log assembly all live server-side; optional `MCP_READONLY` / `MCP_IPS` hardening.
+- Setup and the full tool list (25 tools): see [`zentao-mcp-py/README.md`](./zentao-mcp-py/README.md) and [`AGENTS.md`](./AGENTS.md).
+
 ## Quick Start
 ### 1. Run a local web server
 ```bash
