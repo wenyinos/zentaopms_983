@@ -3,7 +3,7 @@
 """zentao-mcp Python client: stdio MCP shell for ZenTao (zero third-party deps).
 
 Requires: python3 >= 3.7, git. Configuration is read from .env next to this file:
-    ZENTAO_URL, MCP_SECRET, MCP_REPO_PATH
+    ZENTAO_URL, MCP_SECRET, MCP_REPO_PATH, MCP_ACCOUNT, GIT_AUTHOR_MAP
 """
 import json
 import os
@@ -37,6 +37,33 @@ ENV = load_env()
 BASE_URL = (ENV.get('ZENTAO_URL') or 'http://dev.wenyinos.test:8080').rstrip('/')
 SECRET = ENV.get('MCP_SECRET', '')
 REPO_DEFAULT = ENV.get('MCP_REPO_PATH') or os.getcwd()
+ACCOUNT_DEFAULT = ENV.get('MCP_ACCOUNT', '')
+
+
+def load_author_map():
+    amap = {}
+    for pair in ENV.get('GIT_AUTHOR_MAP', '').split(','):
+        pair = pair.strip()
+        if not pair or ':' not in pair:
+            continue
+        key, account = pair.split(':', 1)
+        amap[key.strip().lower()] = account.strip()
+    return amap
+
+
+AUTHOR_MAP = load_author_map()
+
+
+def author_account(name, email):
+    if not AUTHOR_MAP:
+        return ''
+    email_key = str(email or '').strip().lower()
+    name_key = str(name or '').strip().lower()
+    if email_key and email_key in AUTHOR_MAP:
+        return AUTHOR_MAP[email_key]
+    if name_key and name_key in AUTHOR_MAP:
+        return AUTHOR_MAP[name_key]
+    return ''
 
 
 def php_urlencode(value):
@@ -128,8 +155,10 @@ def zt_git_commits(repo_path, since_hash='', limit=20):
 # ============ tools ============
 
 def zt_actor_params(params, args):
-    if args.get('actor'):
-        params['actor'] = str(args['actor'])
+    account = str(args['actor']) if args.get('actor') else ACCOUNT_DEFAULT
+    if account == '':
+        raise RuntimeError('MCP_ACCOUNT 未配置：请在 zentao-mcp-py/.env 中设置本机禅道账号')
+    params['actor'] = account
 
 
 def zt_tool_result(name, args):
@@ -340,12 +369,9 @@ def zt_tool_result(name, args):
     if name == 'zentao_get_git_commits':
         repo = str(args['repoPath']) if args.get('repoPath') else REPO_DEFAULT
         commits = zt_git_commits(repo, str(args.get('since', '')), int(args.get('limit', 20)))
-
-        resp = zt_call('mapAuthors', {}, {'commits': json.dumps(commits, ensure_ascii=False)})
-        if resp.get('code') != 0:
-            raise RuntimeError('mapAuthors 失败: %s' % json.dumps(resp, ensure_ascii=False))
-        enriched = resp.get('data', {}).get('commits', [])
-        return {'count': len(enriched), 'commits': enriched}
+        for commit in commits:
+            commit['authorAccount'] = author_account(commit['name'], commit['email'])
+        return {'count': len(commits), 'commits': commits}
 
     if name == 'zentao_sync_commits':
         repo = str(args['repoPath']) if args.get('repoPath') else REPO_DEFAULT
@@ -521,7 +547,7 @@ def build_tools():
             'dateTo': {'type': 'string', 'description': '截止日期 YYYY-MM-DD（可选，默认同 dateFrom）'},
         }),
 
-        zt_tool_schema('zentao_get_git_commits', '读取本地 git 仓库的提交记录（只读，不同步禅道）。返回 hash/作者/邮箱/authorAccount（按服务端 GIT_AUTHOR_MAP 映射的禅道账号）/时间/消息/文件列表。', {
+        zt_tool_schema('zentao_get_git_commits', '读取本地 git 仓库的提交记录（只读，不同步禅道）。返回 hash/作者/邮箱/authorAccount（按本机 GIT_AUTHOR_MAP 映射的禅道账号）/时间/消息/文件列表。', {
             'repoPath': {'type': 'string', 'description': 'git 仓库路径（可选，默认配置的仓库）'},
             'since': {'type': 'string', 'description': '起始 commit hash，读取该点之后的提交（可选）'},
             'limit': {'type': 'integer', 'description': '无 since 时最多读取的提交数，默认 20'},

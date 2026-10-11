@@ -27,8 +27,10 @@ class mcp extends control
 
     private function actor()
     {
-        $mcp = $this->loadModel('mcp');
-        if(!$mcp->setActor((string)$mcp->getQueryParam('actor'))) $this->deny('MCP_ACCOUNT invalid');
+        $mcp     = $this->loadModel('mcp');
+        $account = trim((string)$mcp->getQueryParam('actor'));
+        if($account === '') $this->deny('ACTOR_REQUIRED: configure MCP_ACCOUNT in client .env');
+        if(!$mcp->setActor($account)) $this->deny('MCP_ACCOUNT invalid');
         return $mcp;
     }
 
@@ -351,25 +353,6 @@ class mcp extends control
     }
 
     /* ============ 提交同步 ============ */
-
-    public function mapAuthors()
-    {
-        $mcp     = $this->loadModel('mcp');
-        $commits = json_decode((string)$this->post->commits, true);
-        if(!is_array($commits)) $this->deny('commits must be a JSON array');
-
-        $result = array();
-        foreach($commits as $commit)
-        {
-            if(!is_array($commit)) continue;
-            $commit['authorAccount'] = $mcp->authorAccount(
-                isset($commit['name']) ? $commit['name'] : '',
-                isset($commit['email']) ? $commit['email'] : ''
-            );
-            $result[] = $commit;
-        }
-        $this->ok(array('commits' => $result));
-    }
 
     public function getSyncState()
     {

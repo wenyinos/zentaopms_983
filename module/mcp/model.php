@@ -60,7 +60,6 @@ class mcpModel extends model
 
     public function setActor($account = '')
     {
-        if($account === '') $account = $this->getEnv('MCP_ACCOUNT');
         if($account === '') return false;
 
         $user = $this->loadModel('user')->getById($account);
@@ -68,34 +67,6 @@ class mcpModel extends model
 
         $this->app->user = $user;
         return true;
-    }
-
-    public function authorMap()
-    {
-        $raw = $this->getEnv('GIT_AUTHOR_MAP');
-        $map = array();
-        if($raw === '') return $map;
-
-        foreach(explode(',', $raw) as $pair)
-        {
-            $pair = trim($pair);
-            if($pair === '' or strpos($pair, ':') === false) continue;
-            list($key, $account) = explode(':', $pair, 2);
-            $map[strtolower(trim($key))] = trim($account);
-        }
-        return $map;
-    }
-
-    public function authorAccount($name, $email)
-    {
-        $map = $this->authorMap();
-        if(empty($map)) return '';
-
-        $emailKey = strtolower(trim((string)$email));
-        $nameKey  = strtolower(trim((string)$name));
-        if($emailKey !== '' && isset($map[$emailKey])) return $map[$emailKey];
-        if($nameKey !== '' && isset($map[$nameKey]))   return $map[$nameKey];
-        return '';
     }
 
     /* ============ 任务查询 ============ */
