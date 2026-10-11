@@ -2,25 +2,32 @@
 
 AI agent 依据 git 提交记录维护禅道项目管理：提交关联任务 / 需求 / Bug、任务状态流转、工时记录，共 25 个 MCP 工具。
 
-- 服务端：禅道 `module/mcp/`（HMAC 自鉴权，与用户会话无关，无需用户名密码）
-- 客户端：`zentao-mcp-py/`，单文件 Python（仅标准库），要求 `python3` + `git`，**不需要 PHP**
+发布包含**两个独立附件**，归属不同、请勿混淆：
+
+| 附件 | 部署位置 | 内容 |
+|---|---|---|
+| `zentao-mcp-server-0.3.0.zip` | **禅道服务器**：解压到禅道根目录 | 服务端端点（PHP）：`module/mcp/` + `module/common/ext/model/mcp.php` |
+| `zentao-mcp-client-0.3.0.zip` | **开发机**（运行 AI agent 的机器）：放任意目录 | Python 客户端：`zentao-mcp-py/`，**不要放到禅道服务器** |
+
+- 服务端：HMAC 自鉴权，与用户会话无关（无需用户名密码）
+- 客户端：单文件 Python（仅标准库），要求 `python3` + `git`，**不需要 PHP**
 - **无需任何数据库变更**：表结构不变，同步点等运行时数据由服务端自动写入禅道原生表
 
-## 一、服务端部署（禅道根目录）
+## 一、服务端部署（zentao-mcp-server-0.3.0.zip）
 
-1. 落位文件。**只有本包的 `module/` 属于服务端**，整包解压后将其覆盖到禅道根目录即可：
+1. 直接解压到禅道根目录（包内仅有 `module/`，可安全合并覆盖）：
 
    ```bash
-   unzip -o zentao-mcp-deploy-0.3.0.zip 'module/*' -d <禅道根目录>
+   unzip -o zentao-mcp-server-0.3.0.zip -d <禅道根目录>
    ```
 
-   对应关系：
+   落位文件：
 
-   | 包内路径 | 目标 |
+   | 路径 | 说明 |
    |---|---|
-   | `module/mcp/control.php` | 禅道根目录 `module/mcp/` |
-   | `module/mcp/model.php` | 禅道根目录 `module/mcp/` |
-   | `module/common/ext/model/mcp.php` | 禅道根目录 `module/common/ext/model/`（放行文件；若 MCP 已部署且该文件未变更可跳过） |
+   | `module/mcp/control.php`、`module/mcp/model.php` | 端点入口与业务逻辑 |
+   | `module/common/ext/model/mcp.php` | 模块放行文件（若 MCP 已部署且该文件未变更可跳过） |
+   | `module/mcp/.env.example` | 配置模板（见下一步） |
 
 2. 创建 `module/mcp/.env`（参考 `.env.example`）：
 
@@ -44,16 +51,17 @@ AI agent 依据 git 提交记录维护禅道项目管理：提交关联任务 / 
    - 禅道原生 `api` / `editor` 调试入口保持封禁（与 MCP 无关）
    - 写操作审计日志：禅道 `tmp/mcp/access-YYYYMMDD.log`
 
-## 二、客户端部署（每台开发机）
+## 二、客户端部署（zentao-mcp-client-0.3.0.zip，每台开发机）
 
-要求：`python3` ≥ 3.7、`git`。
+要求：`python3` ≥ 3.7、`git`。客户端**不属于服务端**，请勿解压到禅道目录。
 
-1. 从包中取出客户端目录到任意位置（如 `~/tools/`；客户端不属于服务端，请勿放到禅道目录）：
+1. 解压到任意位置（如 `~/tools/`）：
 
    ```bash
-   unzip -o zentao-mcp-deploy-0.3.0.zip 'zentao-mcp-py/*' -d ~/tools/
+   unzip -o zentao-mcp-client-0.3.0.zip -d ~/tools/
    ```
-2. 创建 `zentao-mcp-py/.env`（参考 `.env.example`）：
+
+2. 创建 `~/tools/zentao-mcp-py/.env`（参考 `.env.example`）：
 
    ```ini
    ZENTAO_URL=https://<禅道域名>
@@ -66,13 +74,13 @@ AI agent 依据 git 提交记录维护禅道项目管理：提交关联任务 / 
 3. 注册到 MCP 客户端。Qoder：
 
    ```bash
-   qodercli mcp add zentao -s user -t stdio -- python3 <path>/zentao-mcp-py/mcp.py --keepalive
+   qodercli mcp add zentao -s user -t stdio -- python3 ~/tools/zentao-mcp-py/mcp.py --keepalive
    ```
 
    通用 stdio JSON（Claude Desktop / Cursor 等）：
 
    ```json
-   {"mcpServers": {"zentao": {"command": "python3", "args": ["<path>/zentao-mcp-py/mcp.py", "--keepalive"]}}}
+   {"mcpServers": {"zentao": {"command": "python3", "args": ["~/tools/zentao-mcp-py/mcp.py", "--keepalive"]}}}
    ```
 
    `--keepalive` 必须保留：客户端关闭 stdin 后进程保活等待复用（Qoder 进程模型需要）。Windows 以 `python` 替代 `python3`。
@@ -88,6 +96,6 @@ AI agent 依据 git 提交记录维护禅道项目管理：提交关联任务 / 
 
 ## 四、升级说明（从旧 PHP 客户端版本）
 
-- 服务端：覆盖 `module/mcp/` 两个文件即可（ext 放行文件未变更可不动）
-- 客户端：改用本包 `zentao-mcp-py/`；旧客户端已弃用，`sync_commits` 协议不兼容且会明确报错 `LEGACY_FORMAT`
+- 服务端：覆盖 `module/` 即可（ext 放行文件未变更可不动）
+- 客户端：改用新版 `zentao-mcp-py/`；旧 PHP 客户端已弃用，`sync_commits` 协议不兼容且会明确报错 `LEGACY_FORMAT`
 - 首次同步：服务端同步点为空，自动回退"最近 20 条提交"模式；禅道原生去重保证不产生重复关联记录
