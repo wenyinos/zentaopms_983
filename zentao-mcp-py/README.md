@@ -49,17 +49,21 @@ qodercli mcp add zentao -s user -t stdio -- python3 <path>/zentao-mcp-py/mcp.py 
 
 说明：`--keepalive` 使进程在 stdin 被客户端关闭后保活等待复用（Qoder 的 MCP 进程模型需要；对标准客户端无副作用）。Windows 环境请将 `python3` 换为 `python`。
 
-## 工具清单（25 个）
+## 工具清单（46 个）
 
-**任务**：`zentao_get_task` / `zentao_list_tasks` / `zentao_search_tasks` / `zentao_create_task` / `zentao_get_task_history` / `zentao_get_task_estimates` / `zentao_start_task` / `zentao_finish_task` / `zentao_record_effort` / `zentao_add_comment` / `zentao_assign_task` / `zentao_task_flow`（pause/restart/close/activate/cancel）
+**任务**：`zentao_get_task` / `zentao_list_tasks` / `zentao_search_tasks` / `zentao_create_task` / `zentao_update_task` / `zentao_get_task_history` / `zentao_get_task_estimates` / `zentao_start_task` / `zentao_finish_task` / `zentao_record_effort` / `zentao_delete_effort` / `zentao_add_comment` / `zentao_assign_task` / `zentao_task_flow`
 
-**需求**：`zentao_get_story` / `zentao_list_stories`
+**需求**：`zentao_get_story` / `zentao_list_stories` / `zentao_create_story` / `zentao_update_story` / `zentao_change_story`（改需求描述/验收标准，升版本）/ `zentao_story_flow`
 
-**Bug**：`zentao_get_bug` / `zentao_list_bugs` / `zentao_create_bug` / `zentao_resolve_bug` / `zentao_close_bug`
+**Bug**：`zentao_get_bug` / `zentao_list_bugs` / `zentao_create_bug` / `zentao_update_bug` / `zentao_resolve_bug` / `zentao_close_bug` / `zentao_activate_bug` / `zentao_assign_bug`
 
-**项目与产品**：`zentao_list_projects` / `zentao_list_products`
+**项目与产品**：`zentao_list_projects` / `zentao_create_project` / `zentao_update_project` / `zentao_project_flow` / `zentao_manage_team` / `zentao_list_products` / `zentao_create_product` / `zentao_update_product`
+
+**发布 / 测试 / 文档**：`zentao_create_release` / `zentao_create_testtask` / `zentao_testtask_flow` / `zentao_create_testcase` / `zentao_update_testcase` / `zentao_create_doc`
 
 **提交与报表**：`zentao_get_git_commits` / `zentao_sync_commits` / `zentao_effort_report` / `zentao_ping`
+
+> 各工具的填写规范与示例见 [AGENT-GUIDE.md](./AGENT-GUIDE.md)。
 
 ## 提交标记规范
 

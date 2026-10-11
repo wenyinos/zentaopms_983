@@ -76,7 +76,7 @@ class mcpModel extends model
         $task = $this->loadModel('task')->getById($taskID);
         if(empty($task)) return null;
 
-        $fields = array('id', 'name', 'status', 'pri', 'assignedTo', 'openedBy', 'finishedBy', 'project', 'story', 'estimate', 'consumed', 'left', 'deadline', 'realStarted', 'finishedDate');
+        $fields = array('id', 'name', 'status', 'pri', 'assignedTo', 'openedBy', 'finishedBy', 'project', 'story', 'estimate', 'consumed', 'left', 'deadline', 'realStarted', 'finishedDate', 'desc');
         $data   = new stdclass();
         foreach($fields as $field) $data->$field = isset($task->$field) ? $task->$field : null;
         return $data;
@@ -175,7 +175,7 @@ class mcpModel extends model
         $story = $this->loadModel('story')->getById($storyID);
         if(empty($story)) return null;
 
-        $fields = array('id', 'title', 'status', 'stage', 'pri', 'estimate', 'product', 'openedBy', 'assignedTo', 'version', 'closedReason');
+        $fields = array('id', 'title', 'status', 'stage', 'pri', 'estimate', 'product', 'openedBy', 'assignedTo', 'version', 'closedReason', 'spec', 'verify');
         $data   = new stdclass();
         foreach($fields as $field) $data->$field = isset($story->$field) ? $story->$field : null;
         return $data;
@@ -198,7 +198,7 @@ class mcpModel extends model
         $bug = $this->loadModel('bug')->getById($bugID);
         if(empty($bug)) return null;
 
-        $fields = array('id', 'title', 'status', 'severity', 'pri', 'type', 'product', 'openedBy', 'assignedTo', 'resolvedBy', 'resolution', 'openedBuild', 'resolvedBuild', 'closedBy');
+        $fields = array('id', 'title', 'status', 'severity', 'pri', 'type', 'product', 'openedBy', 'assignedTo', 'resolvedBy', 'resolution', 'openedBuild', 'resolvedBuild', 'closedBy', 'steps');
         $data   = new stdclass();
         foreach($fields as $field) $data->$field = isset($bug->$field) ? $bug->$field : null;
         return $data;
@@ -247,6 +247,27 @@ class mcpModel extends model
             ->from(TABLE_PRODUCT)
             ->where('deleted')->eq('0')
             ->orderBy('id_desc')->limit(100)->fetchAll();
+    }
+
+    /* ============ 项目 / 文档 ============ */
+
+    public function projectFlow($projectID, $action)
+    {
+        $projectModel = $this->loadModel('project');
+        if($action === 'start')    return $projectModel->start($projectID);
+        if($action === 'suspend')  return $projectModel->suspend($projectID);
+        if($action === 'activate') return $projectModel->activate($projectID);
+        if($action === 'close')    return $projectModel->close($projectID);
+        return false;
+    }
+
+    public function getMainDoclib($product = 0, $project = 0)
+    {
+        $query = $this->dao->select('id')->from(TABLE_DOCLIB)->where('main')->eq('1')->andWhere('deleted')->eq('0');
+        if($product) $query->andWhere('product')->eq((int)$product);
+        if($project) $query->andWhere('project')->eq((int)$project);
+        $lib = $query->fetch();
+        return $lib ? (int)$lib->id : 0;
     }
 
     /* ============ 提交同步 ============ */

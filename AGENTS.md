@@ -43,11 +43,11 @@ Current history includes short messages (for example `update`, `first commit`). 
 
 `zentao-mcp-py/` provides an MCP server that lets AI agents maintain ZenTao project management from git commits (task/story/bug linking, task status flow, effort logging).
 
-- ZenTao side: `module/mcp/` endpoints + `module/common/ext/model/mcp.php` (open-method extension); client side: `zentao-mcp-py/` (single-file Python client, stdlib only — requires just `python3` and `git`, no PHP on client machines; 25 tools covering task/story/bug lifecycle, queries, effort reports and commit sync).
+- ZenTao side: `module/mcp/` endpoints + `module/common/ext/model/mcp.php` (open-method extension); client side: `zentao-mcp-py/` (single-file Python client, stdlib only — requires just `python3` and `git`, no PHP on client machines; 46 tools covering task/story/bug/project/product/release/testcase/doc lifecycle, queries, effort reports and commit sync).
 - Thin client by design: it runs local `git log`, keeps per-machine identity (`MCP_ACCOUNT` + `GIT_AUTHOR_MAP`), signs requests and speaks stdio MCP. Per-repo sync state (stored in `zt_config`) and commit log assembly live server-side in `module/mcp/`.
 - Auth: HMAC-signed requests with timestamp freshness (±300s), no user session involved. Secrets live in `module/mcp/.env` and `zentao-mcp-py/.env` (both gitignored). Optional `MCP_READONLY` / `MCP_IPS` hardening; write calls are audited to `tmp/mcp/access-YYYYMMDD.log`.
 - Agent workflow: after development work, run `zentao_get_git_commits` → update tasks with `zentao_start_task` / `zentao_record_effort` / `zentao_finish_task` (pass each commit's `authorAccount` as `actor` in multi-user repos) → write links with `zentao_sync_commits`. Commit messages reference objects with `task #N`, `story #N`, `bug #N` markers.
 - After editing files under `module/common/ext/`, clear `tmp/model/*.php` (extension merge cache) and reload php-fpm.
 - Do not expose the ZenTao `api`/`editor` entry points (debug interfaces) in web server configs; the MCP endpoints are self-contained.
-- See `zentao-mcp-py/README.md` for client setup (MCP registration, `.env`, stdio JSON examples) and the full tool list.
+- See `zentao-mcp-py/README.md` for client setup (MCP registration, `.env`, stdio JSON examples), `zentao-mcp-py/AGENT-GUIDE.md` for per-tool filling specs and the full tool list.
 
