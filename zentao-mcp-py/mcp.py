@@ -16,7 +16,7 @@ from urllib.error import HTTPError, URLError
 from urllib.parse import quote_plus
 from urllib.request import Request, urlopen
 
-VERSION = '0.4.0'
+VERSION = '0.5.0'
 
 
 def load_env():
@@ -282,11 +282,17 @@ def zt_tool_result(name, args):
         return zt_call('recordEffort', params, post)
 
     if name == 'zentao_add_comment':
-        if not args.get('taskID'):
-            raise RuntimeError('taskID 必填')
+        if not args.get('taskID') and not args.get('objectID'):
+            raise RuntimeError('taskID 或 objectID 必填')
         if not args.get('comment'):
             raise RuntimeError('comment 必填')
-        params = {'taskID': int(args['taskID'])}
+        params = {}
+        if args.get('objectType'):
+            params['objectType'] = str(args['objectType'])
+        if args.get('objectID'):
+            params['objectID'] = int(args['objectID'])
+        if args.get('taskID'):
+            params['taskID'] = int(args['taskID'])
         zt_actor_params(params, args)
         return zt_call('addComment', params, {'comment': str(args['comment'])})
 
@@ -372,16 +378,25 @@ def zt_tool_result(name, args):
         return zt_call('effortReport', params)
 
     # ---- 项目 ----
+    if name == 'zentao_get_project':
+        if not args.get('projectID'):
+            raise RuntimeError('projectID 必填')
+        return zt_call('getProject', {'projectID': int(args['projectID'])})
+
     if name == 'zentao_create_project':
         for req in ('name', 'code', 'begin', 'end'):
             if not args.get(req):
                 raise RuntimeError('%s 必填' % req)
         params = {}
         zt_actor_params(params, args)
+        if args.get('copyFrom'):
+            params['copyFrom'] = int(args['copyFrom'])
         post = {}
         for key in ('name', 'code', 'begin', 'end', 'team', 'days', 'type', 'acl', 'desc', 'whitelist'):
             if key in args:
                 post[key] = zt_list_arg(args[key])
+        if 'products' in args:
+            post['products'] = json.dumps(args['products'], ensure_ascii=False)
         return zt_call('createProject', params, post)
 
     if name == 'zentao_update_project':
@@ -393,6 +408,8 @@ def zt_tool_result(name, args):
         for key in ('name', 'code', 'begin', 'end', 'days', 'type', 'team', 'desc', 'acl', 'whitelist'):
             if key in args:
                 post[key] = zt_list_arg(args[key])
+        if 'products' in args:
+            post['products'] = json.dumps(args['products'], ensure_ascii=False)
         return zt_call('updateProject', params, post)
 
     if name == 'zentao_project_flow':
@@ -603,6 +620,8 @@ def zt_tool_result(name, args):
         for key in ('title', 'type', 'pri', 'stage', 'precondition', 'keywords', 'story', 'module', 'comment'):
             if key in args:
                 post[key] = args[key]
+        if args.get('steps'):
+            post['steps'] = json.dumps(args['steps'], ensure_ascii=False)
         return zt_call('updateTestcase', params, post)
 
     if name == 'zentao_create_doc':
@@ -618,6 +637,187 @@ def zt_tool_result(name, args):
             if key in args:
                 post[key] = zt_list_arg(args[key])
         return zt_call('createDoc', params, post)
+
+    # ---- 计划 / 账号 / 构建 ----
+    if name == 'zentao_create_plan':
+        for req in ('product', 'title'):
+            if not args.get(req):
+                raise RuntimeError('%s 必填' % req)
+        params = {}
+        zt_actor_params(params, args)
+        post = {}
+        for key in ('product', 'branch', 'title', 'begin', 'end', 'future', 'desc'):
+            if key in args:
+                post[key] = args[key]
+        return zt_call('createPlan', params, post)
+
+    if name == 'zentao_list_plans':
+        if not args.get('productID'):
+            raise RuntimeError('productID 必填')
+        return zt_call('listPlans', {'productID': int(args['productID'])})
+
+    if name == 'zentao_list_users':
+        return zt_call('listUsers')
+
+    if name == 'zentao_create_build':
+        if not args.get('projectID'):
+            raise RuntimeError('projectID 必填')
+        for req in ('product', 'name'):
+            if not args.get(req):
+                raise RuntimeError('%s 必填' % req)
+        params = {'projectID': int(args['projectID'])}
+        zt_actor_params(params, args)
+        post = {}
+        for key in ('product', 'branch', 'name', 'builder', 'date', 'desc', 'scmPath', 'filePath'):
+            if key in args:
+                post[key] = args[key]
+        return zt_call('createBuild', params, post)
+
+    # ---- 文档编辑 / 文档库 ----
+    if name == 'zentao_update_doc':
+        if not args.get('docID'):
+            raise RuntimeError('docID 必填')
+        params = {'docID': int(args['docID'])}
+        zt_actor_params(params, args)
+        post = {}
+        for key in ('title', 'content', 'contentType', 'type', 'url', 'keywords', 'module', 'acl'):
+            if key in args:
+                post[key] = args[key]
+        if 'users' in args:
+            post['users'] = zt_list_arg(args['users'])
+        if 'groups' in args:
+            post['groups'] = zt_list_arg(args['groups'])
+        if 'comment' in args:
+            post['comment'] = str(args['comment'])
+        return zt_call('updateDoc', params, post)
+
+    if name == 'zentao_create_doclib':
+        if not args.get('name'):
+            raise RuntimeError('name 必填')
+        params = {}
+        zt_actor_params(params, args)
+        post = {'name': str(args['name'])}
+        for key in ('libType', 'product', 'project', 'acl'):
+            if key in args:
+                post[key] = args[key]
+        if 'users' in args:
+            post['users'] = zt_list_arg(args['users'])
+        if 'groups' in args:
+            post['groups'] = zt_list_arg(args['groups'])
+        return zt_call('createDoclib', params, post)
+
+    # ---- 评审 / 确认 ----
+    if name == 'zentao_review_story':
+        if not args.get('storyID'):
+            raise RuntimeError('storyID 必填')
+        if not args.get('result'):
+            raise RuntimeError('result 必填（pass|reject|revert|clarify）')
+        params = {'storyID': int(args['storyID'])}
+        zt_actor_params(params, args)
+        post = {}
+        for key in ('result', 'comment', 'assignedTo', 'closedReason', 'duplicateStory', 'childStories', 'preVersion'):
+            if key in args:
+                post[key] = args[key]
+        if 'reviewedBy' in args:
+            post['reviewedBy'] = zt_list_arg(args['reviewedBy'])
+        return zt_call('reviewStory', params, post)
+
+    if name == 'zentao_confirm_bug':
+        if not args.get('bugID'):
+            raise RuntimeError('bugID 必填')
+        params = {'bugID': int(args['bugID'])}
+        zt_actor_params(params, args)
+        post = {}
+        for key in ('assignedTo', 'type', 'pri', 'comment'):
+            if key in args:
+                post[key] = args[key]
+        if 'mailto' in args:
+            post['mailto'] = zt_list_arg(args['mailto'])
+        return zt_call('confirmBug', params, post)
+
+    if name == 'zentao_review_testcase':
+        if not args.get('caseID'):
+            raise RuntimeError('caseID 必填')
+        if not args.get('result'):
+            raise RuntimeError('result 必填（pass|clarify）')
+        params = {'caseID': int(args['caseID'])}
+        zt_actor_params(params, args)
+        post = {'result': str(args['result'])}
+        if 'comment' in args:
+            post['comment'] = str(args['comment'])
+        if 'reviewedBy' in args:
+            post['reviewedBy'] = zt_list_arg(args['reviewedBy'])
+        return zt_call('reviewTestcase', params, post)
+
+    # ---- 关联管理 ----
+    if name == 'zentao_manage_release':
+        if not args.get('releaseID'):
+            raise RuntimeError('releaseID 必填')
+        if not args.get('action'):
+            raise RuntimeError('action 必填（link_story|unlink_story|link_bug|unlink_bug|change_status）')
+        params = {'releaseID': int(args['releaseID']), 'action': str(args['action'])}
+        zt_actor_params(params, args)
+        post = {}
+        for key in ('storyID', 'bugID', 'bugType', 'status'):
+            if key in args:
+                post[key] = args[key]
+        if 'stories' in args:
+            post['stories'] = json.dumps(args['stories'], ensure_ascii=False)
+        if 'bugs' in args:
+            post['bugs'] = json.dumps(args['bugs'], ensure_ascii=False)
+        return zt_call('manageRelease', params, post)
+
+    if name == 'zentao_link_project_stories':
+        if not args.get('projectID'):
+            raise RuntimeError('projectID 必填')
+        if not args.get('stories'):
+            raise RuntimeError('stories 必填（需求 ID 数组）')
+        params = {'projectID': int(args['projectID'])}
+        zt_actor_params(params, args)
+        return zt_call('linkProjectStories', params, {'stories': json.dumps(args['stories'], ensure_ascii=False)})
+
+    if name == 'zentao_unlink_project_story':
+        if not args.get('projectID'):
+            raise RuntimeError('projectID 必填')
+        if not args.get('storyID'):
+            raise RuntimeError('storyID 必填')
+        params = {'projectID': int(args['projectID']), 'storyID': int(args['storyID'])}
+        zt_actor_params(params, args)
+        return zt_call('unlinkProjectStory', params)
+
+    if name == 'zentao_subdivide_story':
+        if not args.get('storyID'):
+            raise RuntimeError('storyID 必填')
+        if not args.get('children'):
+            raise RuntimeError('children 必填（数组：{title, spec?, verify?, module?, pri?, estimate?}）')
+        params = {'storyID': int(args['storyID'])}
+        zt_actor_params(params, args)
+        return zt_call('subdivideStory', params, {'children': json.dumps(args['children'], ensure_ascii=False)})
+
+    if name == 'zentao_link_testtask_cases':
+        if not args.get('taskID'):
+            raise RuntimeError('taskID 必填')
+        if not args.get('cases'):
+            raise RuntimeError('cases 必填（用例 ID 数组）')
+        params = {'taskID': int(args['taskID'])}
+        zt_actor_params(params, args)
+        if args.get('type'):
+            params['type'] = str(args['type'])
+        return zt_call('linkTesttaskCases', params, {'cases': json.dumps(args['cases'], ensure_ascii=False)})
+
+    if name == 'zentao_list_testruns':
+        if not args.get('taskID'):
+            raise RuntimeError('taskID 必填')
+        return zt_call('listTestruns', {'taskID': int(args['taskID'])})
+
+    if name == 'zentao_record_test_result':
+        if not args.get('runID'):
+            raise RuntimeError('runID 必填')
+        if not args.get('steps'):
+            raise RuntimeError('steps 必填（数组：{stepID?, result, real?}）')
+        params = {'runID': int(args['runID'])}
+        zt_actor_params(params, args)
+        return zt_call('recordTestResult', params, {'steps': json.dumps(args['steps'], ensure_ascii=False)})
 
     # ---- 提交 ----
     if name == 'zentao_get_git_commits':
@@ -742,11 +942,13 @@ def build_tools():
             'actor': ACTOR_PROP,
         }, ['taskID', 'consumed', 'left']),
 
-        zt_tool_schema('zentao_add_comment', '给任务添加备注（写入任务历史记录）。', {
-            'taskID': TASKID_PROP,
+        zt_tool_schema('zentao_add_comment', '添加备注（写入对象历史记录）：默认给任务；传 objectType/objectID 可给 bug/story/doc 留言。', {
+            'taskID': {'type': 'integer', 'description': '任务 ID（objectType=task 或省略 objectType 时使用）'},
+            'objectType': {'type': 'string', 'description': 'task | bug | story | doc（可选，默认 task）'},
+            'objectID': {'type': 'integer', 'description': '对象 ID（非任务时使用）'},
             'comment': {'type': 'string', 'description': '备注内容'},
             'actor': ACTOR_PROP,
-        }, ['taskID', 'comment']),
+        }, ['comment']),
 
         zt_tool_schema('zentao_get_story', '查询禅道需求（story）详情。',
                        {'storyID': {'type': 'integer', 'description': '需求 ID'}}, ['storyID']),
@@ -802,7 +1004,7 @@ def build_tools():
         }),
 
         # ---- 项目 ----
-        zt_tool_schema('zentao_create_project', '创建禅道项目（建任务前需要 projectID 时使用；建项目后可用 create_task 建任务）。', {
+        zt_tool_schema('zentao_create_project', '创建禅道项目（可选复制已有项目的团队；可直接关联产品）。', {
             'name': {'type': 'string', 'description': '项目名称'},
             'code': {'type': 'string', 'description': '项目代号（团队内部简称，唯一）'},
             'begin': {'type': 'string', 'description': '开始日期 YYYY-MM-DD'},
@@ -813,10 +1015,16 @@ def build_tools():
             'acl': {'type': 'string', 'description': '访问控制 open/private（可选）'},
             'desc': {'type': 'string', 'description': '项目描述（可选）'},
             'whitelist': {'type': 'array', 'items': {'type': 'string'}, 'description': 'acl=private 时的白名单账号列表（可选）'},
+            'products': {'type': 'array', 'items': {'type': 'integer'}, 'description': '关联的产品 ID 列表（可选）'},
+            'copyFrom': {'type': 'integer', 'description': '复制来源项目 ID（可选，会复制其团队）'},
             'actor': ACTOR_PROP,
         }, ['name', 'code', 'begin', 'end']),
 
-        zt_tool_schema('zentao_update_project', '编辑禅道项目（仅传入要修改的字段，未传字段保持原值；产品关联自动保持）。', {
+        zt_tool_schema('zentao_get_project', '查询项目详情（含关联产品列表，用于项目↔产品关联管理）。', {
+            'projectID': {'type': 'integer', 'description': '项目 ID'},
+        }, ['projectID']),
+
+        zt_tool_schema('zentao_update_project', '编辑禅道项目（仅传入要修改的字段，未传字段保持原值）。products 可全量设置项目关联的产品（传 [] 清空；不传则保持现有）。', {
             'projectID': {'type': 'integer', 'description': '项目 ID'},
             'name': {'type': 'string', 'description': '项目名称（可选）'},
             'code': {'type': 'string', 'description': '项目代号（可选）'},
@@ -828,6 +1036,7 @@ def build_tools():
             'desc': {'type': 'string', 'description': '项目描述（可选）'},
             'acl': {'type': 'string', 'description': '访问控制 open/private（可选）'},
             'whitelist': {'type': 'array', 'items': {'type': 'string'}, 'description': '白名单账号列表（可选）'},
+            'products': {'type': 'array', 'items': {'type': 'integer'}, 'description': '项目关联的产品 ID 列表（可选；全量替换语义，传 [] 清空关联，不传保持现状）'},
             'actor': ACTOR_PROP,
         }, ['projectID']),
 
@@ -1034,7 +1243,7 @@ def build_tools():
             'actor': ACTOR_PROP,
         }, ['product', 'title', 'type']),
 
-        zt_tool_schema('zentao_update_testcase', '编辑测试用例基础字段（标题/类型/优先级/前置条件等；步骤变更请用界面或重传）。', {
+        zt_tool_schema('zentao_update_testcase', '编辑测试用例（基础字段与步骤；步骤变更自动升版本进入评审）。', {
             'caseID': {'type': 'integer', 'description': '用例 ID'},
             'title': {'type': 'string', 'description': '用例标题（可选）'},
             'type': {'type': 'string', 'description': '用例类型（可选）'},
@@ -1044,6 +1253,7 @@ def build_tools():
             'keywords': {'type': 'string', 'description': '关键词（可选）'},
             'story': {'type': 'integer', 'description': '相关需求（可选）'},
             'module': {'type': 'integer', 'description': '所属模块（可选）'},
+            'steps': {'type': 'array', 'items': {'type': 'object'}, 'description': '步骤数组（可选，传则全量替换）：[{type, desc, expect}]'},
             'comment': COMMENT_PROP,
             'actor': ACTOR_PROP,
         }, ['caseID']),
@@ -1063,6 +1273,145 @@ def build_tools():
             'groups': {'type': 'array', 'items': {'type': 'string'}, 'description': '白名单分组列表（可选）'},
             'actor': ACTOR_PROP,
         }, ['title', 'content']),
+
+        # ---- 计划 / 账号 / 构建 ----
+        zt_tool_schema('zentao_create_plan', '创建产品计划（版本规划，供需求的 plan 字段引用）。', {
+            'product': {'type': 'integer', 'description': '所属产品 ID'},
+            'title': {'type': 'string', 'description': '计划名称（如 v1.0）'},
+            'branch': {'type': 'integer', 'description': '分支（可选，多分支产品用）'},
+            'begin': {'type': 'string', 'description': '开始日期 YYYY-MM-DD（可选）'},
+            'end': {'type': 'string', 'description': '结束日期 YYYY-MM-DD（可选）'},
+            'future': {'type': 'integer', 'description': '1=未来计划（可选，未传起止日期时自动视为未来计划）'},
+            'desc': {'type': 'string', 'description': '描述（可选）'},
+            'actor': ACTOR_PROP,
+        }, ['product', 'title']),
+
+        zt_tool_schema('zentao_list_plans', '列出产品的计划（获取 plan ID）。', {
+            'productID': {'type': 'integer', 'description': '产品 ID'},
+        }, ['productID']),
+
+        zt_tool_schema('zentao_list_users', '列出禅道账号（account/realname/role，供指派与团队管理使用）。'),
+
+        zt_tool_schema('zentao_create_build', '创建版本（build）；发布/测试单可引用其 ID。', {
+            'projectID': {'type': 'integer', 'description': '所属项目 ID'},
+            'product': {'type': 'integer', 'description': '所属产品 ID'},
+            'name': {'type': 'string', 'description': '版本名称'},
+            'branch': {'type': 'integer', 'description': '分支（可选）'},
+            'builder': {'type': 'string', 'description': '构建者（可选，默认操作人）'},
+            'date': {'type': 'string', 'description': '日期 YYYY-MM-DD（可选，默认今天）'},
+            'desc': {'type': 'string', 'description': '描述（可选）'},
+            'scmPath': {'type': 'string', 'description': '源码地址（可选）'},
+            'filePath': {'type': 'string', 'description': '下载地址（可选）'},
+            'actor': ACTOR_PROP,
+        }, ['projectID', 'product', 'name']),
+
+        # ---- 文档 ----
+        zt_tool_schema('zentao_update_doc', '编辑文档（内容/标题变更自动升版本）。', {
+            'docID': {'type': 'integer', 'description': '文档 ID'},
+            'title': {'type': 'string', 'description': '标题（可选）'},
+            'content': {'type': 'string', 'description': '新内容（可选）'},
+            'contentType': {'type': 'string', 'description': '内容格式 html（默认）/markdown'},
+            'type': {'type': 'string', 'description': '类型 text（默认）/url'},
+            'url': {'type': 'string', 'description': 'type=url 时的链接'},
+            'keywords': {'type': 'string', 'description': '关键词（可选）'},
+            'module': {'type': 'integer', 'description': '所属模块（可选）'},
+            'acl': {'type': 'string', 'description': '访问控制 open/private（可选）'},
+            'users': {'type': 'array', 'items': {'type': 'string'}, 'description': '白名单账号列表（可选）'},
+            'groups': {'type': 'array', 'items': {'type': 'string'}, 'description': '白名单分组列表（可选）'},
+            'comment': COMMENT_PROP,
+            'actor': ACTOR_PROP,
+        }, ['docID']),
+
+        zt_tool_schema('zentao_create_doclib', '创建文档库（自定义库；产品/项目自带主库）。', {
+            'name': {'type': 'string', 'description': '库名称'},
+            'libType': {'type': 'string', 'description': '类型 product/project/custom（可选，默认 custom）'},
+            'product': {'type': 'integer', 'description': '所属产品（可选）'},
+            'project': {'type': 'integer', 'description': '所属项目（可选）'},
+            'acl': {'type': 'string', 'description': '访问控制 open/private/custom（可选）'},
+            'groups': {'type': 'array', 'items': {'type': 'string'}, 'description': '白名单分组（可选）'},
+            'users': {'type': 'array', 'items': {'type': 'string'}, 'description': '白名单账号（可选）'},
+            'actor': ACTOR_PROP,
+        }, ['name']),
+
+        # ---- 评审 / 确认 ----
+        zt_tool_schema('zentao_review_story', '评审需求：pass 通过（draft/changed→active）/ reject 驳回（需 closedReason）/ revert 回退版本（需 preVersion）/ clarify 待明确。', {
+            'storyID': {'type': 'integer', 'description': '需求 ID'},
+            'result': {'type': 'string', 'description': 'pass | reject | revert | clarify'},
+            'comment': COMMENT_PROP,
+            'assignedTo': {'type': 'string', 'description': '指派给（可选，默认保持）'},
+            'reviewedBy': {'type': 'array', 'items': {'type': 'string'}, 'description': '评审人账号列表（可选，默认操作人）'},
+            'closedReason': {'type': 'string', 'description': '驳回原因（reject 必需：done/subdivided/duplicate/postponed/willnotdo/cancel/bydesign）'},
+            'duplicateStory': {'type': 'integer', 'description': '重复需求 ID（closedReason=duplicate 时必需）'},
+            'childStories': {'type': 'string', 'description': '细分需求（closedReason=subdivided 时用）'},
+            'preVersion': {'type': 'integer', 'description': '回退到的版本号（revert 必需）'},
+            'actor': ACTOR_PROP,
+        }, ['storyID', 'result']),
+
+        zt_tool_schema('zentao_confirm_bug', '确认 Bug（未确认 → 已确认，可同时调整指派/类型/优先级）。', {
+            'bugID': {'type': 'integer', 'description': 'Bug ID'},
+            'assignedTo': {'type': 'string', 'description': '指派给（可选）'},
+            'type': {'type': 'string', 'description': 'Bug 类型（可选）'},
+            'pri': {'type': 'integer', 'description': '优先级（可选）'},
+            'mailto': {'type': 'array', 'items': {'type': 'string'}, 'description': '抄送（可选）'},
+            'comment': COMMENT_PROP,
+            'actor': ACTOR_PROP,
+        }, ['bugID']),
+
+        zt_tool_schema('zentao_review_testcase', '评审测试用例：pass（→normal）/ clarify 待明确。', {
+            'caseID': {'type': 'integer', 'description': '用例 ID'},
+            'result': {'type': 'string', 'description': 'pass | clarify'},
+            'comment': COMMENT_PROP,
+            'reviewedBy': {'type': 'array', 'items': {'type': 'string'}, 'description': '评审人账号列表（可选，默认操作人）'},
+            'actor': ACTOR_PROP,
+        }, ['caseID', 'result']),
+
+        # ---- 关联管理 ----
+        zt_tool_schema('zentao_manage_release', '发布管理：link_story/unlink_story 关联需求、link_bug/unlink_bug 关联 Bug、change_status 变更状态（normal/terminate）。', {
+            'releaseID': {'type': 'integer', 'description': '发布 ID'},
+            'action': {'type': 'string', 'description': 'link_story | unlink_story | link_bug | unlink_bug | change_status'},
+            'stories': {'type': 'array', 'items': {'type': 'integer'}, 'description': '需求 ID 数组（link_story 时必需）'},
+            'bugs': {'type': 'array', 'items': {'type': 'integer'}, 'description': 'Bug ID 数组（link_bug 时必需）'},
+            'storyID': {'type': 'integer', 'description': '需求 ID（unlink_story 时必需）'},
+            'bugID': {'type': 'integer', 'description': 'Bug ID（unlink_bug 时必需）'},
+            'bugType': {'type': 'string', 'description': 'bug | leftBug（unlink_bug 可选，默认 bug）'},
+            'status': {'type': 'string', 'description': 'normal | terminate（change_status 时必需）'},
+            'actor': ACTOR_PROP,
+        }, ['releaseID', 'action']),
+
+        zt_tool_schema('zentao_link_project_stories', '把需求关联到项目（需求须属于项目已关联的产品；已关联的自动跳过）。', {
+            'projectID': {'type': 'integer', 'description': '项目 ID'},
+            'stories': {'type': 'array', 'items': {'type': 'integer'}, 'description': '需求 ID 数组'},
+            'actor': ACTOR_PROP,
+        }, ['projectID', 'stories']),
+
+        zt_tool_schema('zentao_unlink_project_story', '解除项目与需求的关联（该项目下该需求的等待/进行中任务会一并取消）。', {
+            'projectID': {'type': 'integer', 'description': '项目 ID'},
+            'storyID': {'type': 'integer', 'description': '需求 ID'},
+            'actor': ACTOR_PROP,
+        }, ['projectID', 'storyID']),
+
+        zt_tool_schema('zentao_subdivide_story', '细分需求：批量创建子需求并把父需求标记为"已细分关闭"。', {
+            'storyID': {'type': 'integer', 'description': '父需求 ID'},
+            'children': {'type': 'array', 'items': {'type': 'object'}, 'description': '子需求数组：[{title, spec?, verify?, module?, pri?, estimate?}]'},
+            'actor': ACTOR_PROP,
+        }, ['storyID', 'children']),
+
+        zt_tool_schema('zentao_link_testtask_cases', '把测试用例加入测试单（同用例重复加入会重置其执行状态）。', {
+            'taskID': {'type': 'integer', 'description': '测试单 ID'},
+            'cases': {'type': 'array', 'items': {'type': 'integer'}, 'description': '用例 ID 数组'},
+            'type': {'type': 'string', 'description': 'all | bybuild（可选，默认 all）'},
+            'actor': ACTOR_PROP,
+        }, ['taskID', 'cases']),
+
+        zt_tool_schema('zentao_list_testruns', '列出测试单中的用例执行记录（获取 runID）。', {
+            'taskID': {'type': 'integer', 'description': '测试单 ID'},
+        }, ['taskID']),
+
+        zt_tool_schema('zentao_record_test_result', '记录用例执行结果（写入测试单执行记录）。', {
+            'runID': {'type': 'integer', 'description': '执行记录 ID（来自 list_testruns）'},
+            'steps': {'type': 'array', 'items': {'type': 'object'}, 'description': '步骤结果数组：[{stepID?, result: pass|fail|blocked|n/a, real?}]（无步骤用例用 stepID=0）'},
+            'actor': ACTOR_PROP,
+        }, ['runID', 'steps']),
 
         zt_tool_schema('zentao_get_git_commits', '读取本地 git 仓库的提交记录（只读，不同步禅道）。返回 hash/作者/邮箱/authorAccount（按本机 GIT_AUTHOR_MAP 映射的禅道账号）/时间/消息/文件列表。', {
             'repoPath': {'type': 'string', 'description': 'git 仓库路径（可选，默认配置的仓库）'},

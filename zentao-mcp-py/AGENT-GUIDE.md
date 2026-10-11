@@ -28,6 +28,12 @@
 
 ## 一、项目
 
+### zentao_get_project 查询项目详情
+```json
+{ "projectID": 9 }
+```
+- 返回项目基本信息 + **关联产品列表**（`products: [{id, name, branch, plan}]`）
+
 ### zentao_create_project 创建项目
 ```json
 { "name": "WenYinOS ZenTaoPMS", "code": "zentao", "begin": "2026-10-11", "end": "2027-12-31",
@@ -37,12 +43,15 @@
 - 可选：`team`（默认同名称）、`days`、`type`（sprint/waterfall/ops）、`acl`（open/private）、`whitelist`
 - 返回 `data.projectID`；创建人自动入团队，项目自带主文档库
 
-### zentao_update_project 编辑项目
+### zentao_update_project 编辑项目 / 关联产品
 ```json
 { "projectID": 9, "desc": "新的项目描述" }
+{ "projectID": 9, "products": [10, 11] }   // 全量设置项目关联的产品
+{ "projectID": 9, "products": [] }          // 清空产品关联
 ```
-- **只传要改的字段**，未传保持原值；产品关联自动保持
-- 坑：`begin/end` 要传就传完整日期
+- **只传要改的字段**，未传保持原值；不传 `products` 时产品关联自动保持
+- `products` 为**全量替换**语义（传入的列表就是关联结果）；增/减关联先 `get_project` 看现值再传调整后的完整列表
+- 产品 ID 不存在会报 403 PRODUCT_NOT_FOUND
 
 ### zentao_project_flow 项目生命周期
 ```json
@@ -214,7 +223,72 @@
 
 ---
 
-## 七、已知边界
+## 七、v0.5.0 新增能力速查
+
+### 计划 / 账号 / 构建
+```json
+{ "product": 10, "title": "v1.0", "begin": "2026-11-01", "end": "2026-12-31" }   // create_plan
+{ "productID": 10 }                                                              // list_plans → [{id, title}]
+{}                                                                               // list_users → [{account, realname, role, dept}]
+{ "projectID": 9, "product": 10, "name": "v1.0-build", "date": "2026-10-11" }    // create_build
+```
+- 需求的 `plan` 字段用 `list_plans` 拿到的 id；指派/团队填写前用 `list_users` 查账号
+
+### 需求评审与细分
+```json
+{ "storyID": 20, "result": "pass", "comment": "评审通过" }                       // review_story（pass/reject/revert/clarify）
+{ "storyID": 20, "result": "reject", "closedReason": "willnotdo", "comment": "不做" }
+{ "storyID": 22, "children": [ {"title": "子需求A", "spec": "..."}, {"title": "子需求B", "verify": "..."} ] }  // subdivide_story
+```
+- 细分 = 批量建子需求 + 父需求标记"已细分关闭"；子需求默认免评审直接生效
+
+### 项目 ↔ 需求关联
+```json
+{ "projectID": 9, "stories": [20, 21] }        // link_project_stories（需求须属于项目已关联的产品）
+{ "projectID": 9, "storyID": 20 }              // unlink_project_story（会取消该项目下该需求的未完成任务）
+```
+- 查看现值：`get_project` 返回 `stories: [{id, title, status, stage}]` 与 `products`
+
+### Bug 确认 / 通用留言
+```json
+{ "bugID": 6, "comment": "确认有效", "assignedTo": "weijie" }                    // confirm_bug
+{ "objectType": "bug", "objectID": 6, "comment": "留言" }                        // add_comment（task/bug/story/doc）
+```
+
+### 发布管理
+```json
+{ "releaseID": 3, "action": "link_story", "stories": [21] }                      // manage_release
+{ "releaseID": 3, "action": "unlink_story", "storyID": 21 }
+{ "releaseID": 3, "action": "link_bug", "bugs": [6] }
+{ "releaseID": 3, "action": "change_status", "status": "terminate" }             // normal/terminate
+```
+
+### 测试执行
+```json
+{ "taskID": 2, "cases": [1, 2] }                                                 // link_testtask_cases（加入测试单）
+{ "taskID": 2 }                                                                  // list_testruns → [{id, case, caseTitle, status}]
+{ "runID": 2, "steps": [ {"stepID": 0, "result": "pass", "real": "通过"} ] }     // record_test_result
+```
+- `record_test_result` 的 `result` 取值 pass/fail/blocked/n/a；无步骤用例用 `stepID: 0`
+
+### 测试用例步骤编辑 / 评审 / 文档
+```json
+{ "caseID": 2, "steps": [ {"type": "item", "desc": "步骤", "expect": "预期"} ] }  // update_testcase（步骤全量替换，变更自动升版本）
+{ "caseID": 2, "result": "pass", "comment": "评审通过" }                          // review_testcase（pass/clarify）
+{ "docID": 1, "content": "新内容", "contentType": "markdown", "comment": "更新" } // update_doc（内容变更自动升版本）
+{ "name": "自定义库", "libType": "custom" }                                       // create_doclib
+```
+
+### 项目复制
+```json
+{ "name": "新项目", "code": "newproj", "begin": "2026-10-11", "end": "2026-12-31",
+  "copyFrom": 9, "products": [10] }   // create_project：复制来源项目团队 + 直接关联产品
+```
+
+### 批量操作建议
+批量场景（批量建任务/Bug 等）请**循环调用单条目工具**（每次调用独立校验、错误定位清晰）；服务端不做批量接口。
+
+## 八、已知边界
 
 - **无删除**：任务/需求/Bug 的删除不在 MCP 范围（保持安全边界，请走界面人工操作）；施工类纠错可用 `delete_effort` 与状态流转工具。
 - **禅道 9.8.3 限制**：Bug 编辑必须能确定所属模块；需求的描述/验收标准按版本存储（读回时 `get_story` 返回当前版本内容）。

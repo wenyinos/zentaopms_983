@@ -209,12 +209,19 @@ class mcp extends control
     public function addComment()
     {
         $this->writeGuard();
-        $mcp    = $this->actor();
-        $taskID = $this->requireTaskID($mcp);
+        $mcp = $this->actor();
+
+        $objectType = trim((string)$mcp->getQueryParam('objectType'));
+        if($objectType === '') $objectType = 'task';
+        if(!in_array($objectType, array('task', 'bug', 'story', 'doc'))) $this->deny('objectType invalid (task|bug|story|doc)');
+
+        $objectID = (int)$mcp->getQueryParam('objectID');
+        if(!$objectID) $objectID = (int)$mcp->getQueryParam('taskID'); /* 兼容旧参数 */
+        if(!$objectID) $this->deny('objectID required');
 
         $comment  = trim((string)$this->post->comment);
-        $actionID = $this->loadModel('action')->create('task', $taskID, 'commented', $comment);
-        $mcp->auditLog('addComment', "task#$taskID");
+        $actionID = $this->loadModel('action')->create($objectType, $objectID, 'commented', $comment);
+        $mcp->auditLog('addComment', "{$objectType}#$objectID");
         $this->ok($actionID ? 'commented' : 'EMPTY_COMMENT');
     }
 
@@ -370,25 +377,103 @@ class mcp extends control
 
     /* ============ 项目 ============ */
 
+    public function getProject()
+    {
+        $mcp       = $this->loadModel('mcp');
+        $projectID = (int)$mcp->getQueryParam('projectID');
+        if(!$projectID) $this->deny('projectID required');
+
+        $projectModel = $this->loadModel('project');
+        $project      = $projectModel->getById($projectID);
+        if(empty($project)) $this->deny('PROJECT_NOT_FOUND');
+
+        $products = array();
+        foreach($projectModel->getProducts($projectID) as $product)
+        {
+            $products[] = array('id' => (int)$product->id, 'name' => $product->name, 'branch' => (int)$product->branch, 'plan' => (int)$product->plan);
+        }
+
+        $stories = array();
+        foreach($this->loadModel('story')->getProjectStories($projectID) as $story)
+        {
+            $stories[] = array('id' => (int)$story->id, 'title' => $story->title, 'status' => $story->status, 'stage' => $story->stage);
+        }
+
+        $this->ok(array(
+            'id'       => (int)$project->id,
+            'name'     => $project->name,
+            'code'     => $project->code,
+            'status'   => $project->status,
+            'begin'    => $project->begin,
+            'end'      => $project->end,
+            'desc'     => $project->desc,
+            'products' => $products,
+            'stories'  => $stories,
+        ));
+    }
+
     public function createProject()
     {
         $this->writeGuard();
         $mcp = $this->actor();
 
-        $this->onlyPost(array('name', 'code', 'begin', 'end', 'team', 'days', 'type', 'acl', 'desc', 'whitelist'));
+        $this->onlyPost(array('name', 'code', 'begin', 'end', 'team', 'days', 'type', 'acl', 'desc', 'whitelist', 'products'));
         if(trim((string)$this->post->name) === '')  $this->deny('name required');
         if(trim((string)$this->post->code) === '')  $this->deny('code required');
         if(trim((string)$this->post->begin) === '') $this->deny('begin required');
         if(trim((string)$this->post->end) === '')   $this->deny('end required');
         if(is_array($this->post->whitelist)) $_POST['whitelist'] = join(',', $this->post->whitelist);
 
-        $projectID = $this->loadModel('project')->create();
+        $copyFrom   = (int)$mcp->getQueryParam('copyFrom');
+        $productIDs = array();
+        if(isset($_POST['products']) and is_string($_POST['products']))
+        {
+            $decoded = json_decode($_POST['products'], true);
+            if(is_array($decoded)) $productIDs = $decoded;
+        }
+        unset($_POST['products']);
+
+        $projectModel = $this->loadModel('project');
+        $projectID    = $projectModel->create(); /* 团队复制由本端点自行处理：原生 create($copyProjectID) 的拷贝未剔除源行主键 id，会触发 zt_team 主键冲突 */
         if(dao::isError()) $this->daoFail();
         if(!$projectID) $this->deny('CREATE_FAILED');
 
+        if($copyFrom)
+        {
+            $members = $this->dao->select('*')->from(TABLE_TEAM)->where('root')->eq($copyFrom)->andWhere('type')->eq('project')->fetchAll();
+            $today   = date('Y-m-d');
+            foreach($members as $member)
+            {
+                if($member->account == $this->app->user->account) continue; /* 创建者已由 create 自动加入 */
+                unset($member->id);
+                $member->root = $projectID;
+                $member->join = $today;
+                $member->type = 'project';
+                $this->dao->insert(TABLE_TEAM)->data($member)->exec();
+            }
+            if(dao::isError()) $this->daoFail();
+        }
+
+        if(!empty($productIDs))
+        {
+            $productModel = $this->loadModel('product');
+            $_POST = array('products' => array(), 'branch' => array());
+            $i = 0;
+            foreach($productIDs as $productID)
+            {
+                $productID = (int)$productID;
+                if(!$productID or empty($productModel->getById($productID))) $this->deny('PRODUCT_NOT_FOUND: ' . $productID);
+                $_POST['products'][$i] = $productID;
+                $_POST['branch'][$i]   = 0;
+                $i++;
+            }
+            $projectModel->updateProducts($projectID);
+            if(dao::isError()) $this->daoFail();
+        }
+
         $this->loadModel('action')->create('project', $projectID, 'opened');
-        $mcp->auditLog('createProject', "project#$projectID name=" . $this->post->name);
-        $this->ok(array('projectID' => (int)$projectID));
+        $mcp->auditLog('createProject', "project#$projectID name=" . $this->post->name . ($copyFrom ? " copyFrom=$copyFrom" : ''));
+        $this->ok(array('projectID' => (int)$projectID, 'copiedFrom' => $copyFrom ? $copyFrom : null));
     }
 
     public function updateProject()
@@ -403,7 +488,7 @@ class mcp extends control
         $project      = $projectModel->getById($projectID);
         if(empty($project)) $this->deny('PROJECT_NOT_FOUND');
 
-        $this->onlyPost(array('name', 'code', 'begin', 'end', 'days', 'type', 'team', 'desc', 'acl', 'whitelist'));
+        $this->onlyPost(array('name', 'code', 'begin', 'end', 'days', 'type', 'team', 'desc', 'acl', 'whitelist', 'products'));
         $current = array('name' => $project->name, 'code' => $project->code, 'begin' => $project->begin, 'end' => $project->end);
         foreach($current as $key => $value)
         {
@@ -411,16 +496,36 @@ class mcp extends control
         }
         if(is_array($this->post->whitelist)) $_POST['whitelist'] = join(',', $this->post->whitelist);
 
-        /* 回填现有产品关联：updateProducts 会先清空关联，不传 products 键即丢关联 */
+        $productsInput = isset($_POST['products']) ? $_POST['products'] : null;
         $_POST['products'] = array();
         $_POST['branch']   = array();
-        $i = 0;
-        foreach($projectModel->getProducts($projectID) as $row)
+        if($productsInput !== null and is_string($productsInput))
         {
-            $_POST['products'][$i] = $row->id;
-            $_POST['branch'][$i]   = $row->branch;
-            if(!empty($row->plan)) $_POST['plans'][$row->id] = $row->plan;
-            $i++;
+            /* 显式传 products：全量替换关联（空数组 [] 表示清空） */
+            $productIDs = json_decode($productsInput, true);
+            if(!is_array($productIDs)) $this->deny('products must be a JSON array of product IDs');
+            $productModel = $this->loadModel('product');
+            $i = 0;
+            foreach($productIDs as $productID)
+            {
+                $productID = (int)$productID;
+                if(!$productID or empty($productModel->getById($productID))) $this->deny('PRODUCT_NOT_FOUND: ' . $productID);
+                $_POST['products'][$i] = $productID;
+                $_POST['branch'][$i]   = 0;
+                $i++;
+            }
+        }
+        else
+        {
+            /* 未传 products：回填现有产品关联，避免 updateProducts 清空关联 */
+            $i = 0;
+            foreach($projectModel->getProducts($projectID) as $row)
+            {
+                $_POST['products'][$i] = $row->id;
+                $_POST['branch'][$i]   = $row->branch;
+                if(!empty($row->plan)) $_POST['plans'][$row->id] = $row->plan;
+                $i++;
+            }
         }
 
         $changes = $projectModel->update($projectID);
@@ -433,7 +538,7 @@ class mcp extends control
             $this->loadModel('action')->logHistory($actionID, $changes);
         }
         $mcp->auditLog('updateProject', "project#$projectID");
-        $this->ok($changes ? 'updated' : 'nochange');
+        $this->ok(($changes or $productsInput !== null) ? 'updated' : 'nochange');
     }
 
     public function projectFlow()
@@ -963,9 +1068,21 @@ class mcp extends control
         $case      = $caseModel->getById($caseID);
         if(empty($case)) $this->deny('CASE_NOT_FOUND');
 
-        $this->onlyPost(array('title', 'type', 'pri', 'stage', 'precondition', 'keywords', 'story', 'module', 'comment'));
+        $this->onlyPost(array('title', 'type', 'pri', 'stage', 'precondition', 'keywords', 'story', 'module', 'comment', 'steps'));
         if(!isset($_POST['title']) or trim((string)$_POST['title']) === '') $_POST['title'] = $case->title;
         if(!isset($_POST['type']) or trim((string)$_POST['type']) === '')   $_POST['type']  = $case->type;
+
+        $steps = json_decode((string)$this->post->steps, true);
+        unset($_POST['steps']);
+        if(is_array($steps) and !empty($steps))
+        {
+            foreach($steps as $i => $step)
+            {
+                $_POST['steps'][$i]    = isset($step['desc']) ? (string)$step['desc'] : '';
+                $_POST['expects'][$i]  = isset($step['expect']) ? (string)$step['expect'] : '';
+                $_POST['stepType'][$i] = isset($step['type']) ? (string)$step['type'] : 'item';
+            }
+        }
 
         $comment = (string)$this->post->comment;
         unset($_POST['comment']);
@@ -1022,6 +1139,469 @@ class mcp extends control
         $this->loadModel('action')->create('doc', $docID, 'Created');
         $mcp->auditLog('createDoc', "doc#$docID title=" . $this->post->title);
         $this->ok(array('docID' => $docID));
+    }
+
+    /* ============ 计划 / 账号 / 构建 ============ */
+
+    public function createPlan()
+    {
+        $this->writeGuard();
+        $mcp = $this->actor();
+
+        $this->onlyPost(array('product', 'branch', 'title', 'begin', 'end', 'future', 'desc'));
+        if(trim((string)$this->post->product) === '') $this->deny('product required');
+        if(trim((string)$this->post->title) === '')   $this->deny('title required');
+
+        $planID = $this->loadModel('productplan')->create();
+        if(dao::isError()) $this->daoFail();
+        if(!$planID) $this->deny('CREATE_FAILED');
+
+        $this->loadModel('action')->create('productplan', $planID, 'opened');
+        $mcp->auditLog('createPlan', "plan#$planID title=" . $this->post->title);
+        $this->ok(array('planID' => (int)$planID));
+    }
+
+    public function listPlans()
+    {
+        $mcp       = $this->loadModel('mcp');
+        $productID = (int)$mcp->getQueryParam('productID');
+        if(!$productID) $this->deny('productID required');
+
+        $pairs  = $this->loadModel('productplan')->getPairs($productID);
+        $result = array();
+        foreach($pairs as $planID => $title)
+        {
+            if(!$planID) continue;
+            $result[] = array('id' => (int)$planID, 'title' => $title);
+        }
+        $this->ok($result);
+    }
+
+    public function listUsers()
+    {
+        $users  = $this->loadModel('user')->getList();
+        $result = array();
+        foreach($users as $user)
+        {
+            $result[] = array('id' => (int)$user->id, 'account' => $user->account, 'realname' => $user->realname, 'role' => isset($user->role) ? $user->role : '', 'dept' => (int)$user->dept);
+        }
+        $this->ok($result);
+    }
+
+    public function createBuild()
+    {
+        $this->writeGuard();
+        $mcp = $this->actor();
+
+        $projectID = (int)$mcp->getQueryParam('projectID');
+        if(!$projectID) $this->deny('projectID required');
+
+        $this->onlyPost(array('product', 'branch', 'name', 'builder', 'date', 'desc', 'scmPath', 'filePath'));
+        if(trim((string)$this->post->product) === '') $this->deny('product required');
+        if(trim((string)$this->post->name) === '')    $this->deny('name required');
+        if(trim((string)$this->post->builder) === '') $_POST['builder'] = $this->app->user->account;
+        if(trim((string)$this->post->date) === '')    $_POST['date']    = date('Y-m-d');
+
+        $buildID = $this->loadModel('build')->create($projectID);
+        if(dao::isError()) $this->daoFail();
+        if(!$buildID) $this->deny('CREATE_FAILED');
+
+        $this->loadModel('action')->create('build', $buildID, 'opened');
+        $mcp->auditLog('createBuild', "build#$buildID name=" . $this->post->name);
+        $this->ok(array('buildID' => (int)$buildID));
+    }
+
+    public function updateDoc()
+    {
+        $this->writeGuard();
+        $mcp = $this->actor();
+
+        $docID = (int)$mcp->getQueryParam('docID');
+        if(!$docID) $this->deny('docID required');
+
+        $docModel = $this->loadModel('doc');
+        $doc      = $docModel->getByID($docID);
+        if(empty($doc)) $this->deny('DOC_NOT_FOUND');
+
+        $this->onlyPost(array('title', 'content', 'contentType', 'type', 'url', 'keywords', 'module', 'acl', 'users', 'groups', 'comment'));
+        if(!isset($_POST['title']) or trim((string)$_POST['title']) === '') $_POST['title'] = $doc->title;
+        if(!isset($_POST['content']) or (string)$_POST['content'] === '')  unset($_POST['content']);
+        $_POST['lib'] = $doc->lib; /* 必带 lib，否则 model 会把 product/project 清空 */
+        $_POST['contentType'] = ((string)$this->post->contentType === 'markdown') ? 'markdown' : 'html';
+        if(is_array($this->post->users))  $_POST['users']  = join(',', $this->post->users);
+        if(is_array($this->post->groups)) $_POST['groups'] = join(',', $this->post->groups);
+
+        $comment = (string)$this->post->comment;
+        unset($_POST['comment']);
+
+        $result = $docModel->update($docID);
+        if(dao::isError()) $this->daoFail();
+
+        $changes  = (is_array($result) and !empty($result['changes'])) ? $result['changes'] : array();
+        $action   = !empty($changes) ? 'Edited' : 'Commented';
+        $actionID = $this->loadModel('action')->create('doc', $docID, $action, $comment);
+        if(!empty($changes)) $this->loadModel('action')->logHistory($actionID, $changes);
+        $mcp->auditLog('updateDoc', "doc#$docID");
+        $this->ok(!empty($changes) ? 'updated' : 'nochange');
+    }
+
+    public function createDoclib()
+    {
+        $this->writeGuard();
+        $mcp = $this->actor();
+
+        $this->onlyPost(array('name', 'libType', 'product', 'project', 'acl', 'groups', 'users'));
+        if(trim((string)$this->post->name) === '') $this->deny('name required');
+        if(is_array($this->post->users))  $_POST['users']  = join(',', $this->post->users);
+        if(is_array($this->post->groups)) $_POST['groups'] = join(',', $this->post->groups);
+
+        $libID = $this->loadModel('doc')->createLib();
+        if(dao::isError()) $this->daoFail();
+        if(!$libID) $this->deny('CREATE_FAILED');
+
+        $this->loadModel('action')->create('docLib', $libID, 'Created');
+        $mcp->auditLog('createDoclib', "doclib#$libID name=" . $this->post->name);
+        $this->ok(array('libID' => (int)$libID));
+    }
+
+    /* ============ 评审 / 确认 ============ */
+
+    public function reviewStory()
+    {
+        $this->writeGuard();
+        $mcp = $this->actor();
+
+        $storyID = (int)$mcp->getQueryParam('storyID');
+        if(!$storyID) $this->deny('storyID required');
+
+        $storyModel = $this->loadModel('story');
+        $story      = $storyModel->getById($storyID);
+        if(empty($story)) $this->deny('STORY_NOT_FOUND');
+
+        $this->onlyPost(array('result', 'comment', 'reviewedBy', 'assignedTo', 'closedReason', 'duplicateStory', 'childStories', 'preVersion'));
+        $reviewResult = trim((string)$this->post->result);
+        if(!in_array($reviewResult, array('pass', 'reject', 'revert', 'clarify'))) $this->deny('result required (pass|reject|revert|clarify)');
+        if(!isset($_POST['assignedTo']) or $_POST['assignedTo'] === '') $_POST['assignedTo'] = $story->assignedTo ? $story->assignedTo : $story->openedBy;
+        if(!isset($_POST['reviewedBy']) or $_POST['reviewedBy'] === '') $_POST['reviewedBy'] = $this->app->user->account;
+        if(is_array($this->post->reviewedBy)) $_POST['reviewedBy'] = join(',', $this->post->reviewedBy);
+
+        $changes = $storyModel->review($storyID);
+        if(dao::isError()) $this->daoFail();
+
+        $actionID = $this->loadModel('action')->create('story', $storyID, 'Reviewed', (string)$this->post->comment, ucfirst($reviewResult));
+        if($changes) $this->loadModel('action')->logHistory($actionID, $changes);
+        if($reviewResult === 'reject') $this->loadModel('action')->create('story', $storyID, 'Closed', '', ucfirst((string)$this->post->closedReason));
+        $mcp->auditLog('reviewStory', "story#$storyID result=$reviewResult");
+        $this->ok($reviewResult);
+    }
+
+    public function confirmBug()
+    {
+        $this->writeGuard();
+        $mcp = $this->actor();
+
+        $bugID = (int)$mcp->getQueryParam('bugID');
+        if(!$bugID) $this->deny('bugID required');
+
+        $bugModel = $this->loadModel('bug');
+        if(empty($bugModel->getById($bugID))) $this->deny('BUG_NOT_FOUND');
+
+        $this->onlyPost(array('assignedTo', 'type', 'pri', 'mailto', 'comment'));
+        if(is_array($this->post->mailto)) $_POST['mailto'] = join(',', $this->post->mailto);
+
+        $comment = (string)$this->post->comment;
+        unset($_POST['comment']);
+
+        $changes  = $bugModel->confirm($bugID);
+        if(dao::isError()) $this->daoFail();
+        $actionID = $this->loadModel('action')->create('bug', $bugID, 'bugConfirmed', $comment);
+        if($changes) $this->loadModel('action')->logHistory($actionID, $changes);
+        $mcp->auditLog('confirmBug', "bug#$bugID");
+        $this->ok($changes ? 'confirmed' : 'nochange');
+    }
+
+    public function reviewTestcase()
+    {
+        $this->writeGuard();
+        $mcp = $this->actor();
+
+        $caseID = (int)$mcp->getQueryParam('caseID');
+        if(!$caseID) $this->deny('caseID required');
+
+        $caseModel = $this->loadModel('testcase');
+        if(empty($caseModel->getById($caseID))) $this->deny('CASE_NOT_FOUND');
+
+        $this->onlyPost(array('result', 'comment', 'reviewedBy'));
+        $reviewResult = trim((string)$this->post->result);
+        if(!in_array($reviewResult, array('pass', 'clarify'))) $this->deny('result required (pass|clarify)');
+        if(!isset($_POST['reviewedBy']) or $_POST['reviewedBy'] === '') $_POST['reviewedBy'] = $this->app->user->account;
+        if(is_array($this->post->reviewedBy)) $_POST['reviewedBy'] = join(',', $this->post->reviewedBy);
+
+        $caseModel->review($caseID);
+        if(dao::isError()) $this->daoFail();
+
+        $this->loadModel('action')->create('case', $caseID, 'Reviewed', (string)$this->post->comment, ucfirst($reviewResult));
+        $mcp->auditLog('reviewTestcase', "case#$caseID result=$reviewResult");
+        $this->ok($reviewResult);
+    }
+
+    /* ============ 关联管理（发布 / 测试单 / 项目需求 / 细分） ============ */
+
+    public function manageRelease()
+    {
+        $this->writeGuard();
+        $mcp = $this->actor();
+
+        $releaseID = (int)$mcp->getQueryParam('releaseID');
+        if(!$releaseID) $this->deny('releaseID required');
+        $relAction = (string)$mcp->getQueryParam('action');
+        if(!in_array($relAction, array('link_story', 'unlink_story', 'link_bug', 'unlink_bug', 'change_status'))) $this->deny('action invalid (link_story|unlink_story|link_bug|unlink_bug|change_status)');
+
+        $releaseModel = $this->loadModel('release');
+        if(empty($releaseModel->getByID($releaseID))) $this->deny('RELEASE_NOT_FOUND');
+
+        if($relAction === 'link_story' or $relAction === 'link_bug')
+        {
+            $key = ($relAction === 'link_story') ? 'stories' : 'bugs';
+            $this->onlyPost(array($key));
+            $ids = json_decode((string)$this->post->$key, true);
+            if(!is_array($ids) or empty($ids)) $this->deny($key . ' must be a non-empty JSON array');
+
+            $_POST[$key] = array();
+            foreach($ids as $id) $_POST[$key][] = (int)$id;
+
+            if($relAction === 'link_story') $releaseModel->linkStory($releaseID);
+            else                            $releaseModel->linkBug($releaseID);
+            if(dao::isError()) $this->daoFail();
+            $mcp->auditLog('manageRelease', "release#$releaseID $relAction count=" . count($ids));
+            $this->ok('linked');
+        }
+        elseif($relAction === 'unlink_story' or $relAction === 'unlink_bug')
+        {
+            $this->onlyPost(array('storyID', 'bugID', 'bugType'));
+            if($relAction === 'unlink_story')
+            {
+                $itemID = (int)$this->post->storyID;
+                if(!$itemID) $this->deny('storyID required');
+                $releaseModel->unlinkStory($releaseID, $itemID);
+            }
+            else
+            {
+                $itemID = (int)$this->post->bugID;
+                if(!$itemID) $this->deny('bugID required');
+                $bugType = trim((string)$this->post->bugType);
+                $releaseModel->unlinkBug($releaseID, $itemID, $bugType === '' ? 'bug' : $bugType);
+            }
+            if(dao::isError()) $this->daoFail();
+            $mcp->auditLog('manageRelease', "release#$releaseID $relAction item=$itemID");
+            $this->ok('unlinked');
+        }
+        else
+        {
+            $this->onlyPost(array('status'));
+            $status = trim((string)$this->post->status);
+            if(!in_array($status, array('normal', 'terminate'))) $this->deny('status invalid (normal|terminate)');
+            $releaseModel->changeStatus($releaseID, $status);
+            if(dao::isError()) $this->daoFail();
+            $this->loadModel('action')->create('release', $releaseID, 'changestatus', '', $status);
+            $mcp->auditLog('manageRelease', "release#$releaseID status=$status");
+            $this->ok($status);
+        }
+    }
+
+    public function linkProjectStories()
+    {
+        $this->writeGuard();
+        $mcp = $this->actor();
+
+        $projectID = (int)$mcp->getQueryParam('projectID');
+        if(!$projectID) $this->deny('projectID required');
+
+        $projectModel = $this->loadModel('project');
+        if(empty($projectModel->getById($projectID))) $this->deny('PROJECT_NOT_FOUND');
+
+        $storyIDs = json_decode((string)$this->post->stories, true);
+        if(!is_array($storyIDs) or empty($storyIDs)) $this->deny('stories must be a non-empty JSON array of story IDs');
+
+        $storyModel = $this->loadModel('story');
+        $_POST = array('stories' => array(), 'products' => array());
+        foreach($storyIDs as $storyID)
+        {
+            $storyID = (int)$storyID;
+            $story   = $storyModel->getById($storyID);
+            if(empty($story)) $this->deny('STORY_NOT_FOUND: ' . $storyID);
+            $_POST['stories'][] = $storyID;
+            $_POST['products'][$storyID] = (int)$story->product;
+        }
+
+        $projectModel->linkStory($projectID);
+        if(dao::isError()) $this->daoFail();
+        $mcp->auditLog('linkProjectStories', "project#$projectID stories=" . join(',', $_POST['stories']));
+        $this->ok('linked');
+    }
+
+    public function unlinkProjectStory()
+    {
+        $this->writeGuard();
+        $mcp = $this->actor();
+
+        $projectID = (int)$mcp->getQueryParam('projectID');
+        if(!$projectID) $this->deny('projectID required');
+        $storyID = (int)$mcp->getQueryParam('storyID');
+        if(!$storyID) $this->deny('storyID required');
+
+        $projectModel = $this->loadModel('project');
+        if(empty($projectModel->getById($projectID))) $this->deny('PROJECT_NOT_FOUND');
+
+        $projectModel->unlinkStory($projectID, $storyID);
+        if(dao::isError()) $this->daoFail();
+        $mcp->auditLog('unlinkProjectStory', "project#$projectID story#$storyID");
+        $this->ok('unlinked');
+    }
+
+    public function subdivideStory()
+    {
+        $this->writeGuard();
+        $mcp = $this->actor();
+
+        $storyID = (int)$mcp->getQueryParam('storyID');
+        if(!$storyID) $this->deny('storyID required');
+
+        $storyModel = $this->loadModel('story');
+        $parent     = $storyModel->getById($storyID);
+        if(empty($parent)) $this->deny('STORY_NOT_FOUND');
+
+        $children = json_decode((string)$this->post->children, true);
+        if(!is_array($children) or empty($children)) $this->deny('children must be a non-empty JSON array of {title, spec?, verify?, module?, pri?, estimate?}');
+
+        $childIDs = array();
+        foreach($children as $child)
+        {
+            if(!is_array($child) or empty($child['title'])) $this->deny('children[].title required');
+
+            $_POST = array('product' => (int)$parent->product, 'title' => (string)$child['title'], 'needNotReview' => 1);
+            if(isset($child['spec']))     $_POST['spec']     = (string)$child['spec'];
+            if(isset($child['verify']))   $_POST['verify']   = (string)$child['verify'];
+            if(!empty($child['module']))  $_POST['module']   = (int)$child['module'];
+            if(isset($child['pri']))      $_POST['pri']      = (int)$child['pri'];
+            if(isset($child['estimate'])) $_POST['estimate'] = $child['estimate'];
+
+            $result = $storyModel->create(0, 0, '');
+            if(dao::isError()) $this->daoFail();
+            if(!is_array($result) or empty($result['id'])) $this->deny('CREATE_FAILED: ' . $child['title']);
+
+            $childIDs[] = (int)$result['id'];
+            $this->loadModel('action')->create('story', $result['id'], 'Opened');
+        }
+
+        $mails = array();
+        foreach($childIDs as $childID)
+        {
+            $item          = new stdclass();
+            $item->storyID = $childID;
+            $mails[]       = $item;
+        }
+        /* subdivide 内部依赖 $this->action 懒加载属性（原生流程由 batchCreate 顺带挂载），此处显式挂载 */
+        $storyModel->loadModel('action');
+        $storyModel->subdivide($storyID, $mails);
+        if(dao::isError()) $this->daoFail();
+
+        $mcp->auditLog('subdivideStory', "story#$storyID children=" . join(',', $childIDs));
+        $this->ok(array('parentID' => $storyID, 'childIDs' => $childIDs));
+    }
+
+    public function linkTesttaskCases()
+    {
+        $this->writeGuard();
+        $mcp = $this->actor();
+
+        $taskID = (int)$mcp->getQueryParam('taskID');
+        if(!$taskID) $this->deny('taskID required');
+
+        $testtaskModel = $this->loadModel('testtask');
+        if(empty($testtaskModel->getById($taskID))) $this->deny('TESTTASK_NOT_FOUND');
+
+        $cases = json_decode((string)$this->post->cases, true);
+        if(!is_array($cases) or empty($cases)) $this->deny('cases must be a non-empty JSON array of case IDs');
+
+        $caseModel = $this->loadModel('testcase');
+        $_POST = array('cases' => array(), 'versions' => array());
+        foreach($cases as $caseID)
+        {
+            $caseID = (int)$caseID;
+            $case   = $caseModel->getById($caseID);
+            if(empty($case)) $this->deny('CASE_NOT_FOUND: ' . $caseID);
+            $_POST['cases'][] = $caseID;
+            $_POST['versions'][$caseID] = (int)$case->version;
+        }
+
+        $type = trim((string)$mcp->getQueryParam('type'));
+        if($type === '') $type = 'all';
+
+        $testtaskModel->linkCase($taskID, $type);
+        if(dao::isError()) $this->daoFail();
+        $mcp->auditLog('linkTesttaskCases', "testtask#$taskID cases=" . count($cases));
+        $this->ok('linked');
+    }
+
+    public function listTestruns()
+    {
+        $mcp    = $this->loadModel('mcp');
+        $taskID = (int)$mcp->getQueryParam('taskID');
+        if(!$taskID) $this->deny('taskID required');
+
+        $runs = $this->dao->select('t1.id, t1.case, t1.version, t1.status, t2.title AS caseTitle')
+            ->from(TABLE_TESTRUN)->alias('t1')
+            ->leftJoin(TABLE_CASE)->alias('t2')->on('t1.case = t2.id')
+            ->where('t1.task')->eq($taskID)
+            ->orderBy('t1.id_desc')
+            ->fetchAll();
+
+        $result = array();
+        foreach($runs as $run)
+        {
+            $result[] = array('id' => (int)$run->id, 'case' => (int)$run->case, 'caseTitle' => $run->caseTitle, 'version' => (int)$run->version, 'status' => $run->status);
+        }
+        $this->ok($result);
+    }
+
+    public function recordTestResult()
+    {
+        $this->writeGuard();
+        $mcp = $this->actor();
+
+        $runID = (int)$mcp->getQueryParam('runID');
+        if(!$runID) $this->deny('runID required');
+
+        $run = $this->dao->select('id, `case`, version')->from(TABLE_TESTRUN)->where('id')->eq($runID)->fetch();
+        if(empty($run)) $this->deny('RUN_NOT_FOUND');
+
+        $steps = json_decode((string)$this->post->steps, true);
+        if(!is_array($steps) or empty($steps)) $this->deny('steps must be a non-empty JSON array of {stepID?, result, real?}');
+
+        $_POST = array('case' => (int)$run->case, 'version' => (int)$run->version, 'steps' => array(), 'reals' => array());
+        foreach($steps as $step)
+        {
+            $stepID = isset($step['stepID']) ? (int)$step['stepID'] : 0;
+            $_POST['steps'][$stepID] = isset($step['result']) ? (string)$step['result'] : 'pass';
+            $_POST['reals'][$stepID] = isset($step['real']) ? (string)$step['real'] : '';
+        }
+
+        /* 整体结果跟随首个非 pass/n/a 的步骤（与原生一致） */
+        $_POST['result'] = 'pass';
+        foreach($_POST['steps'] as $stepResult)
+        {
+            if($stepResult !== 'pass' and $stepResult !== 'n/a')
+            {
+                $_POST['result'] = $stepResult;
+                break;
+            }
+        }
+
+        $resultID = $this->loadModel('testtask')->createResult($runID);
+        if(dao::isError()) $this->daoFail();
+        $mcp->auditLog('recordTestResult', "run#$runID result=" . $_POST['result']);
+        $this->ok(is_numeric($resultID) ? array('resultID' => (int)$resultID) : 'recorded');
     }
 
     /* ============ 提交同步 ============ */
