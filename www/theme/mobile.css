@@ -1,19 +1,43 @@
 /* wenyinos 禅道移动端适配（≤767px；viewport 由 header 声明，无需额外处理） */
+/* UI 10.1：顶栏选择器由 #topbar/#mainmenu/#modulemenu 迁移到 #mainHeader/#subHeader/#navbar/#userNav */
 @media (max-width: 767px)
 {
     /* ---- 基础防溢出 ---- */
     img, canvas, video { max-width: 100%; height: auto; }
     pre, code { white-space: pre-wrap; word-break: break-all; }
+    /* 10.1 皮肤为桌面宽屏设计（min-width:1280px），窄屏下必须解除 */
+    #header, #header + #main, #main { min-width: 0 !important; }
+    #mainHeader .container, #subHeader .container, #footer .container { max-width: 100% !important; }
+    #wrap, .outer { min-width: 0 !important; }
 
-    /* ---- 顶栏：紧凑 ---- */
-    #topbar { padding: 4px 8px; }
-    #topbar #companyname { font-size: 13px; line-height: 1.35; white-space: normal; }
-    #topnav { font-size: 12px; line-height: 1.8; }
-    #topnav a { padding: 0 4px; }
+    /* ---- 顶栏（10.1 骨架）：纵向堆叠、可横滑 ---- */
+    #mainHeader { min-height: 0; padding-bottom: 8px; }
+    #mainHeader .container { padding-left: 8px; padding-right: 8px; display: block; }
+    #mainHeader #heading { position: static; text-align: center; padding-top: 8px; }
+    #mainHeader #heading h1 { float: none; max-width: none; }
+    #mainHeader #companyname { font-size: 15px; line-height: 1.35; white-space: normal; }
+    #mainHeader #navbar { height: auto; white-space: nowrap; overflow-x: auto; -webkit-overflow-scrolling: touch; margin-top: 6px; text-align: left; }
+    #mainHeader #navbar .nav { display: block; white-space: nowrap; }
+    #mainHeader #navbar .nav > li { display: inline-block; float: none; }
+    #mainHeader #navbar .nav > li > a { padding: 6px 8px; font-size: 13px; line-height: 20px; }
+    #mainHeader #toolbar { position: static; margin-top: 6px; padding: 0; text-align: right; }
+    #mainHeader #extraNav { display: none; }
+    #mainHeader #userMenu { position: static; display: block; }
+    #mainHeader #searchbox { width: auto; position: static; display: block; margin-bottom: 6px; }
+    #mainHeader #userNav { float: none; text-align: right; display: block; }
 
-    /* ---- 主导航 / 二级导航：横向滚动、不换行 ---- */
-    #mainmenu, #modulemenu { white-space: nowrap; overflow-x: auto; -webkit-overflow-scrolling: touch; padding-left: 4px; padding-right: 4px; }
-    #mainmenu > a, #mainmenu .nav > li > a, #modulemenu > a, #modulemenu .nav > li > a { padding: 6px 8px; font-size: 13px; }
+    /* ---- 二级导航（10.1 骨架）：横向滚动、不换行 ---- */
+    #subHeader { min-height: 0; }
+    #subHeader .container { padding-left: 8px; padding-right: 8px; }
+    #subHeader #pageNav, #subHeader #pageActions { float: none; }
+    #subHeader #subNavbar { height: auto; white-space: nowrap; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    #subHeader #subNavbar .nav { display: block; white-space: nowrap; }
+    #subHeader #subNavbar .nav > li { display: inline-block; float: none; }
+    #subHeader #subNavbar .nav > li > a { padding: 6px 8px; font-size: 13px; line-height: 20px; }
+
+    /* ---- 旧骨架残留（兼容层：#titlebar/#featurebar 等）同样横向滚动 ---- */
+    #modulemenu { white-space: nowrap; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    #modulemenu .nav > li > a { padding: 6px 8px; font-size: 13px; }
 
     /* ---- 系统提示条：允许折行（长路径等） ---- */
     .alert { white-space: normal; overflow-wrap: anywhere; max-width: 100%; }
