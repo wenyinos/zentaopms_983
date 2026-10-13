@@ -100,10 +100,34 @@ class projectModel extends model
         }
 
         $selectHtml = $this->select($projects, $projectID, $moduleName, $methodName, $extra);
+
+        /* UI 10.1：项目切换器放入子导航区（modulePageNav），不再注入菜单链接。
+           旧实现把切换器 HTML 塞进 list 菜单项的 %s，导致渲染出 <a id='currentItem'...> 这样的坏链接。 */
+        $label = $this->lang->project->index;
+        if($moduleName == 'project' && $methodName == 'all')    $label = $this->lang->project->allProjects;
+        if($moduleName == 'project' && $methodName == 'create') $label = $this->lang->project->create;
+
+        $projectIndex = '<div class="btn-group angle-btn"><div class="btn-group"><button data-toggle="dropdown" type="button" class="btn">' . $label . ' <span class="caret"></span></button>';
+        $projectIndex .= '<ul class="dropdown-menu">';
+        if(common::hasPriv('project', 'index'))  $projectIndex .= '<li>' . html::a(helper::createLink('project', 'index', 'locate=no'), '<i class="icon icon-home"></i> ' . $this->lang->project->index) . '</li>';
+        if(common::hasPriv('project', 'all'))    $projectIndex .= '<li>' . html::a(helper::createLink('project', 'all', 'status=all'), '<i class="icon icon-cards-view"></i> ' . $this->lang->project->allProjects) . '</li>';
+        if(common::hasPriv('project', 'create')) $projectIndex .= '<li>' . html::a(helper::createLink('project', 'create'), '<i class="icon icon-plus"></i> ' . $this->lang->project->create) . '</li>';
+        $projectIndex .= '</ul></div></div>';
+        $projectIndex .= $selectHtml;
+
+        $this->lang->modulePageNav = $projectIndex;
+        if($moduleName != 'project') $this->lang->$moduleName->dividerMenu = $this->lang->project->dividerMenu;
+
         foreach($this->lang->project->menu as $key => $menu)
         {
-            $replace = $key == 'list' ? $selectHtml : $projectID;
-            common::setMenuVars($this->lang->project->menu, $key,  $replace);
+            common::setMenuVars($this->lang->project->menu, $key, $projectID);
+
+            /* Replace for dropdown submenu. */
+            if(isset($this->lang->project->subMenu->$key))
+            {
+                $subMenu = common::createSubMenu($this->lang->project->subMenu->$key, $projectID);
+                if(!empty($subMenu)) $this->lang->project->menu->{$key}['subMenu'] = $subMenu;
+            }
         }
     }
 

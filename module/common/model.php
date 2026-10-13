@@ -301,6 +301,9 @@ class commonModel extends model
      */
     public static function createSubMenu($items, $replace)
     {
+        /* PHP 8：vsprintf 第二参数必须为数组（旧版可传标量）。 */
+        $replace = is_array($replace) ? $replace : array($replace);
+
         $subMenu = array();
         foreach($items as $subMenuKey => $subMenuLink)
         {
