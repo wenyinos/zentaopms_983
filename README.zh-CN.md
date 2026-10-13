@@ -27,19 +27,45 @@ WenYinOS 禅道项目管理系统基于经典 ZenTao 单体架构，采用 PHP +
 - 服务端：[`module/mcp/`](./module/mcp/) — 自包含签名鉴权端点（双层 MD5 签名 + 时效校验 ±300 秒，不经用户会话）。密钥两级：团队共享密钥 + 各账号在禅道「我的地盘 → MCP密钥」自助生成的个人密钥（写操作须用本人密钥验签，无法冒用他人账号）。每台客户端自带账号与 git 作者映射（署名随人走）；仓库同步点与提交日志组装在服务端。可选 `MCP_STRICT` / `MCP_READONLY` / `MCP_IPS` 加固。
 - 接入配置与完整工具清单（63 个）：见 [`zentao-mcp-py/README.md`](./zentao-mcp-py/README.md)、[`zentao-mcp-py/AGENT-GUIDE.md`](./zentao-mcp-py/AGENT-GUIDE.md) 与 [`AGENTS.md`](./AGENTS.md)。
 
-## 快速启动
-### 1. 启动本地 Web 服务
-```bash
-php -S 127.0.0.1:8080 -t www
-```
+## 安装（官方 install.php 向导）
 
-### 2. 初始化 CLI 辅助脚本（可选）
-```bash
-bash bin/init.sh /usr/bin/php http://127.0.0.1:8080
-```
+**无需导入 SQL**——内置向导会自动创建数据库、数据表、公司与管理账号。已在全新环境端到端实测通过（安装后 `后台 → checkdb` 数据库检查 54/54 表全部 OK）。
 
-### 3. 通过 CLI 执行模块动作（示例）
+### 环境要求
+- PHP ≥ 8.4（安装向导强制检测，实测 8.5），需扩展：`pdo`、`pdo_mysql`、`json`、`openssl`、`mbstring`、`zlib`、`curl`、`filter`、`iconv`
+- MySQL 5.x（utf8/utf8mb4，实测 5.7）；数据库账号需具备建库权限（也可先手工创建空库）
+- Web 服务器：Nginx + php-fpm、Apache，或快速试用时的 PHP 内置服务器
+
+### 安装步骤
+1. 将 Web 服务器站点根目录指向 `www/`。快速本地试用可直接：
+   ```bash
+   php -S 127.0.0.1:8080 -t www
+   ```
+2. 确保以下目录对 PHP 进程可写：`config/`、`tmp/`、`www/data/`
+   ```bash
+   chmod -R 777 tmp www/data config    # 生产环境请收紧为 php-fpm 运行用户
+   ```
+3. 浏览器打开 `http://<你的地址>/install.php`，按向导 5 步完成：
+   1. **欢迎页**——点「开始安装」
+   2. **许可协议**——同意 ZPL 1.2 后继续
+   3. **环境检测**——各项应全部通过（PHP 版本 / PDO / 扩展 / `tmp` 与 `www/data` 可写）
+   4. **数据库设置**——填写主机、端口、账号、密码、数据库名与表前缀，向导自动建库建表；「清空现有数据」仅在覆盖重装时勾选
+   5. **保存配置与管理员**——向导自动写入 `config/my.php`（页面会提示保存路径，请确认写入成功），随后填写公司名、管理员账号与密码（可选导入 demo 数据）
+4. 显示「安装成功」后，用刚创建的管理员账号登录。
+5. **安全收尾——从站点根目录删除安装文件：**
+   ```bash
+   rm www/install.php www/upgrade.php
+   ```
+6. 可选检查：访问 `后台 → checkdb`（数据库一致性检查），各表应全部 OK。
+
+> 说明
+> - 向导会生成 `config/my.php`（含数据库口令），该文件已 gitignore，不要提交真实凭据。
+> - 如需启用统一认证（SSO）与 MCP 模块的扩展钩子，请在 `config/my.php` 中追加 `$config->framework->extensionLevel = 1;`（见上文对应章节）。
+> - 通过 Web 服务器访问时，先配置下方伪静态规则再使用简洁 URL。
+
+## CLI 辅助脚本（可选）
 ```bash
+bash bin/init.sh /usr/bin/php http://127.0.0.1:8080    # 生成 bin/backup.sh、bin/checkdb.sh 等
 php bin/ztcli 'http://127.0.0.1:8080/index.php?m=admin&f=checkdb'
 ```
 

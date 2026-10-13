@@ -27,19 +27,45 @@ This build ships an MCP (Model Context Protocol) service that lets AI agents mai
 - Server side: [`module/mcp/`](./module/mcp/) — self-contained signed endpoints (double MD5 + timestamp freshness ±300s, no user session). Two-tier keys: per-account personal keys are generated in-app at **My → MCP Key** ([`module/my/ext/`](./module/my/ext/), stored in `zt_config`), so write actions cannot impersonate another account; the team shared `MCP_SECRET` covers reads and not-yet-keyed accounts (transition mode). Each client keeps its own account and git-author mapping for attribution; per-repo sync state and commit-log assembly live server-side. Optional `MCP_STRICT` / `MCP_READONLY` / `MCP_IPS` hardening.
 - Setup and the full tool list (63 tools): see [`zentao-mcp-py/README.md`](./zentao-mcp-py/README.md), [`zentao-mcp-py/AGENT-GUIDE.md`](./zentao-mcp-py/AGENT-GUIDE.md) and [`AGENTS.md`](./AGENTS.md).
 
-## Quick Start
-### 1. Run a local web server
-```bash
-php -S 127.0.0.1:8080 -t www
-```
+## Installation (via official install.php wizard)
 
-### 2. Initialize CLI helper scripts (optional)
-```bash
-bash bin/init.sh /usr/bin/php http://127.0.0.1:8080
-```
+No SQL import is needed — the built-in wizard creates the database, tables, company and admin account. Verified end-to-end on a clean deployment (54/54 tables reported OK by `admin → checkdb` afterwards).
 
-### 3. Run a module action from CLI (example)
+### Prerequisites
+- PHP ≥ 8.4 (enforced by the installer; tested on 8.5) with extensions: `pdo`, `pdo_mysql`, `json`, `openssl`, `mbstring`, `zlib`, `curl`, `filter`, `iconv`
+- MySQL 5.x (utf8/utf8mb4; tested on 5.7); a MySQL user able to create databases (or pre-create an empty database)
+- A web server: Nginx + php-fpm, Apache, or PHP's built-in server for a quick trial
+
+### Steps
+1. Point the web server's document root at the `www/` directory. For a quick local trial:
+   ```bash
+   php -S 127.0.0.1:8080 -t www
+   ```
+2. Make sure the following are writable by the PHP process: `config/`, `tmp/`, `www/data/`
+   ```bash
+   chmod -R 777 tmp www/data config    # tighten to the php-fpm user in production
+   ```
+3. Open `http://<your-host>/install.php` in a browser and follow the 5-step wizard:
+   1. **Welcome** — click "开始安装" (Start)
+   2. **License** — accept ZPL 1.2 and continue
+   3. **Environment check** — all items should pass (PHP version / PDO / extensions / writable `tmp` and `www/data`)
+   4. **Database config** — host, port, user, password, database name, table prefix. The wizard creates the database and all tables automatically; leave "清空现有数据" unchecked unless reinstalling over existing data
+   5. **Save config & admin account** — the wizard writes `config/my.php` (verify the on-screen content is saved to that path), then fill in company name, admin account and password (optionally import demo data)
+4. After "安装成功" (Installation successful), log in with the admin account you just created.
+5. **Security — remove the installers from the web root:**
+   ```bash
+   rm www/install.php www/upgrade.php
+   ```
+6. Optional post-install check: visit `admin → checkdb` ("数据库" consistency check) — all tables should report OK.
+
+> Notes
+> - The wizard writes `config/my.php`; keep this file local (it is gitignored) and never commit real credentials.
+> - To enable the SSO connector and the MCP module's extension hooks, add `$config->framework->extensionLevel = 1;` to `config/my.php` (see the sections above).
+> - If the site is served through a web server, configure the pseudo-static rewrite below before using clean URLs.
+
+## CLI Helpers (optional)
 ```bash
+bash bin/init.sh /usr/bin/php http://127.0.0.1:8080    # generate bin/backup.sh, bin/checkdb.sh, ...
 php bin/ztcli 'http://127.0.0.1:8080/index.php?m=admin&f=checkdb'
 ```
 
