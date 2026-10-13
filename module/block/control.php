@@ -1163,9 +1163,30 @@ class block extends control
             ->orderBy($orderBy)
             ->fetchAll('id');
 
-        $testedBuilds = $this->dao->select('build')->from(TABLE_TESTTASK)->where('product')->in(array_keys($products))->fetchPairs();
-        $builds       = $this->dao->select('id, product, name, bugs')->from(TABLE_BUILD)->where('id')->in($testedBuilds)->fetchGroup('product', 'id');
-        $openedBugs   = $this->dao->select('id, openedBuild')->from(TABLE_BUG)->where('openedBuild')->in($testedBuilds)->fetchGroup('openedBuild', 'id');
+        $testTasks     = $this->dao->select('product, build')->from(TABLE_TESTTASK)->where('product')->in(array_keys($products))->fetchAll();
+        $testedBuilds  = array();
+        $virtualBuilds = array();
+        foreach($testTasks as $testTask)
+        {
+            $testedBuilds[] = $testTask->build;
+            /* 非数字版本（如主干 trunk）在 build 表中无记录，构造虚拟版本对象以便统计其 Bug。 */
+            if(!is_numeric($testTask->build)) $virtualBuilds[$testTask->product][$testTask->build] = $testTask->build;
+        }
+        $builds = empty($testedBuilds) ? array() : $this->dao->select('id, product, name, bugs')->from(TABLE_BUILD)->where('id')->in($testedBuilds)->fetchGroup('product', 'id');
+        foreach($virtualBuilds as $virtualProduct => $virtualNames)
+        {
+            foreach($virtualNames as $virtualName)
+            {
+                $virtual = new stdclass();
+                $virtual->id      = $virtualName;
+                $virtual->product = $virtualProduct;
+                $virtual->name    = isset($this->lang->$virtualName) ? $this->lang->$virtualName : $virtualName;
+                $virtual->bugs    = '';
+
+                $builds[$virtualProduct][$virtualName] = $virtual;
+            }
+        }
+        $openedBugs   = empty($testedBuilds) ? array() : $this->dao->select('id, product, openedBuild')->from(TABLE_BUG)->where('openedBuild')->in($testedBuilds)->fetchGroup('openedBuild', 'id');
 
         /* Get bugs. */
         $bugIDList = array();
@@ -1211,14 +1232,20 @@ class block extends control
                 $build->yesterdayClosed    = 0;
 
                 $buildOpenedBugs = zget($openedBugs, $buildID, array());
-                $build->bugs     = array_flip(array_merge(array_flip($build->bugs), array_flip(array_keys($buildOpenedBugs))));
+                /* 合并版本关联 Bug 与以其为打开版本的 Bug（按值去重）。
+                   注意：不能用 array_merge(array_flip(...)) 的旧写法——array_merge 会重排数字键，
+                   导致 Bug ID 丢失（10.1 原实现在此有缺陷）。 */
+                $build->bugs = array_unique(array_merge($build->bugs, array_keys($buildOpenedBugs)));
                 foreach($build->bugs as $key => $bugID)
                 {
                     if(!isset($bugs[$bugID])) continue;
 
                     $bug = $bugs[$bugID];
+                    /* 版本号可能被多个产品共用（如主干），只统计本产品名下的 Bug。 */
+                    if($bug->product != $product) continue;
 
-                    if($bug->assignedTo = $this->app->user->account) $build->assignedToMe++;
+                    /* 注意：10.1 原实现此处误用赋值符 =（恒真且会篡改 $bug->assignedTo），已修正为比较。 */
+                    if($bug->assignedTo == $this->app->user->account) $build->assignedToMe++;
 
                     if($bug->status != 'closed')
                     {
