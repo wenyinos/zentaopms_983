@@ -16,7 +16,7 @@ from urllib.error import HTTPError, URLError
 from urllib.parse import quote_plus
 from urllib.request import Request, urlopen
 
-VERSION = '0.5.0'
+VERSION = '0.6.0'
 
 
 def load_env():

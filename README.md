@@ -24,7 +24,7 @@ This build integrates with the **WenYin Open Source Community unified authentica
 This build ships an MCP (Model Context Protocol) service that lets AI agents maintain ZenTao project management directly from git commits — linking commits to tasks/stories/bugs, driving task status flow and logging effort.
 
 - Client: [`zentao-mcp-py/`](./zentao-mcp-py/) — a single-file Python client (standard library only; requires just `python3` and `git`). Works with any stdio MCP host (Qoder, Claude Desktop, Cursor, ...).
-- Server side: [`module/mcp/`](./module/mcp/) — self-contained HMAC-authenticated endpoints (timestamp freshness ±300s, no user session). Each client keeps its own account and git-author mapping for attribution; per-repo sync state and commit-log assembly live server-side. Optional `MCP_READONLY` / `MCP_IPS` hardening.
+- Server side: [`module/mcp/`](./module/mcp/) — self-contained signed endpoints (double MD5 + timestamp freshness ±300s, no user session). Two-tier keys: per-account personal keys are generated in-app at **My → MCP Key** ([`module/my/ext/`](./module/my/ext/), stored in `zt_config`), so write actions cannot impersonate another account; the team shared `MCP_SECRET` covers reads and not-yet-keyed accounts (transition mode). Each client keeps its own account and git-author mapping for attribution; per-repo sync state and commit-log assembly live server-side. Optional `MCP_STRICT` / `MCP_READONLY` / `MCP_IPS` hardening.
 - Setup and the full tool list (63 tools): see [`zentao-mcp-py/README.md`](./zentao-mcp-py/README.md), [`zentao-mcp-py/AGENT-GUIDE.md`](./zentao-mcp-py/AGENT-GUIDE.md) and [`AGENTS.md`](./AGENTS.md).
 
 ## Quick Start

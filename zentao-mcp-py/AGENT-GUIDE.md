@@ -4,7 +4,7 @@
 
 ## 通用规则
 
-1. **署名（actor）**：所有写操作自动以本机 `.env` 的 `MCP_ACCOUNT` 署名；多人协作场景（同步他人提交）传入该提交的 `actor` 覆盖（无效账号报 403）。
+1. **署名（actor）**：所有写操作自动以本机 `.env` 的 `MCP_ACCOUNT` 署名；多人协作场景（同步他人提交）传入该提交的 `actor` 覆盖（无效账号报 403）。密钥按账号区分：写操作须用签名账号的个人密钥（在禅道「我的地盘 → MCP密钥」自助生成），他人密钥无法冒用；无权/无密钥错用会返回 401 `INVALID_TOKEN`。
 2. **日期格式**：一律 `YYYY-MM-DD`（如 `2026-10-11`）。
 3. **ID 获取**：`projectID` → `zentao_list_projects`；`productID` → `zentao_list_products`；`taskID` → `zentao_list_tasks`/`zentao_search_tasks`；`storyID` → `zentao_list_stories`；`bugID` → `zentao_list_bugs`；建完任务/需求等从返回值的 `data.taskID`/`data.storyID` 等取。
 4. **数组参数**：工具 schema 中 `type: array` 的字段直接传 JSON 数组（如 `stories: [1,2]`、`whitelist: ["zhangsan"]`）。

@@ -1,6 +1,8 @@
 <?php
 class mcpModel extends model
 {
+    public $authAccount = '';    // 本次请求通过校验的密钥归属账号（空 = 使用团队共享密钥）
+
     public function getEnv($key)
     {
         $envFile = dirname(__FILE__) . '/.env';
@@ -11,14 +13,84 @@ class mcpModel extends model
 
     public function checkToken()
     {
-        $secret = $this->getEnv('MCP_SECRET');
-        if($secret === '') return false;
-
         parse_str($this->server->query_string, $query);
         $token = isset($query['token']) ? (string)$query['token'] : '';
+        if($token === '') return false;
         unset($query['token']);
-        $sign = md5(md5(http_build_query($query)) . $secret);
-        return $token !== '' && hash_equals($sign, $token);
+
+        $actor = isset($query['actor']) ? trim((string)$query['actor']) : '';
+
+        /* 带 actor 的请求（写操作）：必须使用该账号的个人密钥签名。 */
+        if($actor !== '')
+        {
+            $secret = $this->getUserSecret($actor);
+            if($secret !== '')
+            {
+                if(!$this->verifyToken($token, $query, $secret)) return false;
+                $this->authAccount = $actor;
+                return true;
+            }
+            /* 账号未生成个人密钥：过渡模式放行共享密钥，严格模式直接拒绝。 */
+            if($this->isStrict()) return false;
+        }
+        else
+        {
+            /* 无 actor 的请求（读操作）：接受任一已生成的个人密钥。 */
+            $account = $this->matchPersonalToken($token, $query);
+            if($account !== '')
+            {
+                $this->authAccount = $account;
+                return true;
+            }
+        }
+
+        $secret = $this->getEnv('MCP_SECRET');
+        if($secret === '') return false;
+        return $this->verifyToken($token, $query, $secret);
+    }
+
+    public function verifyToken($token, $query, $secret)
+    {
+        return hash_equals(md5(md5(http_build_query($query)) . $secret), $token);
+    }
+
+    /* 无 actor 的请求逐一比对已生成的个人密钥，返回命中账号。 */
+    public function matchPersonalToken($token, $query)
+    {
+        $base  = md5(http_build_query($query));
+        $items = $this->loadModel('setting')->getItems('owner=system&module=mcp&section=keys');
+        foreach($items as $item)
+        {
+            if(hash_equals(md5($base . $item->value), $token)) return $item->key;
+        }
+        return '';
+    }
+
+    public function getUserSecret($account)
+    {
+        if($account === '') return '';
+        return (string)$this->loadModel('setting')->getItem('owner=system&module=mcp&section=keys&key=' . $account);
+    }
+
+    public function generateUserSecret($account)
+    {
+        if($account === '') return '';
+
+        $secret = 'mcp-' . bin2hex(random_bytes(16));
+        $item   = new stdclass();
+        $item->owner   = 'system';
+        $item->module  = 'mcp';
+        $item->section = 'keys';
+        $item->key     = $account;
+        $item->value   = $secret;
+        /* 账号可能含点号，绕过 setItem 的路径解析直接写 zt_config。 */
+        $this->dao->replace(TABLE_CONFIG)->data($item)->exec();
+        return dao::isError() ? '' : $secret;
+    }
+
+    public function isStrict()
+    {
+        return $this->getEnv('MCP_STRICT') === '1';
     }
 
     public function getQueryParam($key)
@@ -54,7 +126,8 @@ class mcpModel extends model
     {
         $dir = $this->app->getTmpRoot() . 'mcp';
         if(!is_dir($dir)) @mkdir($dir, 0755, true);
-        $line = date('Y-m-d H:i:s') . "\t" . $this->server->remote_addr . "\t" . $action . "\t" . trim($summary) . "\n";
+        $auth = $this->authAccount === '' ? 'shared' : 'personal:' . $this->authAccount;
+        $line = date('Y-m-d H:i:s') . "\t" . $this->server->remote_addr . "\t" . $action . "\t" . $auth . "\t" . trim($summary) . "\n";
         @file_put_contents($dir . '/access-' . date('Ymd') . '.log', $line, FILE_APPEND);
     }
 
