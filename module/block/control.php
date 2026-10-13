@@ -267,6 +267,38 @@ class block extends control
         $this->display();
     }
 
+/**
+     * Welcome block.
+     *
+     * @access public
+     * @return void
+     */
+    public function welcome()
+    {
+        $this->view->tutorialed = $this->loadModel('tutorial')->getTutorialed();
+
+        $data = $this->block->getWelcomeBlockData();
+
+        $this->view->tasks      = $data['tasks'];
+        $this->view->bugs       = $data['bugs'];
+        $this->view->stories    = $data['stories'];
+        $this->view->projects   = $data['projects'];
+        $this->view->products   = $data['products'];
+
+        $this->view->delay['task']    = $data['delayTask']; 
+        $this->view->delay['bug']     = $data['delayBug']; 
+        $this->view->delay['project'] = $data['delayProject']; 
+
+        $time = date('H:i');
+        $welcomeType = '19:00';
+        foreach($this->lang->block->welcomeList as $type => $name)
+        {
+            if($time >= $type) $welcomeType = $type;
+        }
+        $this->view->welcomeType = $welcomeType;
+        $this->display();
+    }
+
     /**
      * Print block. 
      * 
@@ -305,7 +337,12 @@ class block extends control
         }
         elseif($block->block == 'assigntome')
         {
-            $html = $this->fetch('block', 'printAssignToMeBlock');
+            $this->get->set('param', base64_encode(json_encode($block->params)));
+            $html = $this->fetch('block', 'printAssignToMeBlock', 'longBlock=' . $this->block->isLongBlock($block));
+        }
+        elseif($block->block == 'welcome')
+        {
+            $html = $this->fetch('block', 'welcome');
         }
 
         /* UI 10.1：dashboard 视图通过 fetch() 内联渲染各区块，若此处 die() 会终止整个请求导致后续区块丢失。
@@ -374,6 +411,9 @@ class block extends control
                 $this->view->sso  = $sso;
                 $this->view->sign = strpos($sso, '?') === false ? '?' : '&';
             }
+
+            /* UI 10.1：块视图用 $longBlock 决定宽/窄版式（grid>=6 为长块）。 */
+            $this->view->longBlock = $this->block->isLongBlock($this->block->getByID($id));
 
             $this->viewType    = (isset($params->viewType) and $params->viewType == 'json') ? 'json' : 'html';
             $this->params      = $params;
@@ -628,7 +668,19 @@ class block extends control
         $num   = isset($this->params->num) ? (int)$this->params->num : 0;
         $type  = isset($this->params->type) ? $this->params->type : '';
         $pager = pager::init(0, $num , 1);
-        $this->view->productStats = $this->loadModel('product')->getStats('order_desc', $this->viewType != 'json' ? $pager : '', $type);
+
+        /* UI 10.1 版式：产品块含"所属项目"列，需 product→project 名称映射。 */
+        $productStats  = $this->loadModel('product')->getStats('order_desc', $this->viewType != 'json' ? $pager : '', $type);
+        $productIdList = array();
+        foreach($productStats as $product) $productIdList[] = $product->id;
+
+        $this->view->projects = empty($productIdList) ? array() : $this->dao->select('t1.product,t2.name')->from(TABLE_PROJECTPRODUCT)->alias('t1')
+            ->leftJoin(TABLE_PROJECT)->alias('t2')->on('t1.project=t2.id')
+            ->where('t1.product')->in($productIdList)
+            ->andWhere('t2.deleted')->eq(0)
+            ->orderBy('t1.project')
+            ->fetchPairs('product', 'name');
+        $this->view->productStats = $productStats;
     }
 
     /**
@@ -653,7 +705,7 @@ class block extends control
      * @access public
      * @return void
      */
-    public function printAssignToMeBlock()
+    public function printAssignToMeBlock($longBlock = true)
     {
        if(common::hasPriv('todo',  'view')) $hasViewPriv['todo']  = true;
        if(common::hasPriv('task',  'view')) $hasViewPriv['task']  = true;
@@ -696,6 +748,7 @@ class block extends control
 
         $this->view->hasViewPriv = $hasViewPriv;
         $this->display();
+        $this->view->longBlock   = $longBlock;
     }
 
     /**
@@ -721,6 +774,531 @@ class block extends control
         $closedBlock = isset($this->config->block->closed) ? $this->config->block->closed : '';
         $this->dao->delete()->from(TABLE_BLOCK)->where('source')->eq($block->source)->andWhere('block')->eq($block->block)->exec();
         $this->loadModel('setting')->setItem('system.block.closed', $closedBlock . ",{$block->source}|{$block->block}");
+        die(js::reload('parent'));
+    }
+
+/**
+     * Ajax for use new block.
+     * 
+     * @param  string $module 
+     * @param  string $confirm 
+     * @access public
+     * @return void
+     */
+    public function ajaxUseNew($module, $confirm = 'no')
+    {
+        if($confirm == 'yes')
+        {
+            $this->dao->delete()->from(TABLE_BLOCK)->where('module')->eq($module)->andWhere('account')->eq($this->app->user->account)->exec();
+            $this->dao->delete()->from(TABLE_CONFIG)->where('module')->eq($module)->andWhere('owner')->eq($this->app->user->account)->andWhere('`key`')->eq('blockInited')->exec();
+            die(js::reload('parent'));
+        }
+        elseif($confirm == 'no')
+        {
+            $this->loadModel('setting')->setItem("{$this->app->user->account}.$module.block.initVersion", $this->config->block->version);
+        }
+    }
+
+/**
+     * Print statistic block.
+     *
+     * @param  string $module
+     * @access public
+     * @return void
+     */
+    public function printStatisticBlock($module = 'product')
+    {
+        $func = 'print' . ucfirst($module) . 'StatisticBlock';
+        $this->view->module = $module;
+        $this->$func();
+    }
+
+/**
+     * Print overview block.
+     *
+     * @access public
+     * @return void
+     */
+    public function printOverviewBlock($module = 'product')
+    {
+        $func = 'print' . ucfirst($module) . 'OverviewBlock';
+        $this->view->module = $module;
+        $this->$func();
+    }
+
+/**
+     * Print product statistic block.
+     *
+     * @access public
+     * @return void
+     */
+    public function printProductStatisticBlock()
+    {
+        if(!empty($this->params->type) and preg_match('/[^a-zA-Z0-9_]/', $this->params->type)) die();
+
+        $status  = isset($this->params->type) ? $this->params->type : '';
+        $orderBy = isset($this->params->orderBy) ? $this->params->orderBy : 'id_asc';
+
+        /* Get products. */
+        $products = $this->loadModel('product')->getList($status);
+        foreach($products as $productID => $product)
+        {
+            if(!$this->product->checkPriv($product)) unset($products[$productID]);
+        }
+        $productIDList = array_keys($products);
+        if(!$productIDList)
+        {
+            $this->view->products = $products;
+            return false;
+        }
+        $products = $this->dao->select('*')->from(TABLE_PRODUCT)
+            ->where('id')->in($productIDList)
+            ->orderBy($orderBy)
+            ->fetchAll('id');
+
+        /* Get stories. */
+        $stories = $this->dao->select('product, stage, COUNT(status) AS count')->from(TABLE_STORY)
+            ->where('deleted')->eq(0)
+            ->andWhere('product')->in($productIDList)
+            ->groupBy('product, stage')
+            ->fetchGroup('product', 'stage');
+        /* Padding the stories to sure all status have records. */
+        foreach($stories as $product => $story)
+        {
+            foreach(array_keys($this->lang->story->stageList) as $stage)
+            {
+                $story[$stage] = isset($story[$stage]) ? $story[$stage]->count : 0;
+            }
+            $stories[$product] = $story;
+        }
+
+        /* Get plans. */
+        $plans = $this->dao->select('product, end')->from(TABLE_PRODUCTPLAN)
+            ->where('deleted')->eq(0)
+            ->andWhere('product')->in($productIDList)
+            ->fetchGroup('product');
+        foreach($plans as $product => $productPlans)
+        {
+            $expired   = 0;
+            $unexpired = 0;
+
+            foreach($productPlans as $plan)
+            {
+                if($plan->end <  helper::today()) $expired++;
+                if($plan->end >= helper::today()) $unexpired++;
+            }
+
+            $plan = array();
+            $plan['expired']   = $expired;
+            $plan['unexpired'] = $unexpired;
+
+            $plans[$product] = $plan;
+        }
+
+        /* Get projects. */
+        $projects = $this->dao->select('t1.product, t2.status, t2.end')->from(TABLE_PROJECTPRODUCT)->alias('t1')
+            ->leftJoin(TABLE_PROJECT)->alias('t2')->on('t1.project=t2.id')
+            ->where('t1.product')->in($productIDList)
+            ->andWhere('t2.deleted')->eq(0)
+            ->fetchGroup('product');
+        foreach($projects as $product => $productProjects)
+        {
+            $doing = 0;
+            $done  = 0;
+            $delay = 0;
+
+            foreach($productProjects as $project)
+            {
+                if($project->status == 'doing') $doing++;
+                if($project->status == 'done' or $project->status == 'closed') $done++;
+                if($project->status != 'done' && $project->status != 'closed' && $project->status != 'suspended' && $project->end < helper::today()) $delay++;
+            }
+
+            $project = array();
+            $project['doing'] = $doing;
+            $project['done']  = $done;
+            $project['delay'] = $delay;
+
+            $projects[$product] = $project;
+        }
+
+        /* Get releases. */
+        $releases = $this->dao->select('product, status, COUNT(*) AS count')->from(TABLE_RELEASE)
+            ->where('deleted')->eq(0)
+            ->andWhere('product')->in($productIDList)
+            ->groupBy('product, status')
+            ->fetchGroup('product', 'status');
+        foreach($releases as $product => $release)
+        {
+            $release['normal']    = isset($release['normal'])    ? $release['normal']->count    : 0;
+            $release['terminate'] = isset($release['terminate']) ? $release['terminate']->count : 0;
+
+            $releases[$product] = $release;
+        }
+
+        /* Get last releases. */
+        $lastReleases = $this->dao->select('product, COUNT(*) AS count')->from(TABLE_RELEASE)
+            ->where('date')->eq(date('Y-m-d', strtotime('-1 day')))
+            ->andWhere('product')->in($productIDList)
+            ->groupBy('product')
+            ->fetchPairs();
+
+        foreach($products as $productID => $product)
+        {
+            $product->stories     = isset($stories[$productID])      ? $stories[$productID]      : 0;
+            $product->plans       = isset($plans[$productID])        ? $plans[$productID]        : 0;
+            $product->projects    = isset($projects[$productID])     ? $projects[$productID]     : 0;
+            $product->releases    = isset($releases[$productID])     ? $releases[$productID]     : 0;
+            $product->lastRelease = isset($lastReleases[$productID]) ? $lastReleases[$productID] : 0;
+        }
+
+        $this->app->loadLang('story');
+        $this->app->loadLang('productplan');
+        $this->app->loadLang('project');
+        $this->app->loadLang('release');
+
+        $this->view->products = $products;
+    }
+
+/**
+     * Print product overview block.
+     *
+     * @access public
+     * @return void
+     */
+    public function printProductOverviewBlock()
+    {
+        $normal = 0;
+        $closed = 0;
+
+        $products = $this->loadModel('product')->getList();
+        foreach($products as $product)
+        {
+            if(!$this->product->checkPriv($product)) continue;
+
+            if($product->status == 'normal') $normal++;
+            if($product->status == 'closed') $closed++;
+        }
+
+        $this->view->total  = $normal + $closed;
+        $this->view->normal = $normal;
+        $this->view->closed = $closed;
+    }
+
+/**
+     * Print project statistic block.
+     *
+     * @access public
+     * @return void
+     */
+    public function printProjectStatisticBlock()
+    {
+        if(!empty($this->params->type) and preg_match('/[^a-zA-Z0-9_]/', $this->params->type)) die();
+
+        $this->app->loadLang('task');
+        $this->app->loadLang('story');
+        $this->app->loadLang('bug');
+
+        $status  = isset($this->params->type) ? $this->params->type : '';
+        $orderBy = isset($this->params->orderBy) ? $this->params->orderBy : 'id_asc';
+        $num     = isset($this->params->num)  ? (int)$this->params->num : 0;
+
+        /* Get projects. */
+        $projects = $this->loadModel('project')->getList($status);
+        foreach($projects as $projectID => $project)
+        {
+            if(!$this->project->checkPriv($project)) unset($projects[$projectID]);
+        }
+        $projectIDList = array_keys($projects);
+        if(!$projectIDList)
+        {
+            $this->view->projects = $projects;
+            return false;
+        }
+        $projects = $this->dao->select('*')->from(TABLE_PROJECT)
+            ->where('id')->in($projectIDList)
+            ->orderBy($orderBy)
+            ->beginIF($this->viewType != 'json')->limit($num)->fi()
+            ->fetchAll('id');
+        $projectIDList = array_keys($projects);
+
+
+        /* Get tasks. */
+        $yesterday = date('Y-m-d', strtotime('-1 day'));
+        $tasks = $this->dao->select("project, count(id) as totalTasks, count(status not in ('wait,doing,pause') or null) as undoneTasks, count(finishedDate like '{$yesterday}%' or null) as yesterdayFinished, sum(if(status != 'cancel', estimate, 0)) as totalEstimate, sum(consumed) as totalConsumed, sum(if(status != 'cancel', `left`, 0)) as totalLeft")->from(TABLE_TASK)
+            ->where('project')->in($projectIDList)
+            ->andWhere('deleted')->eq(0)
+            ->andWhere('parent')->eq(0)
+            ->groupBy('project')
+            ->fetchAll('project');
+
+        foreach($tasks as $projectID => $task)
+        {
+            foreach($task as $key => $value)
+            {
+                if($key == 'project') continue;
+                $projects[$projectID]->$key = $value;
+            }
+        }
+
+        /* Get stories. */
+        $stories = $this->dao->select("t1.project, count(t2.status) as totalStories, count(t2.status != 'closed' or null) as unclosedStories, count(t2.stage = 'released' or null) as releasedStories")->from(TABLE_PROJECTSTORY)->alias('t1')
+            ->leftJoin(TABLE_STORY)->alias('t2')->on('t1.story = t2.id')
+            ->where('t1.project')->in($projectIDList)
+            ->andWhere('t2.deleted')->eq(0)
+            ->groupBy('project')
+            ->fetchAll('project');
+
+        foreach($stories as $projectID => $story)
+        {
+            foreach($story as $key => $value)
+            {
+                if($key == 'project') continue;
+                $projects[$projectID]->$key = $value;
+            }
+        }
+
+        /* Get bugs. */
+        $bugs = $this->dao->select("project, status, count(status) as totalBugs, count(status = 'active' or null) as activeBugs, count(resolvedDate like '{$yesterday}%' or null) as yesterdayResolved")->from(TABLE_BUG)
+            ->where('project')->in($projectIDList)
+            ->andWhere('deleted')->eq(0)
+            ->groupBy('project')
+            ->fetchAll('project');
+
+        foreach($bugs as $projectID => $bug)
+        {
+            foreach($bug as $key => $value)
+            {
+                if($key == 'project') continue;
+                $projects[$projectID]->$key = $value;
+            }
+        }
+
+        foreach($projects as $project)
+        {
+            if(!isset($projects[$project->id]->totalTasks))
+            {
+                $projects[$project->id]->totalTasks        = 0;
+                $projects[$project->id]->undoneTasks       = 0;
+                $projects[$project->id]->yesterdayFinished = 0;
+                $projects[$project->id]->totalEstimate     = 0;
+                $projects[$project->id]->totalConsumed     = 0;
+                $projects[$project->id]->totalLeft         = 0;
+            }
+            if(!isset($projects[$project->id]->totalBugs))
+            {
+                $projects[$project->id]->totalBugs         = 0;
+                $projects[$project->id]->activeBugs        = 0;
+                $projects[$project->id]->yesterdayResolved = 0;
+            }
+            if(!isset($projects[$project->id]->totalStories))
+            {
+                $projects[$project->id]->totalStories    = 0;
+                $projects[$project->id]->unclosedStories = 0;
+                $projects[$project->id]->releasedStories = 0;
+            }
+
+            $projects[$project->id]->progress      = ($project->totalConsumed || $project->totalLeft) ? round($project->totalConsumed / ($project->totalConsumed + $project->totalLeft), 2) * 100 : 0;
+            $projects[$project->id]->taskProgress  = $project->totalTasks ? round(($project->totalTasks - $project->undoneTasks) / $project->totalTasks, 2) * 100 : 0;
+            $projects[$project->id]->storyProgress = $project->totalStories ? round(($project->totalStories - $project->unclosedStories) / $project->totalStories, 2) * 100 : 0;
+            $projects[$project->id]->bugProgress   = $project->totalBugs ? round(($project->totalBugs - $project->activeBugs) / $project->totalBugs, 2) * 100 : 0;
+        }
+
+        $this->view->projects = $projects;
+    }
+
+/**
+     * Print project overview block.
+     *
+     * @access public
+     * @return void
+     */
+    public function printProjectOverviewBlock()
+    {
+        $projects = $this->loadModel('project')->getList();
+
+        $total = 0;
+        foreach($projects as $project)
+        {
+            if(!$this->project->checkPriv($project)) continue;
+
+            if(!isset($overview[$project->status])) $overview[$project->status] = 0;
+            $overview[$project->status]++;
+            $total++;
+        }
+
+        $overviewPercent = array();
+        foreach($this->lang->project->statusList as $statusKey => $statusName)
+        {
+            if(!isset($overview[$statusKey])) $overview[$statusKey] = 0;
+            $overviewPercent[$statusKey] = $total ? round($overview[$statusKey] / $total, 2) * 100 . '%' : '0%';
+        }
+
+        $this->view->total           = $total;
+        $this->view->overview        = $overview;
+        $this->view->overviewPercent = $overviewPercent;
+    }
+
+/**
+     * Print qa statistic block.
+     *
+     * @access public
+     * @return void
+     */
+    public function printQaStatisticBlock()
+    {
+        if(!empty($this->params->type) and preg_match('/[^a-zA-Z0-9_]/', $this->params->type)) die();
+
+        $status  = isset($this->params->type) ? $this->params->type : '';
+        $orderBy = isset($this->params->orderBy) ? $this->params->orderBy : 'id_asc';
+
+        /* Get products. */
+        $products = $this->loadModel('product')->getList($status);
+        foreach($products as $productID => $product)
+        {
+            if(!$this->product->checkPriv($product)) unset($products[$productID]);
+        }
+        $productIDList = array_keys($products);
+        if(!$productIDList)
+        {
+            $this->view->products = $products;
+            return false;
+        }
+        $products = $this->dao->select('*')->from(TABLE_PRODUCT)
+            ->where('id')->in($productIDList)
+            ->orderBy($orderBy)
+            ->fetchAll('id');
+
+        $testedBuilds = $this->dao->select('build')->from(TABLE_TESTTASK)->where('product')->in(array_keys($products))->fetchPairs();
+        $builds       = $this->dao->select('id, product, name, bugs')->from(TABLE_BUILD)->where('id')->in($testedBuilds)->fetchGroup('product', 'id');
+        $openedBugs   = $this->dao->select('id, openedBuild')->from(TABLE_BUG)->where('openedBuild')->in($testedBuilds)->fetchGroup('openedBuild', 'id');
+
+        /* Get bugs. */
+        $bugIDList = array();
+        foreach($builds as $product => $productBuilds)
+        {
+            foreach($productBuilds as $buildID => $build)
+            {
+                /* If don't clone $build, the exploded bugs of build will be stored in dao::$cache and it occurs an error when the qa statistic block be loaded twice. */
+                $build = clone $build;
+                $build->bugs = explode(',', trim($build->bugs, ','));
+                foreach($build->bugs as $bugID) $bugIDList[$bugID] = $bugID;
+
+                $builds[$product][$buildID] = $build;
+            }
+        }
+        foreach($openedBugs as $buildBugs)
+        {
+            foreach($buildBugs as $bugID => $bug) $bugIDList[$bugID] = $bugID;
+        }
+
+        $today     = date(DT_DATE1);
+        $yesterday = date(DT_DATE1, strtotime('yesterday'));
+
+        $bugs = $this->loadModel('bug')->getByList($bugIDList);
+        $confirmedBugs = $this->dao->select('objectID')->from(TABLE_ACTION)
+            ->where('objectType')->eq('bug')
+            ->andWhere('action')->eq('bugconfirmed')
+            ->andWhere('date')->ge($yesterday)
+            ->andWhere('date')->lt($today)
+            ->fetchPairs();
+
+        foreach($builds as $product => $productBuilds)
+        {
+            foreach($productBuilds as $buildID => $build)
+            {
+                $build->total              = 0;
+                $build->assignedToMe       = 0;
+                $build->unresolved         = 0;
+                $build->unconfirmed        = 0;
+                $build->unclosed           = 0;
+                $build->yesterdayResolved  = 0;
+                $build->yesterdayConfirmed = 0;
+                $build->yesterdayClosed    = 0;
+
+                $buildOpenedBugs = zget($openedBugs, $buildID, array());
+                $build->bugs     = array_flip(array_merge(array_flip($build->bugs), array_flip(array_keys($buildOpenedBugs))));
+                foreach($build->bugs as $key => $bugID)
+                {
+                    if(!isset($bugs[$bugID])) continue;
+
+                    $bug = $bugs[$bugID];
+
+                    if($bug->assignedTo = $this->app->user->account) $build->assignedToMe++;
+
+                    if($bug->status != 'closed')
+                    {
+                        $build->unclosed++;
+
+                        if($bug->status != 'resoloved')
+                        {
+                            $build->unresolved++;
+
+                            if($bug->status != 'confirmed') $build->unconfirmed++;
+                        }
+                    }
+
+                    if($bug->resolvedDate >= $yesterday && $bug->resolvedDate < $today) $build->yesterdayResolved++;
+                    if($bug->closedDate   >= $yesterday && $bug->closedDate   < $today) $build->yesterdayClosed++;
+                    if(isset($confirmedBugs[$bugID])) $yesterdayConfirmed++;
+
+                    $build->total++;
+                }
+
+                $build->assignedRate    = $build->total ? round($build->assignedToMe  / $build->total * 100, 2) : 0;
+                $build->unresolvedRate  = $build->total ? round($build->unresolved  / $build->total * 100, 2) : 0;
+                $build->unconfirmedRate = $build->total ? round($build->unconfirmed / $build->total * 100, 2) : 0;
+                $build->unclosedRate    = $build->total ? round($build->unclosed    / $build->total * 100, 2) : 0;
+            }
+        }
+
+        foreach($products as $product) $product->builds = zget($builds, $product->id, array());
+
+        $this->view->products = $products;
+    }
+
+/**
+     * Print qa overview block.
+     *
+     * @access public
+     * @return void
+     */
+    public function printQaOverviewBlock()
+    {
+        $casePairs = $this->dao->select('lastRunResult, COUNT(*) AS count')->from(TABLE_CASE)->groupBy('lastRunResult')->fetchPairs();
+        $total     = array_sum($casePairs);
+
+        $this->app->loadLang('testcase');
+        foreach($this->lang->testcase->resultList as $result => $label)
+        {
+            if(!isset($casePairs[$result])) $casePairs[$result] = 0;
+        }
+
+        $casePercents = array();
+        foreach($casePairs as $result => $count)
+        {
+            $casePercents[$result] = $total ? round($count / $total * 100, 2) : 0;
+        }
+
+        $this->view->total        = $total;
+        $this->view->casePairs    = $casePairs;
+        $this->view->casePercents = $casePercents;
+    }
+
+/**
+     * Ajax reset.
+     * 
+     * @param  string $module 
+     * @param  string $confirm 
+     * @access public
+     * @return void
+     */
+    public function ajaxReset($module, $confirm = 'no')
+    {
+        if($confirm != 'yes') die(js::confirm($this->lang->block->confirmReset, inlink('ajaxReset', "module=$module&confirm=yes")));
+
+        $this->dao->delete()->from(TABLE_BLOCK)->where('module')->eq($module)->andWhere('account')->eq($this->app->user->account)->exec();
+        $this->dao->delete()->from(TABLE_CONFIG)->where('module')->eq($module)->andWhere('owner')->eq($this->app->user->account)->andWhere('`key`')->eq('blockInited')->exec();
         die(js::reload('parent'));
     }
 }

@@ -86,6 +86,50 @@ class blockModel extends model
         return $block->grid >= 6;
     }
 
+/**
+     * Get data of welcome block.
+     * 
+     * @access public
+     * @return array
+     */
+    public function getWelcomeBlockData()
+    {
+        $data = array();
+
+        $projects = $this->loadModel('project')->getPairs();
+        $products = $this->loadModel('product')->getPairs();
+
+        $data['tasks']    = (int)$this->dao->select('count(*) AS count')->from(TABLE_TASK)->where('assignedTo')->eq($this->app->user->account)->andWhere('deleted')->eq(0)->fetch('count');
+        $data['bugs']     = (int)$this->dao->select('count(*) AS count')->from(TABLE_BUG)->where('assignedTo')->eq($this->app->user->account)->andWhere('deleted')->eq(0)->fetch('count');
+        $data['stories']  = (int)$this->dao->select('count(*) AS count')->from(TABLE_STORY)->where('assignedTo')->eq($this->app->user->account)->andWhere('deleted')->eq(0)->fetch('count');
+        $data['projects'] = (int)$this->dao->select('count(*) AS count')->from(TABLE_PROJECT)->where('id')->in(array_keys($projects))->andWhere("(status='wait' or status='doing')")->andWhere('deleted')->eq(0)->fetch('count');
+        $data['products'] = (int)$this->dao->select('count(*) AS count')->from(TABLE_PRODUCT)->where('status')->ne('closed')->andWhere('id')->in(array_keys($products))->andWhere('deleted')->eq(0)->fetch('count');
+
+        $today = date('Y-m-d');
+        $data['delayTask'] = (int)$this->dao->select('count(*) AS count')->from(TABLE_TASK)
+            ->where('assignedTo')->eq($this->app->user->account)
+            ->andWhere('status')->in('wait,doing')
+            ->andWhere('deadline')->ne('0000-00-00')
+            ->andWhere('deadline')->lt($today)
+            ->andWhere('deleted')->eq(0)
+            ->fetch('count');
+        $data['delayBug'] = (int)$this->dao->select('count(*) AS count')->from(TABLE_BUG)
+            ->where('assignedTo')->eq($this->app->user->account)
+            ->andWhere('status')->eq('active')
+            ->andWhere('deadline')->ne('0000-00-00')
+            ->andWhere('deadline')->lt($today)
+            ->andWhere('deleted')->eq(0)
+            ->fetch('count');
+        $data['delayProject'] = (int)$this->dao->select('count(*) AS count')->from(TABLE_PROJECT)
+            ->where('id')->in(array_keys($projects))
+            ->andWhere('status')->in('wait,doing')
+            ->andWhere('end')->lt($today)
+            ->andWhere('deleted')->eq(0)
+            ->fetch('count');
+
+        return $data;
+    }
+
     /**
      * Get saved block config.
      * 
@@ -469,5 +513,133 @@ class blockModel extends model
         $params->num['default'] = 20; 
         $params->num['control'] = 'input';
         return $params;
+    }
+
+/**
+     * Check API for ranzhi
+     * 
+     * @param  string    $hash 
+     * @access public
+     * @return bool
+     */
+    public function checkAPI($hash)
+    {
+        if(empty($hash)) return false;
+
+        $key = $this->dao->select('value')->from(TABLE_CONFIG)
+            ->where('owner')->eq('system')
+            ->andWhere('module')->eq('sso')
+            ->andWhere('`key`')->eq('key')
+            ->fetch('value');
+
+        return $key == $hash;
+    }
+
+public function getAssignToMeParams()
+    {
+        $params->todoNum['name']    = $this->lang->block->todoNum;
+        $params->todoNum['default'] = 20; 
+        $params->todoNum['control'] = 'input';
+
+        $params->taskNum['name']    = $this->lang->block->taskNum;
+        $params->taskNum['default'] = 20; 
+        $params->taskNum['control'] = 'input';
+
+        $params->bugNum['name']    = $this->lang->block->bugNum;
+        $params->bugNum['default'] = 20; 
+        $params->bugNum['control'] = 'input';
+
+        return json_encode($params);
+    }
+
+/**
+     * Get product overview pararms.
+     *
+     * @access public
+     * @return string
+     */
+    public function getOverviewParams()
+    {
+        return false;
+    }
+
+/**
+     * Get product statistic params.
+     * 
+     * @access public
+     * @return void
+     */
+    public function getProductStatisticParams()
+    {
+        $params = new stdclass();
+        $params->type['name']    = $this->lang->block->type;
+        $params->type['options'] = $this->lang->block->typeList->product;
+        $params->type['control'] = 'select';
+
+        $params->orderBy['name']    = $this->lang->block->orderBy;
+        $params->orderBy['default'] = 'id_desc';
+        $params->orderBy['options'] = $this->lang->block->orderByList->product;
+        $params->orderBy['control'] = 'select';
+
+        return json_encode($params);
+    }
+
+/**
+     * Get project statistic params.
+     * 
+     * @access public
+     * @return void
+     */
+    public function getProjectStatisticParams()
+    {
+        $params = new stdclass();
+        $params->type['name']    = $this->lang->block->type;
+        $params->type['options'] = $this->lang->block->typeList->project;
+        $params->type['control'] = 'select';
+
+        $params->orderBy['name']    = $this->lang->block->orderBy;
+        $params->orderBy['default'] = 'id_desc';
+        $params->orderBy['options'] = $this->lang->block->orderByList->project;
+        $params->orderBy['control'] = 'select';
+
+        return json_encode($params);
+    }
+
+/**
+     * Get qa statistic params.
+     *
+     * @access public
+     * @return void
+     */
+    public function getQaStatisticParams()
+    {
+        $params = new stdclass();
+        $params->type['name']    = $this->lang->block->type;
+        $params->type['options'] = $this->lang->block->typeList->product;
+        $params->type['control'] = 'select';
+
+        $params->orderBy['name']    = $this->lang->block->orderBy;
+        $params->orderBy['default'] = 'id_desc';
+        $params->orderBy['options'] = $this->lang->block->orderByList->product;
+        $params->orderBy['control'] = 'select';
+
+        return json_encode($params);
+    }
+
+/**
+     * Get statistic params.
+     *
+     * @access public
+     * @return string
+     */
+    public function getStatisticParams($module = 'product')
+    {
+        if($module == 'product') return $this->getProductStatisticParams($module);
+        if($module == 'project') return $this->getProjectStatisticParams($module);
+        if($module == 'qa')      return $this->getQaStatisticParams($module);
+
+        $params = new stdclass();
+        $params = $this->onlyNumParams($params);
+        return json_encode($params);
     }
 }

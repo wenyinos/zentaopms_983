@@ -10,6 +10,7 @@
  * @link        http://www.ranzhico.com
  */
 $config->block = new stdclass();
+$config->block->version = 2;   // UI 10.1：仪表盘区块布局版本（initVersion 比对用）
 $config->block->editor = new stdclass();
 $config->block->editor->set = array('id' => 'html', 'tools' => 'simple');
 

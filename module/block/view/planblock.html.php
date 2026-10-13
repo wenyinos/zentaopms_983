@@ -10,30 +10,39 @@
  * @link        http://www.ranzhi.org
  */
 ?>
-<table class='table tablesorter table-data table-hover block-plan table-fixed'>
-  <thead>
-  <tr>
-    <th width='50'><?php echo $lang->idAB?></th>
-    <th>           <?php echo $lang->productplan->product;?></th>
-    <th>           <?php echo $lang->productplan->title;?></th>
-    <th width='80'><?php echo $lang->productplan->begin;?></th>
-    <th width='80'><?php echo $lang->productplan->end;?></th>
-  </tr>
-  </thead>
-  <?php foreach($plans as $plan):?>
-  <?php
-  $appid    = isset($_GET['entry']) ? "class='app-btn' data-id='{$this->get->entry}'" : '';
-  $viewLink = $this->createLink('productplan', 'view', "planID={$plan->id}");
-  ?>
-  <tr data-url='<?php echo empty($sso) ? $viewLink : $sso . $sign . 'referer=' . base64_encode($viewLink); ?>' <?php echo $appid?>>
-    <td class='text-center'><?php echo $plan->id;?></td>
-    <td title='<?php echo $plan->productName?>'><?php echo $plan->productName?></td>
-    <td title='<?php echo $plan->title?>'><?php echo $plan->title?></td>
-    <td><?php echo $plan->begin?></td>
-    <td><?php echo $plan->end?></td>
-  </tr>
-  <?php endforeach;?>
-</table>
-<script>
-if(typeof(dataTable) == 'function')$('.block-plan').dataTable();
-</script>
+<?php if(empty($plans)): ?>
+<div class='empty-tip'><?php echo $lang->block->emptyTip;?></div>
+<?php else:?>
+<div class='panel-body has-table scrollbar-hover'>
+  <table class='table table-borderless table-hover table-fixed-head tablesorter block-plan'>
+    <thead>
+    <tr>
+      <?php if($longBlock):?>
+      <th class='text-center w-50px'><?php echo $lang->idAB?></th>
+      <th><?php echo $lang->productplan->product;?></th>
+      <?php endif;?>
+      <th><?php echo $lang->productplan->title;?></th>
+      <th class='text-center w-100px'><?php echo $lang->productplan->begin;?></th>
+      <th class='text-center w-100px'><?php echo $lang->productplan->end;?></th>
+    </tr>
+    </thead>
+    <tbody>
+      <?php foreach($plans as $plan):?>
+      <?php
+      $appid    = isset($_GET['entry']) ? "class='app-btn' data-id='{$this->get->entry}'" : '';
+      $viewLink = $this->createLink('productplan', 'view', "planID={$plan->id}");
+      ?>
+      <tr data-url='<?php echo empty($sso) ? $viewLink : $sso . $sign . 'referer=' . base64_encode($viewLink); ?>' <?php echo $appid?>>
+        <?php if($longBlock):?>
+        <td class='text-center'><?php echo $plan->id;?></td>
+        <td title='<?php echo $plan->productName?>'><?php echo $plan->productName?></td>
+        <?php endif;?>
+        <td title='<?php echo $plan->title?>'><?php echo $plan->title?></td>
+        <td class='text-center'><?php echo $plan->begin?></td>
+        <td class='text-center'><?php echo $plan->end?></td>
+      </tr>
+      <?php endforeach;?>
+    </tbody>
+  </table>
+</div>
+<?php endif;?>

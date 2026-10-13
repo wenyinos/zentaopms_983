@@ -10,38 +10,44 @@
  * @link        http://www.zentao.net
  */
 ?>
-<table class='table tablesorter table-data table-hover table-fixed table-striped block-product'>
-  <thead>
-    <tr class='text-center'>
-      <th class='text-left'><?php echo $lang->product->name;?></th>
-      <th width='65' title='<?php echo $lang->story->common;?>'><?php echo $lang->story->statusList['active'];?></th>
-      <th width='65' title='<?php echo $lang->story->common;?>'><?php echo $lang->story->statusList['changed'];?></th>
-      <th width='65' title='<?php echo $lang->story->common;?>'><?php echo $lang->story->statusList['draft'];?></th>
-      <th width='65'><?php echo $lang->product->plans;?></th>
-      <th width='70'><?php echo $lang->product->releases;?></th>
-      <th width='95' title='<?php echo $lang->bug->common;?>'><?php echo $lang->product->bugs;?></th>
-      <th width='95' title='<?php echo $lang->bug->common;?>'><?php echo $lang->bug->unResolved;?></th>
-    </tr>
-  </thead>
-  <tbody>
-    <?php foreach($productStats as $product):?>
-    <?php
-    $appid    = isset($_GET['entry']) ? "class='app-btn text-center' data-id='{$this->get->entry}'" : "class='text-center'";
-    $viewLink = $this->createLink('product', 'browse', 'productID=' . $product->id);
-    ?>
-    <tr data-url='<?php echo empty($sso) ? $viewLink : $sso . $sign . 'referer=' . base64_encode($viewLink); ?>' <?php echo $appid?>>
-      <td class='text-left' title='<?php echo $product->name?>'><?php echo $product->name?></td>
-      <td><?php echo $product->stories['active']?></td>
-      <td><?php echo $product->stories['changed']?></td>
-      <td><?php echo $product->stories['draft']?></td>
-      <td><?php echo $product->plans?></td>
-      <td><?php echo $product->releases?></td>
-      <td><?php echo $product->bugs?></td>
-      <td><?php echo $product->unResolved?></td>
-    </tr> 
-    <?php endforeach;?>
-  </tbody>
-</table>
-<script>
-if(typeof(dataTable) == 'function')$('.block-product').dataTable();
-</script>
+<?php if(empty($productStats)): ?>
+<div class='empty-tip'><?php common::printLink('product', 'create', '', "<i class='icon-plus'></i> " . $lang->product->create, '', "class='btn btn-primary'") ?></div>
+<?php else:?>
+<style>
+.block-products.block-sm .c-project {display: none;}
+</style>
+<div class="panel-body has-table scrollbar-hover block-products">
+  <table class='table table-borderless table-hover table-fixed-head tablesorter table-fixed'>
+    <thead>
+      <tr>
+        <th class='c-name'><?php echo $lang->product->name;?></th>
+        <?php if($longBlock):?>
+        <th class='c-name c-project'><?php echo $lang->product->currentProject;?></th>
+        <?php endif;?>
+        <th class='c-num'><?php echo $lang->product->plans;?></th>
+        <th class='c-num'><?php echo $lang->product->releases;?></th>
+        <th class='c-num'><?php echo $lang->story->statusList['active'] . $lang->story->common;?></th>
+        <th class='c-num w-90px'><?php echo $lang->bug->unResolved . $lang->bug->common;?></th>
+      </tr>
+    </thead>
+    <tbody>
+      <?php foreach($productStats as $product):?>
+      <?php
+      $appid    = isset($_GET['entry']) ? "class='app-btn' data-id='{$this->get->entry}'" : "";
+      $viewLink = $this->createLink('product', 'browse', 'productID=' . $product->id);
+      ?>
+      <tr class='text-center' data-url='<?php echo empty($sso) ? $viewLink : $sso . $sign . 'referer=' . base64_encode($viewLink); ?>' <?php echo $appid?>>
+        <td class='c-name text-left' title='<?php echo $product->name?>'><?php echo $product->name?></td>
+        <?php if($longBlock):?>
+        <td class='c-name c-project text-left'><?php echo zget($projects, $product->id, '');?></td>
+        <?php endif;?>
+        <td class="c-num"><?php echo $product->plans?></td>
+        <td class="c-num"><?php echo $product->releases?></td>
+        <td class="c-num"><?php echo $product->stories['active']?></td>
+        <td class="c-num"><?php echo $product->unResolved?></td>
+      </tr> 
+      <?php endforeach;?>
+    </tbody>
+  </table>
+</div>
+<?php endif;?>
