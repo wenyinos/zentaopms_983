@@ -162,13 +162,9 @@ $lang->lang = 'Language';
 
 /* 风格列表。*/
 $lang->theme                = 'Theme';
-$lang->themes['default']    = 'ZenTao Blue (default)';
-$lang->themes['green']      = 'Green';
-$lang->themes['red']        = 'Red';
-$lang->themes['purple']     = 'Purple';
-$lang->themes['pink']       = 'Pink';
+$lang->themes['wenyin']     = 'WenYin';
+$lang->themes['lightblue']  = 'Bright Blue';
 $lang->themes['blackberry'] = 'Blackberry';
-$lang->themes['classic']    = 'Classic';
 
 /* 首页菜单设置。*/
 $lang->index = new stdclass();

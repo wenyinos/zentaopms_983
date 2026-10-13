@@ -6,6 +6,13 @@ $themeRoot    = $webRoot . "theme/";
 $defaultTheme = $webRoot . 'theme/default/';
 $langTheme    = $themeRoot . 'lang/' . $app->getClientLang() . '.css';
 $clientTheme  = $this->app->getClientTheme();
+/* 主题/语言名须白名单校验：cookie 中可能残留已下线的旧主题（如 default/green/purple），
+   框架只纠正 $clientTheme 属性、setcookie 也要下次请求才生效，直接拼 CSS 会引用不存在的
+   皮肤包导致整站无样式。此处按注册表回退到默认主题。 */
+$clientThemeName = $this->cookie->theme;
+if(!isset($lang->themes[$clientThemeName])) $clientThemeName = $config->default->theme;
+$clientLang = $this->cookie->lang;
+if(!isset($config->langs[$clientLang])) $clientLang = $config->default->lang;
 $onlybody     = zget($_GET, 'onlybody', 'no');
 ?>
 <!DOCTYPE html>
@@ -38,7 +45,7 @@ $onlybody     = zget($_GET, 'onlybody', 'no');
   {
       js::import($jsRoot . 'all.js');
       js::import($jsRoot . 'compat.js');
-      css::import($defaultTheme . $this->cookie->lang . '.' . $this->cookie->theme . '.css');
+      css::import($defaultTheme . $clientLang . '.' . $clientThemeName . '.css');
       css::import($defaultTheme . 'compat.css');
   }
 

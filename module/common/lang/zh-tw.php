@@ -162,13 +162,9 @@ $lang->lang = 'Language';
 
 /* 風格列表。*/
 $lang->theme                = '主題';
-$lang->themes['default']    = '禪道藍（預設）';
-$lang->themes['green']      = '葉蘭綠';
-$lang->themes['red']        = '赤誠紅';
-$lang->themes['purple']     = '玉煙紫';
-$lang->themes['pink']       = '芙蕖粉';
+$lang->themes['wenyin']     = 'WenYin';
+$lang->themes['lightblue']  = '亮藍';
 $lang->themes['blackberry'] = '黑莓';
-$lang->themes['classic']    = '經典';
 
 /* 首頁菜單設置。*/
 $lang->index = new stdclass();
