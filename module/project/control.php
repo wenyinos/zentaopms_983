@@ -777,7 +777,10 @@ class project extends control
         $this->view->projectName = $this->projects[$projectID];
         $this->view->pager       = $pager;
         $this->view->orderBy     = $orderBy;
-        $this->view->tasks       = $this->testtask->getProjectTasks($projectID);
+        /* UI 10.1 版式：测试单按所属产品分组展示（原为扁平列表）。 */
+        $productTasks = array();
+        foreach($this->testtask->getProjectTasks($projectID) as $task) $productTasks[$task->product][] = $task;
+        $this->view->tasks       = $productTasks;
         $this->view->users       = $this->loadModel('user')->getPairs('noclosed|noletter');
         $this->view->products    = $this->loadModel('product')->getPairs();
 

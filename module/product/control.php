@@ -405,6 +405,9 @@ class product extends control
         $this->view->groups     = $this->loadModel('group')->getPairs();
         $this->view->lines      = array('') + $this->loadModel('tree')->getLinePairs();
 
+        /* UI 10.1 版式：产品详情页新增"发布"时间线面板。 */
+        $this->view->releases   = $this->dao->select('*')->from(TABLE_RELEASE)->where('deleted')->eq(0)->andWhere('product')->eq($productID)->orderBy('date')->fetchAll();
+
         $this->display();
     }
 

@@ -290,6 +290,92 @@ class commonModel extends model
         echo html::a(helper::createLink('misc', 'about'), $lang->aboutZenTao, '', "class='about iframe' data-width='900' data-headerless='true' data-backdrop='true' data-keyboard='true' data-class='modal-about'");
     }
 
+/**
+     * Create sub menu by settings in lang files.
+     *
+     * @param  array    $items
+     * @param  mixed    $replace
+     * @static
+     * @access public
+     * @return array
+     */
+    public static function createSubMenu($items, $replace)
+    {
+        $subMenu = array();
+        foreach($items as $subMenuKey => $subMenuLink)
+        {
+            if(is_array($subMenuLink) and isset($subMenuLink['link'])) $subMenuLink = $subMenuLink['link'];
+            $subMenuLink = vsprintf($subMenuLink, $replace);
+            list($subMenuName, $subMenuModule, $subMenuMethod, $subMenuParams) = explode('|', $subMenuLink);
+
+            $link = array();
+            $link['module'] = $subMenuModule;
+            $link['method'] = $subMenuMethod;
+            $link['vars']   = $subMenuParams;
+
+            $menu = new stdclass();
+            $menu->name   = $subMenuKey;
+            $menu->link   = $link;
+            $menu->text   = $subMenuName;
+            $menu->hidden = false;
+            $subMenu[$subMenuKey] = $menu;
+        }
+
+        return $subMenu;
+    }
+
+/**
+     * Print pre and next link
+     *
+     * @param  string $preAndNext
+     * @param  string $linkTemplate
+     * @static
+     * @access public
+     * @return void
+     */
+    public static function printPreAndNext($preAndNext = '', $linkTemplate = '')
+    {
+        global $lang, $app;
+        if(isonlybody()) return false;
+
+        echo "<nav class='container'>";
+        if(isset($preAndNext->pre) and $preAndNext->pre)
+        {
+            $id = (isset($_SESSION['testcaseOnlyCondition']) and !$_SESSION['testcaseOnlyCondition'] and $app->getModuleName() == 'testcase' and isset($preAndNext->pre->case)) ? 'case' : 'id';
+            $title = isset($preAndNext->pre->title) ? $preAndNext->pre->title : $preAndNext->pre->name;
+            $title = '#' . $preAndNext->pre->$id . ' ' . $title . ' ' . $lang->preShortcutKey;
+            $link  = $linkTemplate ? sprintf($linkTemplate, $preAndNext->pre->$id) : inLink('view', "ID={$preAndNext->pre->$id}");
+            echo html::a($link, '<i class="icon-pre icon-chevron-left"></i>', '', "id='prevPage' class='btn btn-info' title='{$title}'");
+        }
+        if(isset($preAndNext->next) and $preAndNext->next)
+        {
+            $id = (isset($_SESSION['testcaseOnlyCondition']) and !$_SESSION['testcaseOnlyCondition'] and $app->getModuleName() == 'testcase' and isset($preAndNext->next->case)) ? 'case' : 'id';
+            $title = isset($preAndNext->next->title) ? $preAndNext->next->title : $preAndNext->next->name;
+            $title = '#' . $preAndNext->next->$id . ' ' . $title . ' ' . $lang->nextShortcutKey;
+            $link  = $linkTemplate ? sprintf($linkTemplate, $preAndNext->next->$id) : inLink('view', "ID={$preAndNext->next->$id}");
+            echo html::a($link, '<i class="icon-pre icon-chevron-right"></i>', '', "id='nextPage' class='btn btn-info' title='$title'");
+        }
+        echo '</nav>';
+    }
+
+/**
+     * Print back link
+     *
+     * @param  string $backLink
+     * @static
+     * @access public
+     * @return void
+     */
+    static public function printBack($backLink, $class = '')
+    {
+        global $lang, $app;
+        if(isonlybody()) return false;
+
+        if(empty($class)) $class = 'btn';
+        $title = $lang->goback . $lang->backShortcutKey;
+        echo html::a($backLink, '<i class="icon-goback icon-back"></i> ' . $lang->goback, '', "id='back' class='{$class}' title={$title}");
+    }
+
     /**
      * Create menu item link
      *
