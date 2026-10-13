@@ -1,9 +1,18 @@
-# WenYinOS ZenTaoPMS 9.8.3_1
+# WenYinOS ZenTaoPMS 9.9.0
 
 English | [简体中文](README.zh-CN.md)
 
+> **Unofficial build** — this is a community fork maintained by the [WenYin Open Source Community](https://github.com/wenyinos/ZenTaoPMS). Version `9.9.0` does not correspond to any official ZenTao release: it means ZenTao **9.8.3** core with the **10.1** interface ported on top (see below).
+
 ## Overview
 WenYinOS ZenTaoPMS is a PHP + MySQL project management system based on the classic ZenTao monolith architecture. It includes product, project, QA, document, and organization management in one application.
+
+Two upstream generations are combined here:
+
+- **Core & business logic**: ZenTao **9.8.3** — unchanged, feature-frozen. All modules keep their original behaviour.
+- **Interface layer**: ZenTao **10.1** — application skeleton (`module/common/view/` header/footer), page templates, skin base (ZUI 1.8.1) and the WenYin purple theme, plus a compatibility layer (`www/theme/default/compat.css`, `www/js/compat.js`) that keeps legacy pages rendering correctly.
+
+Themes registered in this build: **WenYin** (purple, default), **LightBlue**, **Blackberry**.
 
 ## Key Capabilities
 - Product management: stories, plans, releases

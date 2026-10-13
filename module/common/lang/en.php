@@ -20,6 +20,7 @@ $lang->ellipsis  = '…';
 $lang->percent   = '%';
 
 $lang->zentaoPMS      = 'ZenTao';
+$lang->unofficial     = 'Unofficial build';
 $lang->welcome        = "%s PMS";
 $lang->logout         = 'Logout';
 $lang->login          = 'Login';

@@ -16,8 +16,8 @@
       $phpBranch  = PHP_MAJOR_VERSION . '.' . PHP_MINOR_VERSION;
       $phpLink    = "https://www.php.net/releases/{$phpBranch}/en.php";
       ?>
-      <a href='<?php echo $lang->website;?>' target='_blank'><i class='icon-zentao'></i> <?php echo $lang->zentaoPMS . $config->version;?></a> &nbsp;
-      <a href='https://github.com/wenyinos/zentaopms_983' target='_blank'>WenYinOS</a> &nbsp;
+      <a href='https://github.com/wenyinos/ZenTaoPMS' target='_blank'><i class='icon-zentao'></i> <?php echo $lang->zentaoPMS . $config->version;?> · WenYinOS</a>
+      <span class='text-muted'>(<?php echo $lang->unofficial;?>)</span> &nbsp;
       <a href='<?php echo $phpLink;?>' target='_blank'>PHP <?php echo $phpVersion;?></a> &nbsp;
       <?php commonModel::printNotifyLink();?>
     </div>

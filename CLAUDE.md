@@ -4,7 +4,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## 项目概述
 
-这是 ZenTao 项目管理系统（禅道）的定制版本 WenYinOS ZenTaoPMS 9.8.3_1，采用 PHP + MySQL 的经典单体架构，不依赖 Composer/Node 构建管线。
+这是 ZenTao 项目管理系统（禅道）的社区定制版本 **WenYinOS ZenTaoPMS 9.9.0（非官方版本）**，采用 PHP + MySQL 的经典单体架构，不依赖 Composer/Node 构建管线。
+
+版本号含义：`9.9.0` 不对应官方禅道版本，代表 **9.8.3 功能内核 + 10.1 界面层**（骨架/模板/皮肤移植，业务逻辑冻结）。仓库地址：<https://github.com/wenyinos/ZenTaoPMS>
 
 ## 常用开发命令
 

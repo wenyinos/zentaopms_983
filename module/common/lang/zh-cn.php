@@ -20,6 +20,7 @@ $lang->ellipsis  = '…';
 $lang->percent   = '%';
 
 $lang->zentaoPMS      = '禅道';
+$lang->unofficial     = '非官方版本';
 $lang->welcome        = "%s项目管理系统";
 $lang->logout         = '退出';
 $lang->login          = '登录';

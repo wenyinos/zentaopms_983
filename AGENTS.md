@@ -1,5 +1,7 @@
 # Repository Guidelines
 
+**Project**: WenYinOS ZenTaoPMS 9.9.0 — an **unofficial community build** (<https://github.com/wenyinos/ZenTaoPMS>) combining the ZenTao **9.8.3** core (business logic frozen) with the **10.1** interface. The `9.9.0` version number matches no upstream release by design.
+
 ## Project Structure & Module Organization
 This repository is a classic ZenTao PHP monolith.
 - `module/`: business modules (`bug`, `story`, `task`, `project`, etc.). Typical MVC-style layout with `control.php`, `model.php`, and `view/*.html.php`.
