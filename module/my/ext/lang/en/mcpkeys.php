@@ -10,6 +10,7 @@ $lang->my->mcpSecret       = 'Personal Key';
 $lang->my->mcpNoSecret     = 'No personal key yet. Once generated, write actions must be signed with this key and nobody else can act as your account.';
 $lang->my->mcpSecretHint   = 'The key equals your account write permission. Store it securely (e.g. in the local zentao-mcp-py/.env).';
 $lang->my->mcpGenerate     = 'Generate Key';
+$lang->my->mcpGenFail      = 'Failed to generate the key. Please retry; if it persists, ask the administrator to check the server log.';
 $lang->my->mcpReset        = 'Reset Key';
 $lang->my->mcpResetConfirm = 'The old key will stop working immediately (machines using it must update .env). Reset anyway?';
 $lang->my->mcpCopy         = 'Copy';

@@ -8,11 +8,15 @@
   <div class='heading'><i class='icon-key'></i> <?php echo $lang->my->mcpkeys;?></div>
 </div>
 <div class='container mw-800px'>
+  <?php if(!empty($error)):?>
+  <div class='alert alert-danger'><?php echo $error;?></div>
+  <?php endif;?>
   <?php if(!$hasSharedSecret):?>
   <div class='text-danger'><?php echo $lang->my->mcpNoShared;?></div>
   <?php endif;?>
   <div class='alert alert-info'><?php printf($lang->my->mcpIntro, $account);?></div>
   <form class='form-condensed' method='post'>
+    <input type='hidden' name='generate' value='1' />
     <table class='table table-form'>
       <tr>
         <th class='text-right w-120px'><?php echo $lang->my->mcpAccount;?></th>
@@ -26,11 +30,11 @@
           <div class='text-muted'><?php echo $lang->my->mcpSecretHint;?></div>
           <div class='m-t-10px'>
             <button type='button' class='btn' onclick="copyMCPBox('mcpSecret', '<?php echo $lang->my->mcpCopyOk;?>')"><?php echo $lang->my->mcpCopy;?></button>
-            <button type='submit' name='generate' value='reset' class='btn btn-primary' onclick="return confirm('<?php echo $lang->my->mcpResetConfirm;?>')"><?php echo $lang->my->mcpReset;?></button>
+            <button type='submit' class='btn btn-primary' onclick="return confirm('<?php echo $lang->my->mcpResetConfirm;?>')"><?php echo $lang->my->mcpReset;?></button>
           </div>
           <?php else:?>
           <div class='text-muted'><?php echo $lang->my->mcpNoSecret;?></div>
-          <button type='submit' name='generate' value='new' class='btn btn-primary'><?php echo $lang->my->mcpGenerate;?></button>
+          <button type='submit' class='btn btn-primary'><?php echo $lang->my->mcpGenerate;?></button>
           <?php endif;?>
         </td>
       </tr>

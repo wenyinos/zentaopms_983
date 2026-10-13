@@ -1,4 +1,4 @@
-# zentao-mcp 部署指南（v0.6.0）
+# zentao-mcp 部署指南（v0.6.1）
 
 AI agent 依据 git 提交记录维护禅道项目管理：提交关联任务 / 需求 / Bug、任务状态流转、工时记录，并可创建/维护项目/产品/需求/计划/发布/测试/文档等，共 63 个 MCP 工具（填写规范见 `AGENT-GUIDE.md`）。
 
@@ -6,8 +6,8 @@ AI agent 依据 git 提交记录维护禅道项目管理：提交关联任务 / 
 
 | 附件 | 部署位置 | 内容 |
 |---|---|---|
-| `zentao-mcp-server-0.6.0.zip` | **禅道服务器**：直接解压到禅道根目录（增量包，可安全覆盖） | **仅含相对 v0.5.0 的变更文件**：`module/mcp/model.php`（个人密钥验签）、`module/mcp/.env.example`、`module/my/ext/`（自助密钥页）、`module/common/ext/model/hook/checkPriv.z.mcpkeys.php`（权限放行）、`module/common/ext/model/mcp.php`（注释更正） |
-| `zentao-mcp-client-0.6.0.zip` | **开发机**：解压到任意目录（可选更新，本版代码功能不变） | Python 客户端：`zentao-mcp-py/`（版本号与文档更新），**不要放到禅道服务器** |
+| `zentao-mcp-server-0.6.1.zip` | **禅道服务器**：直接解压到禅道根目录（增量包，可安全覆盖） | **仅含相对 v0.5.0 的变更文件**：`module/mcp/model.php`（个人密钥验签）、`module/mcp/.env.example`、`module/my/ext/`（自助密钥页）、`module/common/ext/model/hook/checkPriv.z.mcpkeys.php`（权限放行）、`module/common/ext/model/mcp.php`（注释更正） |
+| `zentao-mcp-client-0.6.1.zip` | **开发机**：解压到任意目录（可选更新，本版代码功能不变） | Python 客户端：`zentao-mcp-py/`（版本号与文档更新），**不要放到禅道服务器** |
 
 > 全新部署：先落位仓库完整代码（或 v0.5.0 完整包），再叠加本增量包。
 
@@ -17,12 +17,12 @@ AI agent 依据 git 提交记录维护禅道项目管理：提交关联任务 / 
 - **无需任何数据库变更**：表结构不变，个人密钥与同步点等运行时数据由服务端自动写入禅道原生表 `zt_config`
 - **需开启扩展机制**：`config/my.php` 中 `$config->framework->extensionLevel = 1;`（本仓库已配置）
 
-## 一、服务端部署（zentao-mcp-server-0.6.0.zip）
+## 一、服务端部署（zentao-mcp-server-0.6.1.zip）
 
 1. 直接解压到禅道根目录（包内仅含变更文件，可安全合并覆盖）：
 
    ```bash
-   unzip -o zentao-mcp-server-0.6.0.zip -d <禅道根目录>
+   unzip -o zentao-mcp-server-0.6.1.zip -d <禅道根目录>
    ```
 
    落位文件（仅变更项）：
@@ -58,14 +58,14 @@ AI agent 依据 git 提交记录维护禅道项目管理：提交关联任务 / 
    - 禅道原生 `api` / `editor` 调试入口保持封禁（与 MCP 无关）
    - 写操作审计日志：禅道 `tmp/mcp/access-YYYYMMDD.log`（每行含密钥归属：`shared` 或 `personal:<账号>`）
 
-## 二、客户端部署（zentao-mcp-client-0.6.0.zip，每台开发机）
+## 二、客户端部署（zentao-mcp-client-0.6.1.zip，每台开发机）
 
 要求：`python3` ≥ 3.7、`git`。客户端**不属于服务端**，请勿解压到禅道目录。
 
 1. 解压到任意位置（如 `~/tools/`）：
 
    ```bash
-   unzip -o zentao-mcp-client-0.6.0.zip -d ~/tools/
+   unzip -o zentao-mcp-client-0.6.1.zip -d ~/tools/
    ```
 
 2. 生成个人密钥（推荐，每人在禅道操作）：登录禅道 → 「我的地盘」→ 顶部菜单「MCP密钥」→ 点「生成密钥」→ 复制页面给出的配置。
@@ -107,12 +107,14 @@ AI agent 依据 git 提交记录维护禅道项目管理：提交关联任务 / 
 
 ## 四、密钥管理与升级说明
 
+**v0.6.1 修复说明**：修复「生成密钥」按钮在真实浏览器中点击无效的问题（v0.6.0 缺陷）。原因：禅道全局 JS（`all.js` 的 `setForm`）在表单提交瞬间会禁用 submit 按钮，被禁用按钮的 `name/value` 不会进入请求体；原实现以按钮字段判断提交动作因而失效（curl 等无 JS 环境不受影响）。现改为按请求方法判定，并保留隐藏字段。已实测：真实浏览器点击生成/重置均正常。
+
 **密钥轮换**（个人）：在「MCP密钥」页点「重置密钥」，旧密钥立即失效；本机 `.env` 换新密钥后重启 MCP 进程。无需管理员介入。
 
 **过渡到严格模式**（管理员）：全员生成个人密钥并验证写操作正常后，在 `module/mcp/.env` 追加 `MCP_STRICT=1` → 清 `tmp/model/*.php` → reload php-fpm。此后所有写操作只能用签名账号自己的个人密钥。
 
-**升级步骤（v0.5.0 → v0.6.0，生产服务器）**：
-1. 解压 `zentao-mcp-server-0.6.0.zip` 到禅道根目录，覆盖同名文件
+**升级步骤（v0.5.0 → v0.6.1，生产服务器）**：
+1. 解压 `zentao-mcp-server-0.6.1.zip` 到禅道根目录，覆盖同名文件
 2. 确认 php-fpm 用户可读（宝塔环境：`chown -R www:www module/mcp module/my module/common/ext`，目录 755 / 文件 644）
 3. 清扩展合并缓存：`rm -f tmp/model/*.php`
 4. 重载 php-fpm

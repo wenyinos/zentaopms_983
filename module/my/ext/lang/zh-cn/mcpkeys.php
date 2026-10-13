@@ -10,6 +10,7 @@ $lang->my->mcpSecret       = '个人密钥';
 $lang->my->mcpNoSecret     = '尚未生成个人密钥。生成后，写操作必须使用该密钥签名，其他机器将无法再冒用你的账号署名。';
 $lang->my->mcpSecretHint   = '密钥等同于你的账号写权限，请通过安全渠道保存（如本机 zentao-mcp-py/.env）。';
 $lang->my->mcpGenerate     = '生成密钥';
+$lang->my->mcpGenFail      = '密钥生成失败，请重试；若持续失败请联系管理员检查服务端日志。';
 $lang->my->mcpReset        = '重置密钥';
 $lang->my->mcpResetConfirm = '重置后旧密钥立即失效（使用旧密钥的机器需同步更新 .env），确定重置？';
 $lang->my->mcpCopy         = '复制';

@@ -13,10 +13,12 @@ class my extends control
         $account = $this->app->user->account;
         $mcp     = $this->loadModel('mcp');
 
-        if(isset($_POST['generate']))
+        /* 按请求方法判定生成动作：禅道全局 JS（all.js 的 setForm）在提交瞬间会禁用 submit 按钮，
+           被禁用按钮的 name/value 不会进入请求体，故不能以按钮字段是否存在来判断。 */
+        if($this->server->request_method === 'POST')
         {
-            $mcp->generateUserSecret($account);
-            $this->locate($this->createLink('my', 'mcpkeys'));
+            if($mcp->generateUserSecret($account) === '') $this->view->error = $this->lang->my->mcpGenFail;
+            else $this->locate($this->createLink('my', 'mcpkeys'));
         }
 
         $secret = $mcp->getUserSecret($account);
