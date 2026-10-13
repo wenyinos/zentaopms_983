@@ -80,8 +80,15 @@ $(function()
       <?php $index = 1;?>
       <?php foreach($products as $product):?>
       <div class="tab-pane fade <?php if($index == 1) echo 'active';?> in" id="tabContent<?php echo $product->id;?>">
+        <?php if(empty($product->builds)):?>
+        <div class='empty-tip'>
+          <?php echo $lang->block->emptyTip;?>
+          <div class="text-muted" style="margin-top:10px;">
+            <a href="<?php echo $this->createLink('testtask', 'browse', "productID={$product->id}");?>" class="text-primary"><?php echo $lang->bug->nowToTest;?> <i class="icon icon-right-circle icon-sm"></i></a>
+          </div>
+        </div>
+        <?php else:?>
         <div class="statistic-menu input-group space w-400px">
-          <?php if($product->builds):?>
           <select id='build' name='build' class="form-control chosen">
             <?php foreach($product->builds as $build):?>
             <option value="<?php echo $build->id;?>"><?php echo $build->name;?></option>
@@ -90,8 +97,8 @@ $(function()
           <div class="input-group-cell">
           <span class="text-muted small"><?php echo $lang->bug->hasSubmittedTest;?><a href="<?php echo $this->createLink('testtask', 'browse', "productID={$product->id}");?>" class="text-primary"><?php echo $lang->bug->nowToTest;?> <i class="icon icon-right-circle icon-sm"></i></a></span>
           </div>
-          <?php endif;?>
         </div>
+        <?php endif;?>
         <?php $buildIndex = 1;?>
         <?php foreach($product->builds as $build):?>
         <div class="table-row <?php if($buildIndex != 1) echo 'hidden';?>" id='bugBox<?php echo $build->id;?>'>
