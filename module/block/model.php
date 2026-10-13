@@ -74,6 +74,19 @@ class blockModel extends model
     }
 
     /**
+     * 判断块是否为长块（UI 10.1 版式依据：grid >= 6）。
+     *
+     * @param  object $block
+     * @access public
+     * @return bool
+     */
+    public function isLongBlock($block)
+    {
+        if(empty($block)) return true;
+        return $block->grid >= 6;
+    }
+
+    /**
      * Get saved block config.
      * 
      * @param  int    $id 

@@ -233,6 +233,16 @@ class block extends control
             }
         }
 
+        /* UI 10.1 版式：仪表盘分左右两栏（grid>=6 为长块，其余为短块）。保留 $blocks 原契约。 */
+        $longBlocks = $shortBlocks = array();
+        foreach($blocks as $key => $block)
+        {
+            if($this->block->isLongBlock($block)) $longBlocks[$key] = $block;
+            else $shortBlocks[$key] = $block;
+        }
+        $this->view->longBlocks  = $longBlocks;
+        $this->view->shortBlocks = $shortBlocks;
+
         $this->view->blocks = $blocks;
         $this->view->module = $module;
 
@@ -297,8 +307,10 @@ class block extends control
         {
             $html = $this->fetch('block', 'printAssignToMeBlock');
         }
-        
-        die($html);
+
+        /* UI 10.1：dashboard 视图通过 fetch() 内联渲染各区块，若此处 die() 会终止整个请求导致后续区块丢失。
+           改为 echo：fetch 内联调用时正确累积输出，HTTP 直连时等价于原来的 die（框架随后正常结束请求）。 */
+        echo $html;
     }
 
     /**
