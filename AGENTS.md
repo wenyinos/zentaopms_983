@@ -39,6 +39,18 @@ Current history includes short messages (for example `update`, `first commit`). 
 - Treat `www/data/` and `tmp/` as runtime data.
 - Prefer changes in `extension/` when customizing behavior to reduce upgrade risk.
 
+## UI Theme System (10.1 interface port)
+
+The front end was ported from ZenTao 10.1 (`feat/ui-101`), keeping the 9.8.3 core and all business logic untouched.
+
+- **Three layers move together**: HTML skeleton (`module/common/view/{header,header.lite,footer,footer.lite}.html.php`), JS (9.8.3 `all.js` retained + `www/js/compat.js` shim), CSS (10.1 skin base + theme overlay + `www/theme/default/compat.css` compatibility layer). Changing only one layer breaks the UI — the 10.1 skin contains no legacy selectors (`#mainmenu`/`#modulemenu`/`#featurebar`/`#titlebar` are absent from it).
+- **`.outer` wrapper is load-bearing**: `header.html.php` keeps `<div id='wrap'><div class='outer'>` inside `main > .container` so ~200 legacy view templates keep their layout JS (`fixTfoot`, `saveOuterBox`, `#wrap>.outer` selectors). Do not remove it when editing the skeleton.
+- **Themes**: production mode loads `theme/default/{lang}.{theme}.css` (pre-merged = 10.1 base + theme overlay). Merged bundles are generated, not hand-edited: WenYin purple comes from the 10.1 `purple` overlay with a color map (`#3123ae→#6f42c1` and the rgba equivalents). `www/theme/wenyin/style.css` is the debug-mode counterpart. Registered themes: `wenyin` (default), `lightblue`, `blackberry`; `wenyin` is the default via the deployment `config/my.php`.
+- **compat.css** is extracted from the old 9.8.3 skin (49 legacy icons incl. ZenIcon/NewZenIcon font-faces + ~267 layout rules). Regenerate, don't hand-patch.
+- **mobile.css** targets the new ids (`#mainHeader`/`#navbar`/`#subNavbar`) and must free the 10.1 skin's `min-width:1280px` on `#header,#main`.
+- PHP 8.5 constraint: `printUserBar` uses `$account[0]`, never brace offsets (`$account{0}` is fatal on PHP 8).
+- After editing `module/*/ext/` or theme files, clear `tmp/model/*.php` and reload php-fpm.
+
 ## MCP Integration (zentao-mcp)
 
 `zentao-mcp-py/` provides an MCP server that lets AI agents maintain ZenTao project management from git commits (task/story/bug linking, task status flow, effort logging).
