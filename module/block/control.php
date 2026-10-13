@@ -204,6 +204,22 @@ class block extends control
         $blocks = $this->block->getBlockList($module);
         $inited = empty($this->config->$module->common->blockInited) ? '' : $this->config->$module->common->blockInited;
 
+        /* UI 10.1：静默迁移到新式仪表盘布局（不再弹"是否启用新视图"提示）。
+           旧布局的区块无法套用左右分栏，直接重建为 10.1 默认布局；每用户每模块仅执行一次（以 initVersion 版本号判断）。 */
+        $account     = isset($this->app->user->account) ? $this->app->user->account : 'guest';
+        $initVersion = (int)$this->dao->select('value')->from(TABLE_CONFIG)
+            ->where('owner')->eq($account)->andWhere('module')->eq($module)
+            ->andWhere('section')->eq('block')->andWhere('`key`')->eq('initVersion')
+            ->fetch('value');
+        if($this->config->block->version and $initVersion < (int)$this->config->block->version)
+        {
+            $this->dao->delete()->from(TABLE_BLOCK)->where('module')->eq($module)->andWhere('account')->eq($account)->exec();
+            $this->dao->delete()->from(TABLE_CONFIG)->where('module')->eq($module)->andWhere('owner')->eq($account)->andWhere('`key`')->eq('blockInited')->exec();
+            $this->block->initBlock($module);
+            $blocks = $this->block->getBlockList($module);
+            $inited = true;
+        }
+
         /* Init block when vist index first. */
         if(empty($blocks) and !$inited and !defined('TUTORIAL'))
         {
@@ -775,28 +791,6 @@ class block extends control
         $this->dao->delete()->from(TABLE_BLOCK)->where('source')->eq($block->source)->andWhere('block')->eq($block->block)->exec();
         $this->loadModel('setting')->setItem('system.block.closed', $closedBlock . ",{$block->source}|{$block->block}");
         die(js::reload('parent'));
-    }
-
-/**
-     * Ajax for use new block.
-     * 
-     * @param  string $module 
-     * @param  string $confirm 
-     * @access public
-     * @return void
-     */
-    public function ajaxUseNew($module, $confirm = 'no')
-    {
-        if($confirm == 'yes')
-        {
-            $this->dao->delete()->from(TABLE_BLOCK)->where('module')->eq($module)->andWhere('account')->eq($this->app->user->account)->exec();
-            $this->dao->delete()->from(TABLE_CONFIG)->where('module')->eq($module)->andWhere('owner')->eq($this->app->user->account)->andWhere('`key`')->eq('blockInited')->exec();
-            die(js::reload('parent'));
-        }
-        elseif($confirm == 'no')
-        {
-            $this->loadModel('setting')->setItem("{$this->app->user->account}.$module.block.initVersion", $this->config->block->version);
-        }
     }
 
 /**

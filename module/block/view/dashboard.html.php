@@ -108,19 +108,6 @@ $dropmenu .= "<li>" . html::a($this->createLink("block", "ajaxReset", "module=$m
 $dropmenu .= '</ul></div>';
 ?>
 $('#subHeader #pageActions .btn-toolbar:last').append(<?php echo json_encode($dropmenu)?>);
-<?php if(!isset($config->$module->block->initVersion) or $config->$module->block->initVersion < '2'):?>
-$(function()
-{
-    if(confirm('<?php echo $lang->block->noticeNewBlock;?>'))
-    {
-        $('#hiddenwin').attr('src', '<?php echo $this->createLink('block', 'ajaxUseNew', "module=$module&confirm=yes");?>');
-    }
-    else
-    {
-        $('#hiddenwin').attr('src', '<?php echo $this->createLink('block', 'ajaxUseNew', "module=$module&confirm=no");?>');
-    }
-})
-<?php endif;?>
 <?php endif;?>
 </script>
 <?php if($extView = $this->getExtViewFile(__FILE__)){include $extView; return helper::cd();}?>
