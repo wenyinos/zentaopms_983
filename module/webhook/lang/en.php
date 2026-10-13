@@ -16,6 +16,7 @@ $lang->webhook->id          = 'ID';
 $lang->webhook->type        = 'Type';
 $lang->webhook->name        = 'Name';
 $lang->webhook->url         = 'Webhook Address';
+$lang->webhook->domain      = 'Zentao Domain';
 $lang->webhook->contentType = 'Content Type';
 $lang->webhook->sendType    = 'Send Type';
 $lang->webhook->product     = "{$lang->productCommon}";
@@ -48,7 +49,6 @@ $lang->webhook->paramsList['date']       = 'Date';
 $lang->webhook->paramsList['comment']    = 'Comment';
 $lang->webhook->paramsList['text']       = 'Action Desc';
 
-$lang->webhook->saveSuccess   = 'Save success.';
 $lang->webhook->confirmDelete = 'Are your sure delete this hook?';
 
 $lang->webhook->trimWords = '';

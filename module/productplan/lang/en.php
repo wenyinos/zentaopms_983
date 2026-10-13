@@ -12,12 +12,12 @@
 $lang->productplan->common     = $lang->productCommon . ' Plan';
 $lang->productplan->browse     = "View";
 $lang->productplan->index      = "List";
-$lang->productplan->create     = "Create";
+$lang->productplan->create     = "Create Plan";
 $lang->productplan->edit       = "Edit";
 $lang->productplan->delete     = "Delete";
 $lang->productplan->view       = "Details";
 $lang->productplan->bugSummary = "<strong>%s</strong> Bugs in total on this page.";
-$lang->productplan->info       = 'Info';
+$lang->productplan->basicInfo  = 'Basic Info';
 $lang->productplan->batchEdit  = 'Batch Edit';
 
 $lang->productplan->batchUnlink      = "Batch Unlink";
@@ -37,6 +37,7 @@ $lang->productplan->unlinkedBugs     = 'Unlinked';
 $lang->productplan->confirmDelete      = "Do you want to delete this Plan?";
 $lang->productplan->confirmUnlinkStory = "Do you want to unlink this Story?";
 $lang->productplan->confirmUnlinkBug   = "Do you want to unlink this Bug?";
+$lang->productplan->noPlan             = 'No plans. ';
 
 $lang->productplan->id      = 'ID';
 $lang->productplan->product = $lang->productCommon;
@@ -46,7 +47,7 @@ $lang->productplan->desc    = 'Description';
 $lang->productplan->begin   = 'Begin';
 $lang->productplan->end     = 'End';
 $lang->productplan->last    = 'Last plan';
-$lang->productplan->future  = 'Future';
+$lang->productplan->future  = 'Pending';
 $lang->productplan->stories = 'Stories';
 $lang->productplan->bugs    = 'Bugs';
 $lang->productplan->hour    = 'Hour';

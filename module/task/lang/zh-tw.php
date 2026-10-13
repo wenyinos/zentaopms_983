@@ -11,7 +11,7 @@
  */
 $lang->task->index               = "任務一覽";
 $lang->task->create              = "建任務";
-$lang->task->batchCreate         = "批量建任務";
+$lang->task->batchCreate         = "批量創建";
 $lang->task->batchCreateChildren = "批量建子任務";
 $lang->task->batchEdit           = "批量編輯";
 $lang->task->batchChangeModule   = "批量修改模組";
@@ -54,9 +54,9 @@ $lang->task->type             = '任務類型';
 $lang->task->pri              = '優先順序';
 $lang->task->mailto           = '抄送給';
 $lang->task->estimate         = '最初預計';
-$lang->task->estimateAB       = '預';
+$lang->task->estimateAB       = '預計';
 $lang->task->left             = '預計剩餘';
-$lang->task->leftAB           = '剩';
+$lang->task->leftAB           = '剩餘';
 $lang->task->consumed         = '總消耗';
 $lang->task->myConsumed       = '我的總消耗';
 $lang->task->consumedAB       = '消耗';
@@ -83,7 +83,7 @@ $lang->task->openedDateAB     = '創建';
 $lang->task->finishedBy       = '由誰完成';
 $lang->task->finishedByAB     = '完成者';
 $lang->task->finishedDate     = '完成時間';
-$lang->task->finishedDateAB   = '完成';
+$lang->task->finishedDateAB   = '完成時間';
 $lang->task->canceledBy       = '由誰取消';
 $lang->task->canceledDate     = '取消時間';
 $lang->task->closedBy         = '由誰關閉';
@@ -109,15 +109,16 @@ $lang->task->parent           = '父任務';
 $lang->task->parentAB         = '父';
 $lang->task->lblPri           = 'P';
 $lang->task->lblHour          = '(h)';
-$lang->task->deniedNotice     = '當前任務只有%s才可以%s。';
 
-$lang->task->ditto         = '同上';
-$lang->task->dittoNotice   = "該任務與上一任務不屬於同一項目！";
-$lang->task->selectAllUser = '全部';
-$lang->task->noStory       = '無需求';
-$lang->task->noAssigned    = '未指派';
-$lang->task->noFinished    = '未完成';
-$lang->task->noClosed      = '未關閉';
+$lang->task->ditto             = '同上';
+$lang->task->dittoNotice       = "該任務與上一任務不屬於同一項目！";
+$lang->task->selectAllUser     = '全部';
+$lang->task->noStory           = '無需求';
+$lang->task->noAssigned        = '未指派';
+$lang->task->noFinished        = '未完成';
+$lang->task->noClosed          = '未關閉';
+$lang->task->yesterdayFinished = '昨日完成';
+$lang->task->allTasks          = '總任務';
 
 $lang->task->statusList['']       = '';
 $lang->task->statusList['wait']   = '未開始';
@@ -161,7 +162,7 @@ $lang->task->confirmDeleteEstimate = "您確定要刪除這個記錄嗎？";
 $lang->task->copyStoryTitle        = "同需求";
 $lang->task->afterSubmit           = "添加之後";
 $lang->task->successSaved          = "成功添加，";
-$lang->task->delayWarning          = " <strong class='delayed f-14px'> 延期%s天 </strong>";
+$lang->task->delayWarning          = " <strong class='text-danger'> 延期%s天 </strong>";
 $lang->task->remindBug             = "該任務為Bug轉化得到，是否更新Bug:%s ?";
 $lang->task->confirmChangeProject  = "修改{$lang->projectCommon}會導致相應的所屬模組、相關需求和指派人發生變化，確定嗎？";
 $lang->task->confirmFinish         = '"預計剩餘"為0，確認將任務狀態改為"已完成"嗎？';
@@ -170,6 +171,9 @@ $lang->task->confirmTransfer       = '"當前剩餘"為0，任務將被轉交，
 $lang->task->noticeLinkStory       = "沒有可關聯的相關需求，您可以為當前項目%s，然後%s";
 $lang->task->noticeSaveRecord      = '您有尚未保存的工時記錄，請先將其保存。';
 $lang->task->commentActions        = '%s. %s, 由 <strong>%s</strong> 添加備註。';
+$lang->task->deniedNotice          = '當前任務只有%s才可以%s。';
+$lang->task->noTask                = '暫時沒有任務。';
+$lang->task->createDenied          = '你不能在該項目添加任務';
 
 $lang->task->error                   = new stdclass();
 $lang->task->error->consumedNumber   = '"已經消耗"必須為數字';
@@ -180,6 +184,7 @@ $lang->task->error->left             = '請填寫"剩餘"';
 $lang->task->error->work             = '"備註"必須小於%d個字元';
 $lang->task->error->skipClose        = '任務：%s 不是“已完成”或“已取消”狀態，確定要關閉嗎？';
 $lang->task->error->consumed         = '任務：%s工時不能小於0，忽略該任務工時的改動';
+$lang->task->error->assignedTo       = '當前狀態的多人任務不能指派給任務團隊外的成員。';
 
 /* Report. */
 $lang->task->report         = new stdclass();

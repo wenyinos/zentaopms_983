@@ -24,6 +24,7 @@ $lang->testsuite->exportTemplet    = 'Export template';
 $lang->testsuite->batchCreateCase  = 'Batch create cases';
 $lang->testsuite->import           = 'Import';
 $lang->testsuite->showImport       = 'Show import data';
+$lang->testsuite->successSaved     = 'Success Saved';
 
 $lang->testsuite->common         = 'Test Suite';
 $lang->testsuite->product        = $lang->productCommon;
@@ -42,6 +43,8 @@ $lang->testsuite->confirmDelete     = 'Do you want to delete this suite?';
 $lang->testsuite->libraryDelete     = 'Do you want to delete this library？';
 $lang->testsuite->confirmUnlinkCase = 'Do you want to unlink this Case?';
 $lang->testsuite->noticeNone        = 'You have not created a suite yet.';
+$lang->testsuite->noModule          = '<div>You have no modules</div><div>Manage now</div>';
+$lang->testsuite->noTestsuite       = 'No suites. ';
 
 $lang->testsuite->lblCases      = 'Cases';
 $lang->testsuite->lblUnlinkCase = 'Unlink Case';

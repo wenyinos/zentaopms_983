@@ -11,7 +11,7 @@
  */
 $lang->task->index               = "Index";
 $lang->task->create              = "Create Task";
-$lang->task->batchCreate         = "Batch Create Tasks";
+$lang->task->batchCreate         = "Batch Create";
 $lang->task->batchCreateChildren = "Batch Create Children";
 $lang->task->batchEdit           = "Batch Edit";
 $lang->task->batchChangeModule   = "Batch Change Module";
@@ -38,7 +38,7 @@ $lang->task->case                = 'Related Case';
 $lang->task->confirmStoryChange  = "Confirm Story Change";
 $lang->task->progress            = 'Progress';
 $lang->task->progressTips        = 'Cost/(Cost+Left)';
-$lang->task->copy                = 'Duplicate a Task';
+$lang->task->copy                = 'Duplicate Task';
 
 $lang->task->common            = 'Task';
 $lang->task->id                = 'ID';
@@ -83,7 +83,7 @@ $lang->task->openedDateAB      = 'Add';
 $lang->task->finishedBy        = 'Finished';
 $lang->task->finishedByAB      = 'Finished';
 $lang->task->finishedDate      = 'Finished on';
-$lang->task->finishedDateAB    = 'Date';
+$lang->task->finishedDateAB    = 'Finished on';
 $lang->task->canceledBy        = 'Cancelled by';
 $lang->task->canceledDate      = 'Cancelled on';
 $lang->task->closedBy          = 'Closed by';
@@ -109,15 +109,16 @@ $lang->task->parent            = 'Parent Task';
 $lang->task->parentAB          = 'Parent Task';
 $lang->task->lblPri            = 'P';
 $lang->task->lblHour           = '(h)';
-$lang->task->deniedNotice      = 'Only the %s can %s the task.';
 
-$lang->task->ditto         = 'Ditto';
-$lang->task->dittoNotice   = "This Task does not belong to the Project as the previous one does!";
-$lang->task->selectAllUser = 'All';
-$lang->task->noStory       = 'No Story';
-$lang->task->noAssigned    = 'Unassigned';
-$lang->task->noFinished    = 'Unfinished';
-$lang->task->noClosed      = 'Unclosed';
+$lang->task->ditto             = 'Ditto';
+$lang->task->dittoNotice       = "This Task does not belong to the Project as the previous one does!";
+$lang->task->selectAllUser     = 'All';
+$lang->task->noStory           = 'No Story';
+$lang->task->noAssigned        = 'Unassigned';
+$lang->task->noFinished        = 'Unfinished';
+$lang->task->noClosed          = 'Unclosed';
+$lang->task->yesterdayFinished = 'Finished Yesterday';
+$lang->task->allTasks          = 'All Tasks';
 
 $lang->task->statusList['']        = '';
 $lang->task->statusList['wait']    = 'Wait';
@@ -161,8 +162,8 @@ $lang->task->confirmDeleteEstimate = "Do you want to delete it?";
 $lang->task->copyStoryTitle        = "Copy Story";
 $lang->task->afterSubmit           = "After Created,";
 $lang->task->successSaved          = "Created!";
-$lang->task->delayWarning          = " <strong class='delayed f-14px'> Delay %s days </strong>";
-$lang->task->remindBug             = "This Task is converted from a Bug. Do you want to update te Bug:%s?";
+$lang->task->delayWarning          = " <strong class='text-danger'> Delay %s days </strong>";
+$lang->task->remindBug             = "This Task is converted from a Bug. Do you want to update the Bug:%s?";
 $lang->task->confirmChangeProject  = "If you change {$lang->projectCommon}, the related Module, Story and Assignor will be changed. Do you want to do it?";
 $lang->task->confirmFinish         = '"Left Hour" is 0. Do you want to change the Status to "Done"?';
 $lang->task->confirmRecord         = '"Left Hour" is 0. Do you want to set Task as "Done"?';
@@ -170,6 +171,9 @@ $lang->task->confirmTransfer       = '"Left Hour" is 0，Do you want to transfer
 $lang->task->noticeLinkStory       = "No story has been linked. You can %s for this project, then %s.";
 $lang->task->noticeSaveRecord      = 'Your Hour is not saved. Please save it first.';
 $lang->task->commentActions        = '%s. %s, commented by <strong>%s</strong>.';
+$lang->task->deniedNotice          = 'Only the %s can %s the task.';
+$lang->task->noTask                = 'No tasks. ';
+$lang->task->createDenied          = 'Create task is denied in this project';
 
 $lang->task->error = new stdclass();
 $lang->task->error->consumedNumber   = '"Consumed" must be numbers.';
@@ -180,6 +184,7 @@ $lang->task->error->left             = 'Please enter "Left Hour"';
 $lang->task->error->work             = '"Remark" must be less than %d characteres.';
 $lang->task->error->skipClose        = 'Task: %s is not “Done” or “Cancelled”. Do you want to close it?';
 $lang->task->error->consumed         = 'Task: %s Hour must be more than 0. Ignore changes to this Task.';
+$lang->task->error->assignedTo       = 'Multiple task in the current state cannot be assigned to member who outside the task team.';
 
 /* Report. */
 $lang->task->report = new stdclass();

@@ -17,7 +17,7 @@ $lang->productplan->edit       = "编辑计划";
 $lang->productplan->delete     = "删除计划";
 $lang->productplan->view       = "计划详情";
 $lang->productplan->bugSummary = "本页共 <strong>%s</strong> 个Bug";
-$lang->productplan->info       = '信息';
+$lang->productplan->basicInfo  = '基本信息';
 $lang->productplan->batchEdit  = '批量编辑';
 
 $lang->productplan->batchUnlink      = "批量移除";
@@ -37,6 +37,7 @@ $lang->productplan->unlinkedBugs     = '未关联Bug';
 $lang->productplan->confirmDelete      = "您确认删除该计划吗？";
 $lang->productplan->confirmUnlinkStory = "您确认移除该需求吗？";
 $lang->productplan->confirmUnlinkBug   = "您确认移除该Bug吗？";
+$lang->productplan->noPlan             = '暂时没有计划。';
 
 $lang->productplan->id      = '编号';
 $lang->productplan->product = $lang->productCommon;

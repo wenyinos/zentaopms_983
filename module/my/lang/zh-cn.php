@@ -4,6 +4,7 @@ $lang->my->common = '我的地盘';
 /* 方法列表。*/
 $lang->my->index          = '首页';
 $lang->my->todo           = '我的待办';
+$lang->my->calendar       = '日程';
 $lang->my->task           = '我的任务';
 $lang->my->bug            = '我的Bug';
 $lang->my->testTask       = '我的版本';
@@ -21,6 +22,7 @@ $lang->my->shareContacts  = '共享联系人列表';
 $lang->my->limited        = '受限操作(只能编辑与自己相关的内容)';
 $lang->my->score          = '我的积分';
 $lang->my->scoreRule      = '积分规则';
+$lang->my->noTodo         = '暂时没有待办。';
 
 $lang->my->taskMenu = new stdclass();
 $lang->my->taskMenu->assignedToMe = '指派给我';

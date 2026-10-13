@@ -11,7 +11,7 @@
  */
 /* 欄位列表。*/
 $lang->project->common        = $lang->projectCommon . '視圖';
-$lang->project->allProjects   = '全部';
+$lang->project->allProjects   = '所有' . $lang->projectCommon;
 $lang->project->type          = $lang->projectCommon . '類型';
 $lang->project->name          = $lang->projectCommon . '名稱';
 $lang->project->code          = $lang->projectCommon . '代號';
@@ -22,6 +22,8 @@ $lang->project->to            = '至';
 $lang->project->days          = '可用工作日';
 $lang->project->day           = '天';
 $lang->project->workHour      = '工時';
+$lang->project->totalHours    = '可用工時';
+$lang->project->totalDays     = '可用工日';
 $lang->project->status        = $lang->projectCommon . '狀態';
 $lang->project->desc          = $lang->projectCommon . '描述';
 $lang->project->owner         = '負責人';
@@ -29,15 +31,16 @@ $lang->project->PO            = $lang->productCommon . '負責人';
 $lang->project->PM            = $lang->projectCommon . '負責人';
 $lang->project->QD            = '測試負責人';
 $lang->project->RD            = '發佈負責人';
+$lang->project->qa            = '測試';
+$lang->project->release       = '發佈';
 $lang->project->acl           = '訪問控制';
 $lang->project->teamname      = '團隊名稱';
 $lang->project->order         = $lang->projectCommon . '排序';
 $lang->project->products      = '相關' . $lang->productCommon;
 $lang->project->whitelist     = '分組白名單';
-$lang->project->totalEstimate = '總預計';
-$lang->project->totalConsumed = '總消耗';
-$lang->project->totalLeft     = '總剩餘';
-$lang->project->Left          = '剩餘';
+$lang->project->totalEstimate = '預計';
+$lang->project->totalConsumed = '消耗';
+$lang->project->totalLeft     = '剩餘';
 $lang->project->progress      = '進度';
 $lang->project->hours         = '預計 %s 消耗 %s 剩餘 %s';
 $lang->project->viewBug       = '查看bug';
@@ -54,6 +57,8 @@ $lang->project->delayed       = '已延期';
 $lang->project->product       = $lang->project->products;
 $lang->project->readjustTime  = '調整項目起止時間';
 $lang->project->readjustTask  = '順延任務的起止時間';
+$lang->project->effort        = '日誌';
+$lang->project->relatedMember = '相關成員';
 
 $lang->project->start    = '開始';
 $lang->project->activate = '激活';
@@ -93,7 +98,6 @@ $lang->project->otherInfo = '其他信息';
 $lang->project->statusList['wait']      = '未開始';
 $lang->project->statusList['doing']     = '進行中';
 $lang->project->statusList['suspended'] = '已掛起';
-$lang->project->statusList['done']      = '已完成';
 $lang->project->statusList['closed']    = '已關閉';
 
 $lang->project->aclList['open']    = "預設設置(有{$lang->projectCommon}視圖權限，即可訪問)";
@@ -101,21 +105,22 @@ $lang->project->aclList['private'] = "私有{$lang->projectCommon}(只有{$lang-
 $lang->project->aclList['custom']  = "自定義白名單(團隊成員和白名單的成員可以訪問)";
 
 /* 方法列表。*/
-$lang->project->index             = "{$lang->projectCommon}首頁";
+$lang->project->index             = "{$lang->projectCommon}主頁";
 $lang->project->task              = '任務列表';
 $lang->project->groupTask         = '分組瀏覽任務';
 $lang->project->story             = '需求列表';
 $lang->project->bug               = 'Bug列表';
 $lang->project->dynamic           = '動態';
-$lang->project->build             = '版本列表';
+$lang->project->latestDynamic     = '最新動態';
+$lang->project->build             = '所有版本';
 $lang->project->testtask          = '測試任務';
 $lang->project->burn              = '燃盡圖';
-$lang->project->baseline          = '基準綫';
 $lang->project->computeBurn       = '更新';
 $lang->project->burnData          = '燃盡圖數據';
 $lang->project->fixFirst          = '修改首天工時';
 $lang->project->team              = '團隊成員';
 $lang->project->doc               = '文檔列表';
+$lang->project->doclib            = '文檔庫列表';
 $lang->project->manageProducts    = '關聯' . $lang->productCommon;
 $lang->project->linkStory         = '關聯需求';
 $lang->project->linkStoryByPlan   = '按照計劃關聯';
@@ -139,9 +144,14 @@ $lang->project->importPlanStories = '按計劃關聯需求';
 $lang->project->importBug         = '導入Bug';
 $lang->project->updateOrder       = '排序';
 $lang->project->tree              = '樹狀圖';
+$lang->project->treeTask          = '只看任務';
+$lang->project->treeStory         = '只看需求';
 $lang->project->storyKanban       = '需求看板';
 $lang->project->storySort         = '需求排序';
 $lang->project->importPlanStory   = '創建' . $lang->projectCommon . '成功！\n是否導入計劃關聯的相關需求？';
+$lang->project->iteration         = '版本迭代';
+$lang->project->iterationInfo     = '迭代%s次';
+$lang->project->viewAll           = '查看所有';
 
 /* 分組瀏覽。*/
 $lang->project->allTasks     = '所有';
@@ -172,7 +182,7 @@ $lang->project->groupFilter['pri']['noset']         = '未設置';
 $lang->project->groupFilter['assignedTo']['undone'] = '未完成';
 $lang->project->groupFilter['assignedTo']['all']    = $lang->project->all;
 
-$lang->project->byQuery              = '搜索';
+$lang->project->byQuery = '搜索';
 
 /* 查詢條件列表。*/
 $lang->project->allProject      = "所有{$lang->projectCommon}";
@@ -182,19 +192,23 @@ $lang->project->aboveAllProject = "以上所有{$lang->projectCommon}";
 /* 頁面提示。*/
 $lang->project->selectProject   = "請選擇{$lang->projectCommon}";
 $lang->project->beginAndEnd     = '起止時間';
+$lang->project->begin           = '開始日期';
+$lang->project->end             = '截止日期';
 $lang->project->lblStats        = '工時統計';
-$lang->project->stats           = '可用工時<strong>%s</strong>工時，總共預計<strong>%s</strong>工時，已經消耗<strong>%s</strong>工時，預計剩餘<strong>%s</strong>工時';
-$lang->project->taskSummary     = "本頁共 <strong>%s</strong> 個任務，未開始 <strong>%s</strong>，進行中 <strong>%s</strong>，總預計<strong>%s</strong>工時，已消耗<strong>%s</strong>工時，剩餘<strong>%s</strong>工時。";
-$lang->project->checkedSummary  = "選中 <strong>%total%</strong> 個任務，未開始 <strong>%wait%</strong>，進行中 <strong>%doing%</strong>，總預計<strong>%estimate%</strong>工時，已消耗<strong>%consumed%</strong>工時，剩餘<strong>%left%</strong>工時。";
-$lang->project->memberHours     = "%s共有 <strong>%s</strong> 個可用工時，";
-$lang->project->groupSummary    = "本組共 <strong>%s</strong> 個任務，未開始 <strong>%s</strong>，進行中 <strong>%s</strong>，總預計<strong>%s</strong>工時，已消耗<strong>%s</strong>工時，剩餘<strong>%s</strong>工時。";
-$lang->project->groupSummaryAB  = "總任務<strong>%s</strong> ，未開始<strong>%s</strong>，進行中<strong>%s</strong>。<br />總預計<strong>%s</strong>，已消耗<strong>%s</strong>，剩餘<strong>%s</strong>。";
-$lang->project->noTimeSummary   = "本組共 <strong>%s</strong> 個任務，未開始 <strong>%s</strong>，進行中 <strong>%s</strong>";
+$lang->project->stats           = '可用工時 <strong>%s</strong> 工時，總共預計 <strong>%s</strong> 工時，已經消耗 <strong>%s</strong> 工時，預計剩餘 <strong>%s</strong> 工時';
+$lang->project->taskSummary     = "本頁共 <strong>%s</strong> 個任務，未開始 <strong>%s</strong>，進行中 <strong>%s</strong>，總預計 <strong>%s</strong> 工時，已消耗 <strong>%s</strong> 工時，剩餘 <strong>%s</strong> 工時。";
+$lang->project->checkedSummary  = "選中 <strong>%total%</strong> 個任務，未開始 <strong>%wait%</strong>，進行中 <strong>%doing%</strong>，總預計 <strong>%estimate%</strong> 工時，已消耗 <strong>%consumed%</strong> 工時，剩餘 <strong>%left%</strong> 工時。";
+$lang->project->memberHoursAB   = "<div>%s有 <strong>%s</strong> 工時</div>";
+$lang->project->memberHours     = '<div class="table-col"><div class="clearfix segments"><div class="segment"><div class="segment-title">%s可用工時</div><div class="segment-value">%s</div></div></div></div>';
+$lang->project->countSummary    = '<div class="table-col"><div class="clearfix segments"><div class="segment"><div class="segment-title">總任務</div><div class="segment-value">%s</div></div><div class="segment"><div class="segment-title">進行中</div><div class="segment-value"><span class="label label-dot label-primary"></span> %s</div></div><div class="segment"><div class="segment-title">未開始</div><div class="segment-value"><span class="label label-dot label-primary muted"></span> %s</div></div></div></div>';
+$lang->project->timeSummary     = '<div class="table-col"><div class="clearfix segments"><div class="segment"><div class="segment-title">總預計</div><div class="segment-value">%s</div></div><div class="segment"><div class="segment-title">已消耗</div><div class="segment-value text-red">%s</div></div><div class="segment"><div class="segment-title">剩餘</div><div class="segment-value">%s</div></div></div></div>';
+$lang->project->groupSummaryAB  = "<div>總任務 <strong>%s</strong></div><div><span class='text-muted'>未開始</span> %s &nbsp; <span class='text-muted'>進行中</span> %s</div><div>總預計 <strong>%s</strong></div><div><span class='text-muted'>已消耗</span> %s &nbsp; <span class='text-muted'>剩餘</span> %s</div>";
 $lang->project->wbs             = "分解任務";
 $lang->project->batchWBS        = "批量分解";
-$lang->project->howToUpdateBurn = "<a href='http://api.zentao.net/goto.php?item=burndown&lang=zh-tw' target='_blank' title='如何更新燃盡圖？' class='btn btn-sm'>幫助</a>";
+$lang->project->howToUpdateBurn = "<a href='http://api.zentao.net/goto.php?item=burndown&lang=zh-tw' target='_blank' title='如何更新燃盡圖？' class='btn btn-link'>幫助 <i class='icon icon-help'></i></a>";
 $lang->project->whyNoStories    = "看起來沒有需求可以關聯。請檢查下{$lang->projectCommon}關聯的{$lang->productCommon}中有沒有需求，而且要確保它們已經審核通過。";
 $lang->project->productStories  = "{$lang->projectCommon}關聯的需求是{$lang->productCommon}需求的子集，並且只有評審通過的需求才能關聯。請<a href='%s'>關聯需求</a>。";
+$lang->project->haveDraft       = "有%s條草稿狀態的需求無法關聯到該{$lang->projectCommon}";
 $lang->project->doneProjects    = '已結束';
 $lang->project->selectDept      = '選擇部門';
 $lang->project->selectDeptTitle = '選擇一個部門的成員';
@@ -208,6 +222,8 @@ $lang->project->copyFromProject = "複製自{$lang->projectCommon} <strong>%s</s
 $lang->project->cancelCopy      = '取消複製';
 $lang->project->byPeriod        = '按時間段';
 $lang->project->byUser          = '按用戶';
+$lang->project->noProject       = '暫時沒有項目。';
+$lang->project->noMembers       = '暫時沒有團隊成員。';
 
 /* 交互提示。*/
 $lang->project->confirmDelete         = "您確定刪除{$lang->projectCommon}[%s]嗎？";
@@ -239,6 +255,8 @@ $lang->project->charts->burn->graph->formatNumber = 0;
 $lang->project->charts->burn->graph->animation    = 0;
 $lang->project->charts->burn->graph->rotateNames  = 1;
 $lang->project->charts->burn->graph->showValues   = 0;
+$lang->project->charts->burn->graph->reference    = '參考';
+$lang->project->charts->burn->graph->actuality    = '實際';
 
 $lang->project->placeholder = new stdclass();
 $lang->project->placeholder->code      = '團隊內部的簡稱';
@@ -279,8 +297,8 @@ $lang->printKanban->taskStatus = '狀態';
 $lang->printKanban->typeList['all']       = '全部';
 $lang->printKanban->typeList['increment'] = '增量';
 
-$lang->project->featureBar['task']['unclosed']     = $lang->project->unclosed;
 $lang->project->featureBar['task']['all']          = $lang->project->allTasks;
+$lang->project->featureBar['task']['unclosed']     = $lang->project->unclosed;
 $lang->project->featureBar['task']['assignedtome'] = $lang->project->assignedToMe;
 $lang->project->featureBar['task']['myinvolved']   = $lang->project->myInvolved;
 $lang->project->featureBar['task']['delayed']      = '已延期';
@@ -288,10 +306,10 @@ $lang->project->featureBar['task']['needconfirm']  = '需求變動';
 $lang->project->featureBar['task']['status']       = $lang->project->statusSelects[''];
 
 $lang->project->treeLevel = array();
-$lang->project->treeLevel['root']  = '全部摺疊';
-$lang->project->treeLevel['story'] = '顯示需求';
-$lang->project->treeLevel['task']  = '顯示任務';
 $lang->project->treeLevel['all']   = '全部展開';
+$lang->project->treeLevel['root']  = '全部摺疊';
+$lang->project->treeLevel['story'] = '只看需求';
+$lang->project->treeLevel['task']  = '只看任務';
 
 global $config;
 if($config->global->flow == 'onlyTask')

@@ -50,14 +50,13 @@ $lang->report->deviationChart   = $lang->projectCommon . '偏差曲綫';
 
 $lang->reportList          = new stdclass();
 $lang->reportList->project = new stdclass();
-$lang->reportList->product = new stdclass();
-$lang->reportList->test    = new stdclass();
-$lang->reportList->staff   = new stdclass();
-
 $lang->reportList->project->lists[10] = $lang->projectCommon . '偏差報表|report|projectdeviation';
+$lang->reportList->product = new stdclass();
 $lang->reportList->product->lists[10] = $lang->productCommon . '彙總表|report|productsummary';
+$lang->reportList->test    = new stdclass();
 $lang->reportList->test->lists[10]    = 'Bug創建表|report|bugcreate';
 $lang->reportList->test->lists[13]    = 'Bug指派表|report|bugassign';
+$lang->reportList->staff   = new stdclass();
 $lang->reportList->staff->lists[10]   = '員工負載表|report|workload';
 
 $lang->report->id            = '編號';
@@ -106,3 +105,4 @@ $lang->report->mailTitle->todo     = " 待辦(%s),";
 $lang->report->mailTitle->testTask = " 測試版本(%s),";
 
 $lang->report->proVersion = '<a href="http://api.zentao.net/goto.php?item=proversion&from=reportpage" target="_blank">更多精彩，盡在專業版！</a>';
+$lang->report->proVersionEn = '<a href="http://api.zentao.pm/goto.php?item=proversion&from=reportpage" target="_blank">Try ZenTao Pro for more!</a>';

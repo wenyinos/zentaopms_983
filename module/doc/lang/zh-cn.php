@@ -43,28 +43,39 @@ $lang->doc->download       = '下载';
 $lang->doc->acl            = '权限';
 $lang->doc->groups         = '分组';
 $lang->doc->users          = '用户';
+$lang->doc->item           = '项';
+$lang->doc->num            = '文档数量';
+$lang->doc->searchResult   = '搜索结果';
 
 $lang->doc->moduleDoc      = '按模块浏览';
 $lang->doc->searchDoc      = '搜索';
+$lang->doc->fast           = '快速访问';
 $lang->doc->allDoc         = '所有文档';
 $lang->doc->openedByMe     = '由我创建';
 $lang->doc->orderByOpen    = '最近添加';
-$lang->doc->orderByEdit    = '最近修改';
+$lang->doc->orderByEdit    = '最近更新';
+$lang->doc->orderByVisit   = '最近访问';
+$lang->doc->todayEdited    = '今日更新';
+$lang->doc->pastEdited     = '往日更新';
+$lang->doc->myDoc          = '我的文档';
+$lang->doc->myCollection   = '我的收藏';
 
 /* 方法列表。*/
-$lang->doc->index          = '首页';
-$lang->doc->create         = '创建文档';
-$lang->doc->edit           = '编辑文档';
-$lang->doc->delete         = '删除文档';
-$lang->doc->browse         = '文档列表';
-$lang->doc->view           = '文档详情';
-$lang->doc->diff           = '对比';
-$lang->doc->sort           = '排序';
-$lang->doc->manageType     = '维护分类';
-$lang->doc->editType       = '编辑分类';
-$lang->doc->deleteType     = '删除分类';
-$lang->doc->addType        = '增加分类';
-$lang->doc->childType      = '子分类';
+$lang->doc->index            = '文档主页';
+$lang->doc->create           = '创建文档';
+$lang->doc->edit             = '编辑文档';
+$lang->doc->delete           = '删除文档';
+$lang->doc->browse           = '文档列表';
+$lang->doc->view             = '文档详情';
+$lang->doc->diff             = '对比';
+$lang->doc->sort             = '排序';
+$lang->doc->manageType       = '维护分类';
+$lang->doc->editType         = '编辑分类';
+$lang->doc->deleteType       = '删除分类';
+$lang->doc->addType          = '增加分类';
+$lang->doc->childType        = '子分类';
+$lang->doc->collect          = '收藏';
+$lang->doc->cancelCollection = '取消收藏';
 
 $lang->doc->libName        = '文档库名称';
 $lang->doc->libType        = '文档库类型';
@@ -109,9 +120,20 @@ $lang->doc->contentTypeList['markdown'] = 'MarkDown';
 
 $lang->doc->browseType             = '浏览方式';
 $lang->doc->browseTypeList['list'] = '列表';
-$lang->doc->browseTypeList['menu'] = '目录';
-$lang->doc->browseTypeList['tree'] = '树状图';
-$lang->doc->browseTypeList['card'] = '卡片';
+$lang->doc->browseTypeList['grid'] = '目录';
+
+$lang->doc->fastMenuList['byediteddate']  = '最近更新';
+//$lang->doc->fastMenuList['visiteddate']   = '最近访问';
+$lang->doc->fastMenuList['openedbyme']    = '我的文档';
+$lang->doc->fastMenuList['collectedbyme'] = '我的收藏';
+
+$lang->doc->fastMenuIconList['byediteddate']  = 'icon-folder-upload';
+//$lang->doc->fastMenuIconList['visiteddate']   = 'icon-folder-move';
+$lang->doc->fastMenuIconList['openedbyme']    = 'icon-folder-account';
+$lang->doc->fastMenuIconList['collectedbyme'] = 'icon-folder-star';
+
+$lang->doc->customObjectLibs['files']       = '显示附件库';
+$lang->doc->customObjectLibs['customFiles'] = '显示自定义文件';
 
 $lang->doc->confirmDelete      = "您确定删除该文档吗？";
 $lang->doc->confirmDeleteLib   = "您确定删除该文档库吗？";
@@ -121,6 +143,11 @@ $lang->doc->errorEmptyProject  = "没有{$lang->projectCommon}，无法创建文
 $lang->doc->errorMainSysLib    = "该系统文档库不能删除！";
 $lang->doc->accessDenied       = "您没有权限访问！";
 $lang->doc->versionNotFount    = '该版本文档不存在';
+$lang->doc->noDoc              = '暂时没有文档。';
+$lang->doc->noSearchedDoc      = '没有搜索到任何文档。';
+$lang->doc->noEditedDoc        = '您还没有编辑任何文档。';
+$lang->doc->noOpenedDoc        = '您还没有创建任何文档。';
+$lang->doc->noCollectedDoc     = '您还没有收藏任何文档。';
 
 $lang->doc->placeholder = new stdclass();
 $lang->doc->placeholder->url = '相应的链接地址';

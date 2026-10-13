@@ -26,7 +26,7 @@ $lang->user->gender      = 'Gender';
 $lang->user->email       = 'Email';
 $lang->user->basicInfo   = 'Basic Info';
 $lang->user->accountInfo = 'Account';
-$lang->user->verify      = 'Safety Verification';
+$lang->user->verify      = 'Verification';
 $lang->user->contactInfo = 'Contact';
 $lang->user->skype       = 'Skype';
 $lang->user->qq          = 'QQ';
@@ -38,19 +38,19 @@ $lang->user->phone       = 'Phone';
 $lang->user->address     = 'Address';
 $lang->user->zipcode     = 'Zip Code';
 $lang->user->join        = 'Join Date';
-$lang->user->visits      = 'Visit Count';
+$lang->user->visits      = 'Visits';
 $lang->user->ip          = 'Last IP';
 $lang->user->last        = 'Last Login';
 $lang->user->ranzhi      = 'Zdoo Account';
 $lang->user->ditto       = 'Ditto';
 $lang->user->originalPassword = 'Old Password';
-$lang->user->verifyPassword   = 'Admin password';
+$lang->user->verifyPassword   = 'Your Login Password';
 $lang->user->resetPassword    = 'Forgot Password?';
 
 $lang->user->index           = "Home";
 $lang->user->view            = "Overview";
 $lang->user->create          = "Add User";
-$lang->user->batchCreate     = "Batch Add User";
+$lang->user->batchCreate     = "Batch Add";
 $lang->user->edit            = "Edit";
 $lang->user->batchEdit       = "Batch Edit";
 $lang->user->unlock          = "Unlock";
@@ -59,7 +59,7 @@ $lang->user->unbind          = "Unbind Zdoo";
 $lang->user->login           = "Login";
 $lang->user->mobileLogin     = "Mobile";
 $lang->user->editProfile     = "Edit";
-$lang->user->deny            = "Access Denied";
+$lang->user->deny            = "Access is denied.";
 $lang->user->confirmDelete   = "Are you sure to delete this user?";
 $lang->user->confirmUnlock   = "Are you sure to unlock this user?";
 $lang->user->confirmUnbind   = "Are you sure to unbind this user from Zdoo?";
@@ -67,14 +67,15 @@ $lang->user->relogin         = "Login Again";
 $lang->user->asGuest         = "Guest";
 $lang->user->goback          = "Back";
 $lang->user->deleted         = '(Deleted)';
+$lang->user->search          = 'Search';
 
 $lang->user->profile     = 'Profile';
 $lang->user->project     = $lang->projectCommon;
 $lang->user->task        = 'Task';
 $lang->user->bug         = 'Bug';
 $lang->user->test        = 'Test';
-$lang->user->testTask    = 'Test Task';
-$lang->user->testCase    = 'Test Case';
+$lang->user->testTask    = 'TestTask';
+$lang->user->testCase    = 'TestCase';
 $lang->user->todo        = 'Todo';
 $lang->user->story       = 'Story';
 $lang->user->dynamic     = 'Dynamic';
@@ -85,22 +86,22 @@ $lang->user->finishedBy  = 'Finished';
 $lang->user->resolvedBy  = 'Resolved';
 $lang->user->closedBy    = 'Closed';
 $lang->user->reviewedBy  = 'Reviewed';
-$lang->user->canceledBy  = 'Cancelled';
+$lang->user->canceledBy  = 'Canceled';
 
 $lang->user->testTask2Him = 'Build';
 $lang->user->case2Him     = 'Case Assigned';
 $lang->user->caseByHim    = 'Case Opened';
 
-$lang->user->errorDeny    = "Sorry, your access to <b>%s</b> Module <b>%s</b> Feature has been denied. Please contact Admin to get permission. Click Back to return.";
+$lang->user->errorDeny    = "Sorry, your access to <b>%s</b> of <b>%s</b> has been denied. Please contact your Admin to get permissions. Click Back to return.";
 $lang->user->loginFailed  = "Login failed. Please check your account and password.";
 $lang->user->lockWarning  = "You can try %s times.";
 $lang->user->loginLocked  = "Please contact the administrator to unlock your account or try %s mins later.";
-$lang->user->weakPassword = "Your password does not meet the setting requirements.";
+$lang->user->weakPassword = "Your password does not meet the complexity requirements.";
 
 $lang->user->roleList['']       = '';
 $lang->user->roleList['dev']    = 'Developer';
-$lang->user->roleList['qa']     = 'Tester';
-$lang->user->roleList['pm']     = 'Project Manager';
+$lang->user->roleList['qa']     = 'QA';
+$lang->user->roleList['pm']     = 'Scrum Master';
 $lang->user->roleList['po']     = 'Product Owner';
 $lang->user->roleList['td']     = 'Technical Manager';
 $lang->user->roleList['pd']     = 'Product Manager';
@@ -118,7 +119,7 @@ $lang->user->passwordStrengthList[2] = "<span style='color:green'>Strong</span>"
 $lang->user->statusList['active'] = 'Activated';
 $lang->user->statusList['delete'] = 'Deleted';
 
-$lang->user->keepLogin['on']      = 'Keep login';
+$lang->user->keepLogin['on']      = 'Remember Me';
 $lang->user->loginWithDemoUser    = 'Login as Demo User:';
 
 $lang->user->tpl = new stdclass();
@@ -132,8 +133,8 @@ $lang->user->placeholder->account   = 'Letters, Underline and Numbers, at least 
 $lang->user->placeholder->password1 = 'six characters at lease ';
 $lang->user->placeholder->role      = "Role affects content and user order.";
 $lang->user->placeholder->group     = "Group decides user privilege.";
-$lang->user->placeholder->commiter  = 'Svn or Git like';
-$lang->user->placeholder->verify    = 'Password is required.';
+$lang->user->placeholder->commiter  = 'SVN/Git account';
+$lang->user->placeholder->verify    = 'Please input your login password.';
 
 $lang->user->placeholder->passwordStrength[1] = 'Letters and Numbers, at least 6 characters';
 $lang->user->placeholder->passwordStrength[2] = 'Letters, Numbers and special characters, at lease 10 characters';
@@ -147,7 +148,7 @@ $lang->user->error->mail          = "ID %s，please enter valid Email address";
 $lang->user->error->role          = "ID %s，role cannot be null.";
 $lang->user->error->reserved      = "ID %s，account is reserved.";
 
-$lang->user->error->verifyPassword   = "Wrong password. Please enter your Login Password.";
+$lang->user->error->verifyPassword   = "Verification failed. Please enter your Login Password.";
 $lang->user->error->originalPassword = "Old password is incorrect.";
 
 $lang->user->contacts = new stdclass();
@@ -157,10 +158,10 @@ $lang->user->contacts->userList = 'User List';
 
 $lang->user->contacts->manage        = 'Manage';
 $lang->user->contacts->contactsList  = 'Contacts';
-$lang->user->contacts->selectedUsers = 'Select User';
+$lang->user->contacts->selectedUsers = 'Select';
 $lang->user->contacts->selectList    = 'List';
-$lang->user->contacts->createList    = 'Create a List';
-$lang->user->contacts->noListYet     = 'No contact list exists. Please create a list first.';
+$lang->user->contacts->createList    = 'Create Contact List';
+$lang->user->contacts->noListYet     = 'No contact list exists. Please create one first.';
 $lang->user->contacts->confirmDelete = 'Do you want to delete this list?';
 $lang->user->contacts->or            = ' or ';
 

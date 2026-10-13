@@ -22,25 +22,25 @@ $lang->testcase->pri              = 'Priority';
 $lang->testcase->type             = 'Type';
 $lang->testcase->status           = 'Status';
 $lang->testcase->steps            = 'Steps';
-$lang->testcase->openedBy         = 'Creator';
-$lang->testcase->openedDate       = 'Create on';
+$lang->testcase->openedBy         = 'Created by';
+$lang->testcase->openedDate       = 'Created on';
 $lang->testcase->lastEditedBy     = 'Edited by';
 $lang->testcase->result           = 'Result';
 $lang->testcase->real             = 'Details';
-$lang->testcase->keywords         = 'Keywords';
+$lang->testcase->keywords         = 'Tags';
 $lang->testcase->files            = 'Files';
 $lang->testcase->linkCase         = 'Linked Cases';
 $lang->testcase->linkCases        = 'Link Cases';
 $lang->testcase->unlinkCase       = 'Unlink Cases';
-$lang->testcase->stage            = 'Stage';
-$lang->testcase->reviewedBy       = 'Reviewed By';
+$lang->testcase->stage            = 'Phase';
+$lang->testcase->reviewedBy       = 'Reviewed by';
 $lang->testcase->reviewedDate     = 'Reviewed on';
 $lang->testcase->reviewResult     = 'Review Result';
 $lang->testcase->reviewedByAB     = 'By';
 $lang->testcase->reviewedDateAB   = 'Date';
 $lang->testcase->reviewResultAB   = 'Result';
 $lang->testcase->forceNotReview   = 'No Review';
-$lang->testcase->lastEditedByAB   = 'Edited By';
+$lang->testcase->lastEditedByAB   = 'Edited by';
 $lang->testcase->lastEditedDateAB = 'Edited on';
 $lang->testcase->lastEditedDate   = 'Edited on';
 $lang->testcase->version          = 'Case Version';
@@ -72,8 +72,8 @@ $lang->testcase->stepVersion = 'Version';
 
 $lang->testcase->common                  = 'Case';
 $lang->testcase->index                   = "Home";
-$lang->testcase->create                  = "Create Case";
-$lang->testcase->batchCreate             = "Batch Create Cases";
+$lang->testcase->create                  = "Add Case";
+$lang->testcase->batchCreate             = "Batch Add";
 $lang->testcase->delete                  = "Delete";
 $lang->testcase->view                    = "Overview";
 $lang->testcase->review                  = "Review";
@@ -84,10 +84,10 @@ $lang->testcase->batchChangeModule       = "Batch Change Module";
 $lang->testcase->batchChangeBranch       = "Batch Change Branch";
 $lang->testcase->delete                  = "Delete";
 $lang->testcase->batchDelete             = "Batch Delete ";
-$lang->testcase->batchConfirmStoryChange = "Batch Confirm Story Change";
-$lang->testcase->batchCaseTypeChange     = "Batch Change type";
+$lang->testcase->batchConfirmStoryChange = "Batch Confirm";
+$lang->testcase->batchCaseTypeChange     = "Batch Change Type";
 $lang->testcase->browse                  = "Cases";
-$lang->testcase->groupCase               = "View By Group";
+$lang->testcase->groupCase               = "By Group";
 $lang->testcase->import                  = "Import";
 $lang->testcase->importFile              = "Import CSV";
 $lang->testcase->importFromLib           = "Import From Library";
@@ -102,6 +102,7 @@ $lang->testcase->group                   = 'Group';
 $lang->testcase->groupName               = 'Group Name';
 $lang->testcase->step                    = 'Step';
 $lang->testcase->stepChild               = 'Child';
+$lang->testcase->viewAll                 = 'View All';
 
 $lang->testcase->new = 'New';
 
@@ -111,11 +112,13 @@ $lang->testcase->deleteStep   = 'Delete';
 $lang->testcase->insertBefore = 'Inserted Before';
 $lang->testcase->insertAfter  = 'Inserted After';
 
-$lang->testcase->assignToMe  = 'AssignedToMe';
-$lang->testcase->openedByMe  = 'CreatedByMe';
-$lang->testcase->allCases    = 'All';
-$lang->testcase->needConfirm = 'StoryChanged';
-$lang->testcase->bySearch    = 'Search';
+$lang->testcase->assignToMe   = 'Assigned To Me';
+$lang->testcase->openedByMe   = 'Created By Me';
+$lang->testcase->allCases     = 'All';
+$lang->testcase->allTestcases = 'All Cases';
+$lang->testcase->needConfirm  = 'Story Changed';
+$lang->testcase->bySearch     = 'Search';
+$lang->testcase->unexecuted   = 'Wait';
 
 $lang->testcase->lblStory       = 'Story';
 $lang->testcase->lblLastEdited  = 'Last Edit';
@@ -129,8 +132,9 @@ $lang->testcase->legendLinkBugs     = 'Bug';
 $lang->testcase->legendOpenAndEdit  = 'Create/Edit';
 $lang->testcase->legendComment      = 'Remark';
 
+$lang->testcase->summary            = "Cases on this page : <strong>%s</strong> Total, <strong>%s</strong> runed.";
 $lang->testcase->confirmDelete      = 'Do you want to delete this Test Case?';
-$lang->testcase->confirmBatchDelete = 'Do you want to batch delete thess Test Cases?';
+$lang->testcase->confirmBatchDelete = 'Do you want to batch delete these Test Cases?';
 $lang->testcase->ditto              = 'Ditto';
 $lang->testcase->dittoNotice        = 'This Case does not belong to the Product as the previous one!';
 
@@ -144,7 +148,7 @@ $lang->testcase->priList[4] = 4;
 
 /* Define the types. */
 $lang->testcase->typeList['']            = '';
-$lang->testcase->typeList['feature']     = 'Function';
+$lang->testcase->typeList['feature']     = 'Feature';
 $lang->testcase->typeList['performance'] = 'Performance';
 $lang->testcase->typeList['config']      = 'Config';
 $lang->testcase->typeList['install']     = 'Install';
@@ -165,11 +169,11 @@ $lang->testcase->reviewResultList['pass']    = 'Pass';
 $lang->testcase->reviewResultList['clarify'] = 'Clarify';
 
 $lang->testcase->groups['']           = 'Group ';
-$lang->testcase->groups['story']      = 'Story Group';
-$lang->testcase->groups['assignedTo'] = 'Assign Group';
+$lang->testcase->groups['story']      = 'Group by Story';
+$lang->testcase->groups['assignedTo'] = 'Group by Assignee';
 
 $lang->testcase->statusList['']            = '';
-$lang->testcase->statusList['wait']        = 'ToReview';
+$lang->testcase->statusList['wait']        = 'Wait';
 $lang->testcase->statusList['normal']      = 'Normal';
 $lang->testcase->statusList['blocked']     = 'Blocked';
 $lang->testcase->statusList['investigate'] = 'Investigating';
@@ -186,6 +190,8 @@ $lang->testcase->noFunction       = 'Iconv and mb_convert_encoding is not found.
 $lang->testcase->noRequire        = "Row %s has“%s”which is a required field and it should not be blank.";
 $lang->testcase->noLibrary        = "No library exists. Please create one first.";
 $lang->testcase->mustChooseResult = 'Review result is required.';
+$lang->testcase->noModule         = '<div>You have no modules</div><div>Manage now</div>';
+$lang->testcase->noCase           = 'No cases. ';
 
 $lang->testcase->searchStories = 'Enter to searcu Story';
 $lang->testcase->selectLib     = 'Select Library';

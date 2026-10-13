@@ -11,13 +11,14 @@
  */
 $lang->todo->common       = '待辦';
 $lang->todo->index        = "待辦一覽";
-$lang->todo->create       = "新增";
+$lang->todo->create       = "添加待辦";
 $lang->todo->createCycle  = "創建周期待辦";
 $lang->todo->assignTo     = "指派給";
 $lang->todo->activate     = "激活";
 $lang->todo->batchCreate  = "批量添加";
 $lang->todo->edit         = "編輯";
 $lang->todo->close        = "關閉";
+$lang->todo->batchClose   = "批量關閉";
 $lang->todo->batchEdit    = "批量編輯";
 $lang->todo->view         = "待辦詳情";
 $lang->todo->finish       = "完成";
@@ -90,20 +91,14 @@ $lang->todo->confirmDelete  = "您確定要刪除這條待辦嗎？";
 $lang->todo->thisIsPrivate  = '這是一條私人事務。:)';
 $lang->todo->lblDisableDate = '暫時不設定時間';
 $lang->todo->lblBeforeDays  = "提前%s天生成待辦";
+$lang->todo->lblClickCreate = "點擊添加待辦";
 $lang->todo->noTodo         = '該類型沒有待辦事務';
 $lang->todo->noAssignedTo   = '被指派人不能為空';
 
-$lang->todo->periods['today']      = '今日';
-$lang->todo->periods['yesterday']  = '昨日';
-$lang->todo->periods['thisWeek']   = '本週';
-$lang->todo->periods['lastWeek']   = '上周';
-$lang->todo->periods['thisMonth']  = '本月';
-$lang->todo->periods['lastmonth']  = '上月';
-$lang->todo->periods['thisSeason'] = '本季';
+$lang->todo->periods['all']        = '所有待辦';
 $lang->todo->periods['thisYear']   = '本年';
 $lang->todo->periods['future']     = '待定';
 $lang->todo->periods['before']     = '未完';
-$lang->todo->periods['all']        = '所有';
 $lang->todo->periods['cycle']      = '周期';
 
 $lang->todo->action = new stdclass();

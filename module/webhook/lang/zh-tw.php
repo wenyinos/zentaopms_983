@@ -16,6 +16,7 @@ $lang->webhook->id          = 'ID';
 $lang->webhook->type        = '類型';
 $lang->webhook->name        = '名稱';
 $lang->webhook->url         = 'Hook地址';
+$lang->webhook->domain      = '禪道域名';
 $lang->webhook->contentType = '內容類型';
 $lang->webhook->sendType    = '發送方式';
 $lang->webhook->product     = "關聯{$lang->productCommon}";
@@ -48,7 +49,6 @@ $lang->webhook->paramsList['date']       = '操作日期';
 $lang->webhook->paramsList['comment']    = '備註';
 $lang->webhook->paramsList['text']       = '操作內容';
 
-$lang->webhook->saveSuccess   = '保存成功';
 $lang->webhook->confirmDelete = '您確認要刪除該webhook嗎？';
 
 $lang->webhook->trimWords = '了';

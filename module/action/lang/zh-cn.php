@@ -25,6 +25,7 @@ $lang->action->undelete    = '还原';
 $lang->action->hideOne     = '隐藏';
 $lang->action->hideAll     = '全部隐藏';
 $lang->action->editComment = '修改备注';
+$lang->action->create      = '添加备注';
 $lang->action->comment     = '备注';
 
 $lang->action->trashTips      = '提示：为了保证系统的完整性，禅道系统的删除都是标记删除。';
@@ -33,6 +34,7 @@ $lang->action->original       = '原始格式';
 $lang->action->confirmHideAll = '您确定要全部隐藏这些记录吗？';
 $lang->action->needEdit       = '要还原%s的名称或代号已经存在，请编辑更改。';
 $lang->action->historyEdit    = '历史记录编辑不能为空。';
+$lang->action->noDynamic      = '暂时没有动态。';
 
 $lang->action->history = new stdclass();
 $lang->action->history->action = '关联日志';
@@ -53,13 +55,21 @@ $lang->action->dynamic->all        = '所有';
 $lang->action->dynamic->hidden     = '已隐藏';
 $lang->action->dynamic->search     = '搜索';
 
+$lang->action->periods['all']       = $lang->action->dynamic->all;
+$lang->action->periods['today']     = $lang->action->dynamic->today;
+$lang->action->periods['yesterday'] = $lang->action->dynamic->yesterday;
+$lang->action->periods['thisweek']  = $lang->action->dynamic->thisWeek;
+$lang->action->periods['lastweek']  = $lang->action->dynamic->lastWeek;
+$lang->action->periods['thismonth'] = $lang->action->dynamic->thisMonth;
+$lang->action->periods['lastmonth'] = $lang->action->dynamic->lastMonth;
+
 $lang->action->objectTypes['product']     = $lang->productCommon;
 $lang->action->objectTypes['story']       = '需求';
 $lang->action->objectTypes['productplan'] = '计划';
 $lang->action->objectTypes['release']     = '发布';
 $lang->action->objectTypes['project']     = $lang->projectCommon;
 $lang->action->objectTypes['task']        = '任务';
-$lang->action->objectTypes['build']       = 'Build';
+$lang->action->objectTypes['build']       = '版本';
 $lang->action->objectTypes['bug']         = 'Bug';
 $lang->action->objectTypes['case']        = '用例';
 $lang->action->objectTypes['caseresult']  = '用例结果';
@@ -115,7 +125,7 @@ $lang->action->desc->finished       = '$date, 由 <strong>$actor</strong> 完成
 $lang->action->desc->paused         = '$date, 由 <strong>$actor</strong> 暂停。' . "\n";
 $lang->action->desc->verified       = '$date, 由 <strong>$actor</strong> 验收。' . "\n";
 $lang->action->desc->diff1          = '修改了 <strong><i>%s</i></strong>，旧值为 "%s"，新值为 "%s"。<br />' . "\n";
-$lang->action->desc->diff2          = '修改了 <strong><i>%s</i></strong>，区别为：' . "\n" . "<blockquote>%s</blockquote>" . "\n<div class='hidden'>%s</div>";
+$lang->action->desc->diff2          = '修改了 <strong><i>%s</i></strong>，区别为：' . "\n" . "<blockquote class='textdiff'>%s</blockquote>" . "\n<blockquote class='original'>%s</blockquote>";
 $lang->action->desc->diff3          = '将文件名 %s 改为 %s 。' . "\n";
 $lang->action->desc->linked2bug     = '$date 由 <strong>$actor</strong> 关联到版本 <strong>$extra</strong>';
 
@@ -196,7 +206,7 @@ $lang->action->label->bug         = 'Bug|bug|view|bugID=%s';
 $lang->action->label->case        = '用例|testcase|view|caseID=%s';
 $lang->action->label->testtask    = '测试单|testtask|view|caseID=%s';
 $lang->action->label->testsuite   = '测试套件|testsuite|view|suiteID=%s';
-$lang->action->label->caselib     = '测试库|testsuite|libview|libID=%s';
+$lang->action->label->caselib     = '用例库|testsuite|libview|libID=%s';
 $lang->action->label->todo        = '待办|todo|view|todoID=%s';
 $lang->action->label->doclib      = '文档库|doc|browse|libID=%s';
 $lang->action->label->doc         = '文档|doc|view|docID=%s';
@@ -206,24 +216,23 @@ $lang->action->label->entry       = '应用|entry|browse|';
 $lang->action->label->webhook     = 'Webhook|webhook|browse|';
 $lang->action->label->space       = ' ';
 
-$lang->action->search = new stdclass();
-
 /* Object type. */
-$lang->action->search->objectTypeList['']            = '';    
+$lang->action->search = new stdclass();
+$lang->action->search->objectTypeList['']            = '';
 $lang->action->search->objectTypeList['product']     = $lang->productCommon;
 $lang->action->search->objectTypeList['project']     = $lang->projectCommon;
 $lang->action->search->objectTypeList['bug']         = 'Bug';
-$lang->action->search->objectTypeList['case']        = '用例'; 
+$lang->action->search->objectTypeList['case']        = '用例';
 $lang->action->search->objectTypeList['caseresult']  = '用例结果';
 $lang->action->search->objectTypeList['stepresult']  = '用例步骤';
-$lang->action->search->objectTypeList['story']       = '需求';  
-$lang->action->search->objectTypeList['task']        = '任务'; 
-$lang->action->search->objectTypeList['testtask']    = '测试单';     
-$lang->action->search->objectTypeList['user']        = '用户'; 
+$lang->action->search->objectTypeList['story']       = '需求';
+$lang->action->search->objectTypeList['task']        = '任务';
+$lang->action->search->objectTypeList['testtask']    = '测试单';
+$lang->action->search->objectTypeList['user']        = '用户';
 $lang->action->search->objectTypeList['doc']         = '文档';
 $lang->action->search->objectTypeList['doclib']      = '文档库';
 $lang->action->search->objectTypeList['todo']        = '待办';
-$lang->action->search->objectTypeList['build']       = 'Build';
+$lang->action->search->objectTypeList['build']       = '版本';
 $lang->action->search->objectTypeList['release']     = '发布';
 $lang->action->search->objectTypeList['productplan'] = '计划';
 $lang->action->search->objectTypeList['branch']      = '分支';

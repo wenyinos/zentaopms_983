@@ -9,15 +9,15 @@
  * @version     $Id: en.php 4129 2013-01-18 01:58:14Z wwccss $
  * @link        http://www.zentao.net
  */
-$lang->release->common    = 'Release';
-$lang->release->create    = "Create";
-$lang->release->edit      = "Edit";
-$lang->release->linkStory = "Link Story";
-$lang->release->linkBug   = "Link Bug";
-$lang->release->delete    = "Delete";
-$lang->release->deleted   = 'Deleted';
-$lang->release->view      = "Overview";
-$lang->release->browse    = "Browse";
+$lang->release->common           = 'Release';
+$lang->release->create           = "Create Release";
+$lang->release->edit             = "Edit";
+$lang->release->linkStory        = "Link Story";
+$lang->release->linkBug          = "Link Bug";
+$lang->release->delete           = "Delete";
+$lang->release->deleted          = 'Deleted';
+$lang->release->view             = "Overview";
+$lang->release->browse           = "Browse";
 $lang->release->changeStatus     = "Change Status";
 $lang->release->batchUnlink      = "Batch Unlink";
 $lang->release->batchUnlinkStory = "Batch Unlink Story";
@@ -26,28 +26,32 @@ $lang->release->batchUnlinkBug   = "Batch Unlink";
 $lang->release->confirmDelete      = "Do you want to delete this Release?";
 $lang->release->confirmUnlinkStory = "Do you want to remove this Story?";
 $lang->release->confirmUnlinkBug   = "Do you want to remove this Bug?";
+$lang->release->existBuild         = '『Build』『%s』existed. You could change『name』or choose a『build』.';
+$lang->release->noRelease          = 'No releases. ';
 
 $lang->release->basicInfo = 'Basic Info';
 
-$lang->release->id                    = 'ID';
-$lang->release->product               = $lang->productCommon;
-$lang->release->branch                = 'Platform/Branch';
-$lang->release->build                 = 'Build';
-$lang->release->name                  = 'Name';
-$lang->release->date                  = 'Date';
-$lang->release->desc                  = 'Description';
-$lang->release->status                = 'Status';
-$lang->release->last                  = 'Last Release';
-$lang->release->unlinkStory           = 'Unlink Story';
-$lang->release->unlinkBug             = 'Unlink Bug';
-$lang->release->stories               = 'Finished Story';
-$lang->release->bugs                  = 'Solved Bug';
-$lang->release->leftBugs              = 'Remained Bug';
-$lang->release->generatedBugs         = 'Remained Bug';
-$lang->release->finishStories         = 'Finished %s Story';
-$lang->release->resolvedBugs          = 'Solved %s Bug';
-$lang->release->createdBugs           = 'Generated %s Bug';
-$lang->release->export                = 'Export as HTML';
+$lang->release->id            = 'ID';
+$lang->release->product       = $lang->productCommon;
+$lang->release->branch        = 'Platform/Branch';
+$lang->release->build         = 'Build';
+$lang->release->name          = 'Name';
+$lang->release->marker        = 'Milestone';
+$lang->release->date          = 'Date';
+$lang->release->desc          = 'Description';
+$lang->release->status        = 'Status';
+$lang->release->last          = 'Last Release';
+$lang->release->unlinkStory   = 'Unlink Story';
+$lang->release->unlinkBug     = 'Unlink Bug';
+$lang->release->stories       = 'Finished Story';
+$lang->release->bugs          = 'Solved Bug';
+$lang->release->leftBugs      = 'Remained Bug';
+$lang->release->generatedBugs = 'Remained Bug';
+$lang->release->finishStories = 'Finished %s Story';
+$lang->release->resolvedBugs  = 'Solved %s Bug';
+$lang->release->createdBugs   = 'Generated %s Bug';
+$lang->release->export        = 'Export as HTML';
+$lang->release->yesterday     = 'Released Yesterday';
 
 $lang->release->filePath = 'Download : ';
 $lang->release->scmPath  = 'SCM Path : ';

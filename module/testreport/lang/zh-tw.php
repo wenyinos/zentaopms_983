@@ -24,7 +24,7 @@ $lang->testreport->bugs        = '測試的Bug';
 $lang->testreport->builds      = '版本信息';
 $lang->testreport->goal        = '項目目標';
 $lang->testreport->cases       = '用例';
-$lang->testreport->bugInfo     = '缺陷分佈';
+$lang->testreport->bugInfo     = 'Bug分佈';
 $lang->testreport->report      = '總結';
 $lang->testreport->legacyBugs  = '遺留的Bug';
 $lang->testreport->createdDate = '創建時間';
@@ -33,6 +33,7 @@ $lang->testreport->profile     = '概況';
 $lang->testreport->value       = '值';
 $lang->testreport->none        = '無';
 $lang->testreport->all         = '所有報告';
+$lang->testreport->deleted     = '已刪除';
 
 $lang->testreport->legendBasic       = '基本信息';
 $lang->testreport->legendStoryAndBug = '測試範圍';
@@ -67,8 +68,8 @@ $lang->testreport->errorTrunk     = "主幹版本不能創建測試報告，請�
 $lang->testreport->moreProduct    = "只能對同一個產品生成測試報告。";
 
 $lang->testreport->bugSummary = <<<EOD
-共發現<strong>%s</strong>個Bug <a data-toggle='tooltip' class='text-warning' title='{$lang->testreport->foundBugTip}'><i class='icon-info-sign'></i></a>，
-遺留<strong>%s</strong>個Bug <a data-toggle='tooltip' class='text-warning' title='{$lang->testreport->legacyBugTip}'><i class='icon-info-sign'></i></a>。
-用例執行產生<strong>%s</strong>個Bug <a data-toggle='tooltip' class='text-warning' title='{$lang->testreport->fromCaseBugTip}'><i class='icon-info-sign'></i></a>。
+共發現<strong>%s</strong>個Bug <a data-toggle='tooltip' class='text-warning' title='{$lang->testreport->foundBugTip}'><i class='icon-exclamation-sign'></i></a>，
+遺留<strong>%s</strong>個Bug <a data-toggle='tooltip' class='text-warning' title='{$lang->testreport->legacyBugTip}'><i class='icon-exclamation-sign'></i></a>。
+用例執行產生<strong>%s</strong>個Bug <a data-toggle='tooltip' class='text-warning' title='{$lang->testreport->fromCaseBugTip}'><i class='icon-exclamation-sign'></i></a>。
 有效Bug率（方案為已解決或延期 / 狀態為已解決或已關閉）：<strong>%s</strong>，用例發現Bug率（用例創建的Bug / 發現Bug數）：<strong>%s</strong>
 EOD;

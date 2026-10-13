@@ -10,7 +10,7 @@
  * @link        http://www.zentao.net
  */
 $lang->story->create      = "提需求";
-$lang->story->batchCreate = "批量提需求";
+$lang->story->batchCreate = "批量创建";
 $lang->story->change      = "变更";
 $lang->story->changed     = '需求变更';
 $lang->story->review      = '评审';
@@ -23,6 +23,7 @@ $lang->story->batchClose  = '批量关闭';
 $lang->story->activate    = '激活';
 $lang->story->delete      = "删除";
 $lang->story->view        = "需求详情";
+$lang->story->setting     = "设置";
 $lang->story->tasks       = "相关任务";
 $lang->story->bugs        = "相关Bug";
 $lang->story->cases       = "相关用例";
@@ -44,6 +45,7 @@ $lang->story->batchChangeBranch = "批量修改分支";
 $lang->story->batchChangeStage  = "批量修改阶段";
 $lang->story->batchAssignTo     = "批量指派";
 $lang->story->batchChangeModule = "批量修改模块";
+$lang->story->viewAll           = '查看全部';
 
 $lang->story->common         = '需求';
 $lang->story->id             = '编号';
@@ -91,6 +93,10 @@ $lang->story->newStory       = '继续添加需求';
 $lang->story->colorTag       = '颜色标签';
 $lang->story->files          = '附件';
 $lang->story->copy           = "复制需求";
+$lang->story->total          = '总需求';
+$lang->story->allStories     = '所有需求';
+$lang->story->unclosed       = '未关闭';
+$lang->story->deleted        = '已删除';
 
 $lang->story->ditto       = '同上';
 $lang->story->dittoNotice = '该需求与上一需求不属于同一产品！';
@@ -150,11 +156,11 @@ $lang->story->sourceList['tester']     = '测试人员';
 $lang->story->sourceList['bug']        = 'Bug';
 $lang->story->sourceList['other']      = '其他';
 
-$lang->story->priList[]   = '';
-$lang->story->priList[3]  = '3';
-$lang->story->priList[1]  = '1';
-$lang->story->priList[2]  = '2';
-$lang->story->priList[4]  = '4';
+$lang->story->priList[]  = '';
+$lang->story->priList[3] = '3';
+$lang->story->priList[1] = '1';
+$lang->story->priList[2] = '2';
+$lang->story->priList[4] = '4';
 
 $lang->story->legendBasicInfo      = '基本信息';
 $lang->story->legendLifeTime       = '需求的一生';
@@ -176,7 +182,7 @@ $lang->story->lblReview            = '评审需求';
 $lang->story->lblActivate          = '激活需求';
 $lang->story->lblClose             = '关闭需求';
 
-$lang->story->checkAffection       = '检查影响';
+$lang->story->checkAffection       = '影响范围';
 $lang->story->affectedProjects     = '影响的' . $lang->projectCommon;
 $lang->story->affectedBugs         = '影响的Bug';
 $lang->story->affectedCases        = '影响的用例';
@@ -188,6 +194,7 @@ $lang->story->confirmDelete         = "您确认删除该需求吗?";
 $lang->story->errorEmptyChildStory  = '『细分需求』不能为空。';
 $lang->story->mustChooseResult      = '必须选择评审结果';
 $lang->story->mustChoosePreVersion  = '必须选择回溯的版本';
+$lang->story->noStory               = '暂时没有需求。';
 
 $lang->story->form = new stdclass();
 $lang->story->form->area      = '该需求所属范围';

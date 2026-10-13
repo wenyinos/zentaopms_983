@@ -40,6 +40,9 @@ $lang->testtask->blocked          = "被阻塞版本";
 $lang->testtask->done             = "已测版本";
 $lang->testtask->totalStatus      = "全部";
 $lang->testtask->all              = "全部" . $lang->productCommon;
+$lang->testtask->allTasks         = '所有测试';
+$lang->testtask->collapseAll      = '全部折叠';
+$lang->testtask->expandAll        = '全部展开';
 
 $lang->testtask->id             = '编号';
 $lang->testtask->common         = '测试单';
@@ -101,6 +104,7 @@ $lang->testtask->showFail      = '失败<span class="text-danger">%s</span>次';
 $lang->testtask->confirmDelete     = '您确认要删除该版本吗？';
 $lang->testtask->confirmUnlinkCase = '您确认要移除该用例吗？';
 $lang->testtask->noticeNoOther     = '该产品还没有其他测试版本';
+$lang->testtask->noTesttask        = '暂时没有测试版本。';
 
 $lang->testtask->assignedToMe  = '指派给我';
 $lang->testtask->allCases      = '所有用例';

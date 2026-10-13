@@ -7,7 +7,7 @@ $lang->datatable->hide   = '隐藏';
 $lang->datatable->reset  = '恢复默认';
 
 $lang->datatable->custom            = '自定义列';
-$lang->datatable->customTip         = '勾选需要显示的列';
+$lang->datatable->customTip         = '勾选需要显示的列，拖动列名进行排序。';
 $lang->datatable->switchToTable     = '切换到简单表格';
 $lang->datatable->switchToDatatable = '切换到高级表格';
 $lang->datatable->required          = '必选';

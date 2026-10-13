@@ -17,13 +17,14 @@ $lang->search->group1        = '第一组';
 $lang->search->group2        = '第二组';
 $lang->search->buildForm     = '搜索表单';
 $lang->search->buildQuery    = '执行搜索';
-$lang->search->saveQuery     = '保存查询';
+$lang->search->savedQuery    = '已保存的检索历史';
 $lang->search->deleteQuery   = '删除查询';
 $lang->search->setQueryTitle = '请输入查询标题（保存之前请先查询）：';
 $lang->search->select        = '需求/任务筛选';
 $lang->search->me            = '自己';
 $lang->search->noQuery       = '还没有保存查询！';
 $lang->search->onMenuBar     = '显示在菜单栏';
+$lang->search->custom        = '自定义';
 
 $lang->search->account  = '用户名';
 $lang->search->module   = '模块';

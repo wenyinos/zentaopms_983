@@ -4,7 +4,6 @@ $lang->mail->index         = 'Home';
 $lang->mail->detect        = 'Testing';
 $lang->mail->edit          = 'Edit Settings';
 $lang->mail->save          = 'Save';
-$lang->mail->saveSuccess   = 'Saved Successfully';
 $lang->mail->test          = 'Email Sending Test';
 $lang->mail->reset         = 'Reset';
 $lang->mail->resend        = 'Resend';
@@ -74,7 +73,7 @@ $lang->mail->secureList['tls'] = 'tls';
 
 $lang->mail->more           = 'More';
 $lang->mail->noticeResend   = 'Sent it again!';
-$lang->mail->inputFromEmail = 'Enter Sender Email';
+$lang->mail->inputFromEmail = 'Sender Email';
 $lang->mail->nextStep       = 'Next';
 $lang->mail->successSaved   = 'Configuration has been saved.';
 $lang->mail->testSubject    = 'Testing Email';

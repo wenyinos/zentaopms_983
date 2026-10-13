@@ -15,17 +15,16 @@ $lang->admin->checkDB       = 'Check Database';
 $lang->admin->sso           = 'Zdoo';
 $lang->admin->safeIndex     = 'Security';
 $lang->admin->checkWeak     = 'Weak Password Check';
-$lang->admin->certifyMobile = 'Verify your mobilephone';
+$lang->admin->certifyMobile = 'Verify your cellphone';
 $lang->admin->certifyEmail  = 'Verify your Email';
 $lang->admin->ztCompany     = 'Verify your company';
 $lang->admin->captcha       = 'Verification Code';
 $lang->admin->getCaptcha    = 'Get Verification Code';
 
-$lang->admin->api           = 'API';
-$lang->admin->log           = 'Log';
-$lang->admin->setting       = 'Setting';
-$lang->admin->days          = 'Valid Days';
-$lang->admin->saveSuccess   = 'Saved.';
+$lang->admin->api     = 'API';
+$lang->admin->log     = 'Log';
+$lang->admin->setting = 'Setting';
+$lang->admin->days    = 'Valid Days';
 
 $lang->admin->info = new stdclass();
 $lang->admin->info->version = 'Current Version is %s. ';
@@ -59,8 +58,8 @@ $lang->admin->safe->password   = 'Password Strength';
 $lang->admin->safe->weak       = 'Weak Passwords';
 $lang->admin->safe->reason     = 'Type';
 $lang->admin->safe->checkWeak  = 'WeakPasswords';
-$lang->admin->safe->changeWeak = 'Weak password must be strengthen';
-$lang->admin->safe->modifyPasswordFirstLogin = 'Change password when first login';
+$lang->admin->safe->changeWeak = 'Your password is weak. Change it.';
+$lang->admin->safe->modifyPasswordFirstLogin = 'Change password after first login';
 
 $lang->admin->safe->modeList[0] = 'N/A';
 $lang->admin->safe->modeList[1] = 'Medium';
@@ -71,7 +70,7 @@ $lang->admin->safe->modeRuleList[2] = 'Contains upper and lower case, numbers an
 
 $lang->admin->safe->reasonList['weak']     = 'Common Weak Password';
 $lang->admin->safe->reasonList['account']  = 'Same as your account';
-$lang->admin->safe->reasonList['mobile']   = 'Same as your mobile number';
+$lang->admin->safe->reasonList['mobile']   = 'Same as your cellphone number';
 $lang->admin->safe->reasonList['phone']    = 'Same as your phone number';
 $lang->admin->safe->reasonList['birthday'] = 'Same as your DOB';
 

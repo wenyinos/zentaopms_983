@@ -24,6 +24,7 @@ $lang->testsuite->exportTemplet    = '导出模板';
 $lang->testsuite->batchCreateCase  = '批量创建用例';
 $lang->testsuite->import           = '导入';
 $lang->testsuite->showImport       = '显示导入数据';
+$lang->testsuite->successSaved     = '保存成功';
 
 $lang->testsuite->common         = '套件';
 $lang->testsuite->product        = '所属' . $lang->productCommon;
@@ -42,6 +43,8 @@ $lang->testsuite->confirmDelete     = '您确认要删除该套件吗？';
 $lang->testsuite->libraryDelete     = '您确认要删除该用例库吗？';
 $lang->testsuite->confirmUnlinkCase = '您确认要移除该用例吗？';
 $lang->testsuite->noticeNone        = '您还没有创建套件';
+$lang->testsuite->noModule          = '<div>您现在还没有模块信息</div><div>请维护用例库模块</div>';
+$lang->testsuite->noTestsuite       = '暂时没有套件。';
 
 $lang->testsuite->lblCases      = '用例列表';
 $lang->testsuite->lblUnlinkCase = '移除用例';
