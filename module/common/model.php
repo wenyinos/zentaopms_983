@@ -319,6 +319,99 @@ class commonModel extends model
     }
 
     /**
+     * Print top bar.
+     *
+     * @static
+     * @access public
+     * @return void
+     */
+    public static function printUserBar()
+    {
+        global $lang, $app;
+
+        if(isset($app->user))
+        {
+            $isGuest = $app->user->account == 'guest';
+
+            echo "<a class='dropdown-toggle' data-toggle='dropdown'>";
+            echo "<div class='avatar avatar-sm bg-secondary avatar-circle'>" . strtoupper($app->user->account[0]) . "</div>\n";
+            echo "<span class='user-name'>" . (empty($app->user->realname) ? $app->user->account : $app->user->realname) . '</span>';
+            echo "<span class='caret'></span>";
+            echo '</a>';
+            echo "<ul class='dropdown-menu pull-right'>";
+            if(!$isGuest)
+            {
+                echo '<li class="user-profile-item">';
+                echo "<a href='". helper::createLink('my', 'profile', '', '', true) . "' class='iframe" . (!empty($app->user->role) && isset($lang->user->roleList[$app->user->role]) ? '' : ' no-role') . "' data-width='600'>";
+                echo "<div class='avatar avatar bg-secondary avatar-circle'>" . strtoupper($app->user->account[0]) . "</div>\n";
+                echo '<div class="user-profile-name">' . (empty($app->user->realname) ? $app->user->account : $app->user->realname) . '</div>';
+                if(isset($lang->user->roleList[$app->user->role])) echo '<div class="user-profile-role">' . $lang->user->roleList[$app->user->role] . '</div>';
+                echo '</a></li><li class="divider"></li>';
+                echo '<li>' . html::a(helper::createLink('my', 'profile', '', '', true), $lang->profile, '', "class='iframe' data-width='600'") . '</li>';
+                echo '<li>' . html::a(helper::createLink('my', 'changepassword', '', '', true), $lang->changePassword, '', "class='iframe' data-width='500'") . '</li>';
+
+                echo "<li class='divider'></li>";
+            }
+
+            echo "<li class='dropdown-submenu'>";
+            echo "<a href='javascript:;'>" . $lang->theme . "</a><ul class='dropdown-menu pull-left'>";
+            foreach($app->lang->themes as $key => $value)
+            {
+                echo "<li " . ($app->cookie->theme == $key ? "class='selected'" : '') . "><a href='javascript:selectTheme(\"$key\");' data-value='" . $key . "'>" . $value . "</a></li>";
+            }
+            echo '</ul></li>';
+
+            echo "<li class='dropdown-submenu'>";
+            echo "<a href='javascript:;'>" . $lang->lang . "</a><ul class='dropdown-menu pull-left'>";
+            foreach ($app->config->langs as $key => $value)
+            {
+                echo "<li " . ($app->cookie->lang == $key ? "class='selected'" : '') . "><a href='javascript:selectLang(\"$key\");'>" . $value . "</a></li>";
+            }
+            echo '</ul></li>';
+
+            if(!$isGuest and !commonModel::isTutorialMode() and $app->viewType != 'mhtml')
+            {
+                $customLink = helper::createLink('custom', 'ajaxMenu', "module={$app->getModuleName()}&method={$app->getMethodName()}", '', true);
+                echo "<li class='custom-item'><a href='$customLink' data-toggle='modal' data-type='iframe' data-icon='cog' data-width='80%'>$lang->customMenu</a></li>";
+            }
+
+            echo '<li class="divider"></li>';
+            echo '<li>';
+            if($isGuest)
+            {
+                echo html::a(helper::createLink('user', 'login'), $lang->login);
+            }
+            else
+            {
+                echo html::a(helper::createLink('user', 'logout'), $lang->logout);
+            }
+            echo '</li></ul>';
+        }
+    }
+
+/**
+     * Print about bar.
+     *
+     * @static
+     * @access public
+     * @return void
+     */
+    public static function printAboutBar()
+    {
+        global $app, $config, $lang;
+        echo "<ul id='extraNav' class='nav nav-default'>";
+        echo "<li class='dropdown'>";
+        echo "<a data-toggle='dropdown'>" . $lang->help . " <span class='caret'></span></a>";
+        echo "<ul class='dropdown-menu'>";
+        if($config->global->flow == 'full' && !commonModel::isTutorialMode() and $app->user->account != 'guest') echo '<li>' . html::a(helper::createLink('tutorial', 'start'), $lang->tutorial, '', "class='iframe' data-class-name='modal-inverse' data-width='800' data-headerless='true' data-backdrop='true' data-keyboard='true'") . "</li>";
+        echo '<li>' . html::a($lang->manualUrl, $lang->manual, '_blank', "class='open-help-tab'") . '</li>';
+        echo '<li>' . html::a(helper::createLink('misc', 'changeLog'), $lang->changeLog, '', "class='iframe' data-width='800' data-headerless='true' data-backdrop='true' data-keyboard='true'") . '</li>';
+        echo "</ul></li>\n";
+        echo '<li>' . html::a(helper::createLink('misc', 'about'), $lang->aboutZenTao, '', "class='about iframe' data-width='900' data-headerless='true' data-backdrop='true' data-keyboard='true' data-class='modal-about'") . '</li>';
+        echo '</ul>';
+    }
+
+/**
      * Print the main menu.
      *
      * @param  string $moduleName
@@ -339,17 +432,21 @@ class commonModel extends model
         /* Print all main menus. */
         $menu       = customModel::getMainMenu();
         $activeName = 'active';
+        $lastMenu   = end($menu);
 
-        echo "<ul class='nav'>\n";
+        echo "<ul class='nav nav-default'>\n";
         foreach($menu as $menuItem)
         {
-            if(isset($menuItem->hidden) && $menuItem->hidden) continue;
-            $active = $menuItem->name == $mainMenu ? "class='$activeName'" : '';
-            $link   = commonModel::createMenuLink($menuItem);
-            echo "<li $active data-id='$menuItem->name'><a href='$link' $active>$menuItem->text</a></li>\n";
+            if(empty($menuItem->hidden))
+            {
+                $active = $menuItem->name == $mainMenu ? "class='$activeName'" : '';
+                $link   = commonModel::createMenuLink($menuItem);
+                echo "<li $active data-id='$menuItem->name'><a href='$link' $active>$menuItem->text</a></li>\n";
+            }
+
+            if(($lastMenu->name != $menuItem->name) && strpos($lang->dividerMenu, ",{$menuItem->name},") !== false) echo "<li class='divider'></li>";
+
         }
-        $customLink = helper::createLink('custom', 'ajaxMenu', "module={$app->getModuleName()}&method={$app->getMethodName()}", '', true);
-        if(!commonModel::isTutorialMode() and $app->viewType != 'mhtml' and $app->user->account != 'guest') echo "<li class='custom-item'><a href='$customLink' data-toggle='modal' data-type='iframe' title='$lang->customMenu' data-icon='cog' data-width='80%'><i class='icon icon-cog'></i></a></li>";
         echo "</ul>\n";
     }
 
@@ -386,18 +483,21 @@ class commonModel extends model
             if($config->global->flow == 'onlyTask')  $searchObject = 'task';
         }
 
-        echo "<div class='input-group input-group-sm' id='searchbox'>";
-        echo "<div class='input-group-btn' id='typeSelector'>";
-        echo "<button type='button' class='btn dropdown-toggle' data-toggle='dropdown'><span id='searchTypeName'>" . $lang->searchObjects[$searchObject] . "</span> <span class='caret'></span></button>";
+        echo "<div id='searchbox'>";
+        echo "<div class='input-group'>";
+        echo "<div class='input-group-btn'>";
+        echo "<a data-toggle='dropdown' class='btn btn-link'><span id='searchTypeName'>" . $lang->searchObjects[$searchObject] . "</span> <span class='caret'></span></a>";
         echo html::hidden('searchType', $searchObject);
-        echo "<ul class='dropdown-menu'>";
+        echo "<ul id='searchTypeMenu' class='dropdown-menu'>";
         foreach ($lang->searchObjects as $key => $value)
         {
-            echo "<li><a href='javascript:;' data-value='{$key}'>{$value}</a></li>";
+            $class = $key == $searchObject ? "class='selected'" : '';
+            echo "<li $class><a href='javascript:$.setSearchType(\"$key\");' data-value='{$key}'>{$value}</a></li>";
         }
         echo '</ul></div>';
-        echo html::input('searchQuery', '', "onclick='this.value=\"\"' onkeydown='if(event.keyCode==13) shortcut()' class='form-control' placeholder='" . $lang->searchTips . "'");
-        echo "<div id='objectSwitcher' class='input-group-btn'><a href='javascript:shortcut();' class='btn'>GO! </a></div>";
+        echo "<input id='searchInput' class='form-control search-input' type='search' onclick='this.value=\"\"' onkeydown='if(event.keyCode==13) $.gotoObject();' placeholder='" . $lang->searchTips . "'/>";
+        echo '</div>';
+        echo "<a href='javascript:$.gotoObject();' class='btn btn-link' id='searchGo'>GO!</a>";
         echo "</div>\n";
     }
 
@@ -411,7 +511,7 @@ class commonModel extends model
      */
     public static function printModuleMenu($moduleName)
     {
-        global $lang, $app;
+        global $config, $lang, $app;
 
         if(!isset($lang->$moduleName->menu))
         {
@@ -427,45 +527,102 @@ class commonModel extends model
         $isMobile       = $app->viewType === 'mhtml';
 
         /* The beginning of the menu. */
-        echo $isMobile ? '' : "<ul class='nav'>\n";
+        echo $isMobile ? '' : "<ul class='nav nav-default'>\n";
 
-        /* Cycling to print every sub menus. */
+        if(isset($lang->menugroup->$moduleName)) $moduleName = $lang->menugroup->$moduleName;
+        /* Cycling to print every sub menu. */
         foreach($menu as $menuItem)
         {
+            if(isset($lang->$moduleName->dividerMenu) and strpos($lang->$moduleName->dividerMenu, ",{$menuItem->name},") !== false) echo "<li class='divider'></li>";
             if(isset($menuItem->hidden) && $menuItem->hidden) continue;
             if($isMobile and empty($menuItem->link)) continue;
 
             /* Init the these vars. */
+            $alias     = isset($menuItem->alias) ? $menuItem->alias : '';
+            $subModule = isset($menuItem->subModule) ? explode(',', $menuItem->subModule) : array();
+            $class     = isset($menuItem->class) ? $menuItem->class : '';
+            $active    = '';
+            if($subModule and in_array($currentModule, $subModule)) $active = 'active';
+            if($alias and $moduleName == $currentModule and strpos(",$alias,", ",$currentMethod,") !== false) $active = 'active';
             if($menuItem->link)
             {
-                $active = '';
-                $float  = isset($menuItem->float) ? $menuItem->float : '';
-                $alias  = '';
                 $target = '';
                 $module = '';
                 $method = '';
                 $link   = commonModel::createMenuLink($menuItem);
                 if(is_array($menuItem->link))
                 {
-                    if(isset($menuItem->link['subModule']))
-                    {
-                        $subModules = explode(',', $menuItem->link['subModule']);
-                        if(in_array($currentModule, $subModules) and $float != 'right') $active = 'active';
-                    }
-                    if(isset($menuItem->link['alias']))  $alias  = $menuItem->link['alias'];
                     if(isset($menuItem->link['target'])) $target = $menuItem->link['target'];
                     if(isset($menuItem->link['module'])) $module = $menuItem->link['module'];
                     if(isset($menuItem->link['method'])) $method = $menuItem->link['method'];
                 }
-                if($float != 'right' and $module == $currentModule and ($method == $currentMethod or strpos(",$alias,", ",$currentMethod,") !== false)) $active = 'active';
+                if($module == $currentModule and ($method == $currentMethod or strpos(",$alias,", ",$currentMethod,") !== false)) $active = 'active';
 
-                $menuItemHtml = "<li class='$float $active' data-id='$menuItem->name'>" . html::a($link, $menuItem->text, $target) . "</li>\n";
-                if($isMobile) $menuItemHtml = html::a($link, $menuItem->text, $target, "class='$active'") . "\n";
+                /* Avoid user thinking the page is shaking when the menu toggle class 'active' */
+                if($config->global->flow == 'onlyTest')
+                {
+                    if($currentModule == 'bug'       && $currentMethod == 'browse')  $active = '';
+                    if($currentModule == 'testcase'  && $currentMethod == 'browse')  $active = '';
+                    if($currentModule == 'testtask'  && $currentMethod == 'browse')  $active = '';
+                    if($currentModule == 'testsuite' && $currentMethod == 'library') $active = '';
+                }
+
+                $label   = $menuItem->text;
+                $subMenu = '';
+                /* Print sub menus. */
+                if(isset($menuItem->subMenu))
+                {
+                    $firstLink  = '';
+                    $firstLabel = '';
+                    foreach($menuItem->subMenu as $subMenuItem)
+                    {
+                        if($subMenuItem->hidden) continue;
+
+                        $subActive = '';
+                        $subModule = '';
+                        $subMethod = '';
+                        $subParams = '';
+                        $subLabel  = $subMenuItem->text;
+                        if(isset($subMenuItem->link['module'])) $subModule = $subMenuItem->link['module'];
+                        if(isset($subMenuItem->link['method'])) $subMethod = $subMenuItem->link['method'];
+                        if(isset($subMenuItem->link['vars']))   $subParams = $subMenuItem->link['vars'];
+
+                        $subLink = helper::createLink($subModule, $subMethod, $subParams);
+
+                        if($config->global->flow != 'onlyTest' && $currentModule == strtolower($subModule) && $currentMethod == strtolower($subMethod)) $subActive = 'active';
+
+                        $subMenu .= "<li class='$subActive' data-id='$subMenuItem->name'>" . html::a($subLink, $subLabel) . '</li>';
+
+                        if(!$firstLink)  $firstLink  = $subLink;
+                        if(!$firstLabel) $firstLabel = $subLabel;
+                    }
+
+                    if(!$firstLink or !$firstLabel) continue;
+
+                    if($config->global->flow == 'onlyTest')
+                    {
+                        $link = $firstLink;
+                    }
+                    else
+                    {
+                        $link  = $firstLink;
+                        $label = $firstLabel;
+                    }
+
+                    if($subMenu)
+                    {
+                        $label   .= "<span class='caret'></span>";
+                        $subMenu  = "<ul class='dropdown-menu'>{$subMenu}</ul>";
+                    }
+                }
+
+                $menuItemHtml = "<li class='$class $active' data-id='$menuItem->name'>" . html::a($link, $label, $target) . $subMenu . "</li>\n";
+                if($isMobile) $menuItemHtml = html::a($link, $menuItem->text, $target, "class='$class $active'") . "\n";
                 echo $menuItemHtml;
             }
             else
             {
-                echo $isMobile ? $menuItem->text : "<li data-id='$menuItem->name'>$menuItem->text</li>\n";
+                echo $isMobile ? $menuItem->text : "<li class='$class $active' data-id='$menuItem->name'>$menuItem->text</li>\n";
             }
         }
         echo $isMobile ? '' : "</ul>\n";
@@ -485,24 +642,29 @@ class commonModel extends model
         global $lang;
         $mainMenu = $moduleName;
         if(isset($lang->menugroup->$moduleName)) $mainMenu = $lang->menugroup->$moduleName;
-        echo html::a(helper::createLink('my', 'index'), $lang->zentaoPMS) . $lang->arrow;
+        echo "<ul class='breadcrumb'>";
+        echo '<li>' . html::a(helper::createLink('my', 'index'), $lang->zentaoPMS) . '</li>';
         if($moduleName != 'index')
         {
             if(!isset($lang->menu->$mainMenu)) return;
-            list($menuLabel, $module, $method) = explode('|', $lang->menu->$mainMenu);
-            echo html::a(helper::createLink($module, $method), $menuLabel);
+            $menuLink = $mainMenu == 'admin' ? $lang->adminMenu : $lang->menu->$mainMenu;
+            list($menuLabel, $module, $method) = explode('|', $menuLink);
+            echo '<li>' . html::a(helper::createLink($module, $method), $menuLabel) . '</li>';
         }
         else
         {
-            echo $lang->index->common;
+            echo '<li>' . $lang->index->common . '</li>';
         }
-        if(empty($position)) return;
-        echo $lang->arrow;
+        if(empty($position))
+        {
+            echo '</ul>';
+            return;
+        }
         foreach($position as $key => $link)
         {
-            echo $link;
-            if(isset($position[$key + 1])) echo $lang->arrow;
+            echo "<li class='active'>" . $link . '</li>';
         }
+        echo '</ul>';
     }
 
     /**

@@ -1,28 +1,28 @@
-  </div><?php /* end '.outer' in 'header.html.php'. */ ?>
-  <script>setTreeBox()</script>
-  <?php if($extView = $this->getExtViewFile(__FILE__)){include $extView; return helper::cd();}?>
+</div><?php /* end '.outer' in 'header.html.php'. */ ?>
+</div></div><?php /* end '#wrap'/'.container' in 'header.html.php'. */ ?>
+<script>$.initSidebar()</script>
+<?php if($extView = $this->getExtViewFile(__FILE__)){include $extView; return helper::cd();}?>
 
-  <div id='divider'></div>
-  <iframe frameborder='0' name='hiddenwin' id='hiddenwin' scrolling='no' class='debugwin hidden'></iframe>
-<?php $onlybody = zget($_GET, 'onlybody', 'no');?>
+<iframe frameborder='0' name='hiddenwin' id='hiddenwin' scrolling='no' class='debugwin hidden'></iframe>
+
 <?php if($onlybody != 'yes'):?>
-</div><?php /* end '#wrap' in 'header.html.php'. */ ?>
-<div id='footer'>
-  <div id='crumbs'>
+</main><?php /* end '#main' in 'header.html.php'. */ ?>
+<footer id='footer'>
+  <div class="container">
     <?php commonModel::printBreadMenu($this->moduleName, isset($position) ? $position : ''); ?>
+    <div id='poweredBy'>
+      <?php
+      $phpVersion = PHP_VERSION;
+      $phpBranch  = PHP_MAJOR_VERSION . '.' . PHP_MINOR_VERSION;
+      $phpLink    = "https://www.php.net/releases/{$phpBranch}/en.php";
+      ?>
+      <a href='<?php echo $lang->website;?>' target='_blank'><i class='icon-zentao'></i> <?php echo $lang->zentaoPMS . $config->version;?></a> &nbsp;
+      <a href='https://github.com/wenyinos/zentaopms_983' target='_blank'>WenYinOS</a> &nbsp;
+      <a href='<?php echo $phpLink;?>' target='_blank'>PHP <?php echo $phpVersion;?></a> &nbsp;
+      <?php commonModel::printNotifyLink();?>
+    </div>
   </div>
-  <div id='poweredby'>
-  <?php
-  $phpVersion = PHP_VERSION;
-  $phpBranch  = PHP_MAJOR_VERSION . '.' . PHP_MINOR_VERSION;
-  $phpLink    = "https://www.php.net/releases/{$phpBranch}/en.php";
-  ?>
-  <a href='<?php echo $lang->website;?>' target='_blank' class='text-primary'><i class='icon-zentao'></i> <?php echo $lang->zentaoPMS . $config->version;?></a> &nbsp;
-    <a href='https://github.com/wenyinos/zentaopms_983' target='_blank'>WenYinOS</a> &nbsp;
-    <a href='<?php echo $phpLink;?>' target='_blank'>PHP <?php echo $phpVersion;?></a> &nbsp;
-    <?php commonModel::printNotifyLink();?>
-  </div>
-</div>
+</footer>
 <div id="noticeBox"><?php echo $this->loadModel('score')->getNotice(); ?></div>
 <?php
 /* Security notice: remind to remove install.php and upgrade.php if not deleted. */
@@ -71,7 +71,7 @@ $(function()
                 if(data)
                 {
                     if(typeof data == 'string') data = $.parseJSON(data);
-                    if(typeof data.message == 'string')	notifyMessage(data.message);
+                    if(typeof data.message == 'string') notifyMessage(data.message);
                 }
             }
         });
@@ -98,8 +98,6 @@ $(function(){ redirect('<?php echo $ranzhiURL?>', '<?php echo $this->config->sso
 </script>
 
 <?php endif;?>
-
-<script>config.onlybody = '<?php echo $onlybody?>';</script>
 <?php
 if($this->loadModel('cron')->runable()) js::execute('startCron()');
 if(isset($pageJS)) js::execute($pageJS);  // load the js for current page.

@@ -147,6 +147,10 @@ $lang->lang = 'Language';
 
 /* 风格列表。*/
 $lang->theme                 = 'Theme';
+/* UI 10.1 骨架新增语言项 */
+$lang->adminMenu = 'Admin|admin|index';
+$lang->dividerMenu = ',qa,';
+$lang->manualUrl       = 'http://www.zentao.net/book/zentaopmshelp.html?fullScreen=zentao';
 $lang->themes['lightblue']   = 'Bright Blue';
 $lang->themes['blackberry']  = 'Blackberry';
 $lang->themes['wenyin']      = 'WenYin';
