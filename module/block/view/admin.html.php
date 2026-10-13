@@ -10,21 +10,36 @@
  * @link        http://www.ranzhico.com
  */
 ?>
+<?php
+$webRoot = $this->app->getWebRoot();
+$jsRoot  = $webRoot . "js/";
+include '../../common/view/chosen.html.php';
+?>
 <?php if(isset($pageCSS)) css::internal($pageCSS); ?>
-<?php js::set('blockID', $blockID)?>
-<?php if(isset($pageJS)) js::execute($pageJS);?>
-<table class='table table-form'>
-  <tr><th class='w-100px'></th><td></td><td class='w-100px'></td></tr>
+<form class="form-horizontal load-indicator" id="blockAdminForm" method='post' target='hiddenwin'>
   <?php if(!empty($modules)):?>
-  <tr>
-    <th class='w-100px'><?php echo $lang->block->lblModule; ?></th>
-    <?php
-    $moduleID = '';
-    if($block) $moduleID = $block->source != '' ? $block->source : $block->block;
-    ?>
-    <td><?php echo html::select('modules', $modules, $moduleID, "class='form-control'")?></td>
-  </tr>
+  <div class="form-group">
+    <label for="modules" class="col-sm-3"><?php echo $lang->block->lblModule;?></label>
+    <div class="col-sm-7">
+      <?php
+      $moduleID = '';
+      if($block) $moduleID = $block->source != '' ? $block->source : $block->block;
+      ?>
+      <?php echo html::select('modules', $modules, $moduleID, "class='form-control chosen'")?>
+    </div>
+  </div>
+  <?php else:?>
+  <?php echo html::hidden('modules', $module);?>
   <?php endif;?>
-  <tr><?php if(!empty($blocks)) echo $blocks;?></tr>
-</table>
-<div id='blockParam'></div>
+  <div id="blocksList"><?php if(!empty($blocks)) echo $blocks;?></div>
+  <div id="blockParams"></div>
+  <div class="form-group">
+    <div class="col-sm-7 col-sm-offset-3">
+      <button type="submit" class="btn btn-wide btn-primary"><?php echo $lang->save;?></button>
+      <button type="cancel" class="btn btn-wide" data-dismiss="modal"><?php echo $lang->cancel;?></button>
+    </div>
+  </div>
+</form>
+<?php js::set('blockID', $blockID);?>
+<?php if(!empty($module)) js::set('module', $module);?>
+<?php if(isset($pageJS)) js::execute($pageJS);?>

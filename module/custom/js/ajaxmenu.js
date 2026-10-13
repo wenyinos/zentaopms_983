@@ -2,17 +2,17 @@ $(function()
 {
     var currentModule = startMenu['module'],
         currentMethod = startMenu['method'],
-        $mainMenu     = $('#mainmenu'),
-        $moduleMenu   = $('#modulemenu'),
-        $featureMenu  = $('#featurebar'),
+        $navbar       = $('#navbar'),
+        $subNavbar    = $('#subNavbar'),
+        $mainMenu     = $('#mainMenu'),
         $loadingIcon  = $('#loadingIcon'),
-        $menuEditor   = $('#menuEditor');
-    var menuConfig    =
-    {
-        'main':    null,
-        'module':  {},
-        'feature': {}
-    };
+        $menuEditor   = $('#menuEditor'),
+        menuConfig    =
+        {
+            'main':    null,
+            'module':  {},
+            'feature': {}
+        };
 
     var updateConfig = function($menu)
     {
@@ -32,19 +32,47 @@ $(function()
 
     var updateMenu = function(moduleName, methodName, items)
     {
-        var $menu = moduleName === 'main' ? $mainMenu : (methodName ? $featureMenu : $moduleMenu);
+        var $menu = moduleName === 'main' ? $navbar : (methodName ? $mainMenu : $subNavbar);
         var items = items || (moduleName === 'main' ? menuConfig.main : (methodName ? menuConfig['feature'][moduleName][methodName] : menuConfig['module'][moduleName]));
 
         $menu.data({'module': moduleName, 'method': methodName});
 
         if(items)
         {
-            var $nav = $('<ul class="nav"/>');
+            var $nav = $('<ul class="nav nav-default"/>');
             $.each(items, function(idx, item)
             {
                 if(!item.text || item.fixed) return;
-                var $a = $('<a href="#"/>').html(item.text).data('menu', item).append('<i class="item-hidden-icon icon icon-eye-close"></i>');
-                $('<li/>').attr('data-id', item.name).toggleClass('right', item.float === 'right').toggleClass('menu-hidden', !!item.hidden).append($a).appendTo($nav);
+                var $a = $('<a href="#"/>').append(item.text);
+                $a.data('menu', item).append('<i class="item-hidden-icon icon icon-eye-off"></i>');
+                var hidden = !!item.hidden;
+                if(item.subMenu)
+                {
+                    hidden = true;
+                    $a.addClass('dropdown dropdown-hover').append("<span class='caret'></span><ul class='dropdown-menu'></ul>");
+                    var $dropmenu = $a.find('.dropdown-menu');
+                    $.each(item.subMenu, function(subIdx, subItem)
+                    {
+                        subItem.order = subIdx + 1;
+                        var $subA = $('<a href="#"/>').append(subItem.text);
+                        $subA.data('menu', subItem).append('<i class="item-hidden-icon icon icon-eye-off"></i>');
+                        $('<li/>').attr('data-id', subItem.name).toggleClass('right', subItem.float === 'right').toggleClass('menu-hidden', !!subItem.hidden).append($subA).appendTo($dropmenu);
+
+                        hidden = subItem.hidden && hidden;
+                    });
+                    var $aInner = $a.children('a');
+                    if ($aInner.length)
+                    {
+                        $aInner.replaceWith($('<span>' + $aInner.text() + ' <span class="caret"></span></span>'));
+                        $a.addClass('dropdown-hover');
+                    }
+                    if(!$dropmenu.children().length)
+                    {
+                        $a.removeClass('dropdown dropdown-hover').find('.caret').remove();
+                        $dropmenu.remove();
+                    }
+                }
+                $('<li/>').attr('data-id', item.name).toggleClass('right', item.float === 'right').toggleClass('menu-hidden', hidden).append($a).appendTo($nav);
             });
             $nav.sortable({finish: function(e)
             {
@@ -62,10 +90,10 @@ $(function()
     {
         currentModule = moduleName;
         currentMethod = methodName;
-        $mainMenu.find('li.active').removeClass('active');
-        $mainMenu.find('li[data-id="' + moduleName + '"]:not(.right)').addClass('active');
-        $moduleMenu.find('li.active').removeClass('active');
-        $moduleMenu.find('li[data-id="' + methodName + '"]:not(.right)').addClass('active');
+        $navbar.find('li.active').removeClass('active');
+        $navbar.find('li[data-id="' + moduleName + '"]:not(.right)').addClass('active');
+        $subNavbar.find('li.active').removeClass('active');
+        $subNavbar.find('li[data-id="' + methodName + '"]:not(.right)').addClass('active');
     };
 
     var loadData = function(moduleName, methodName, type, callback)
@@ -104,22 +132,36 @@ $(function()
 
     var formatMenuConfig = function(items)
     {
-        return $.map(items, function(item)
+        var dataList = [];
+        $.each(items, function(idx, item)
         {
             var data = {name: item.name, order: parseInt(item.order)};
             if(item.hidden) data.hidden = true;
             if(item.float) data.float = item.float;
-            return data;
+            if(item.subMenu)
+            {
+                var subMenu = [];
+                $.each(item.subMenu, function(sIdx, subItem)
+                {
+                    var subData = {name: subItem.name, order: parseInt(subItem.order)};
+                    if(subItem.hidden) subData.hidden = true;
+                    if(subItem.float) subData.float = subItem.float;
+                    subMenu.push(subData);
+                });
+                data.subMenu = subMenu;
+            }
+            dataList.push(data);
         });
+        return dataList;
     };
 
     $menuEditor.on('mouseenter', '.nav > li:not(.drag-shadow) > a', function()
     {
-        var $a   = $(this);
-        var item = $a.data('menu');
+        var $a    = $(this);
+        var item  = $a.data('menu');
         var $menu = $a.closest('nav');
 
-        if($menu.is('#mainmenu'))
+        if($menu.is('#navbar'))
         {
             var moduleName = item.name;
             if(moduleName !== currentModule)
@@ -159,7 +201,7 @@ $(function()
                 }
             }
         }
-        else if($menu.is('#modulemenu'))
+        else if($menu.is('#subNavbar'))
         {
             var moduleName = item.link ? item.link['module'] : $menu.data('module');
             var methodName = item.link ? item.link['method'] : item.name;
@@ -183,21 +225,38 @@ $(function()
                 }
             }
         }
-    }).on('click', '.nav > li > a', function()
+    }).on('click', '.nav>li>a,.dropdown-menu>li>a', function(e)
     {
-        var $a         = $(this);
-        var item       = $a.data('menu');
+        var $a   = $(this);
+        var item = $a.data('menu');
+        if(!item) return;
+        if($a.find('.dropdown-menu').length) return;
+
         var $menu      = $a.closest('nav');
         var moduleName = item.link && item.link['module'] ? item.link['module'] : item.name;
         var methodName = item.link && item.link['method'] ? item.link['method'] : '';
-        item.hidden    = !!!item.hidden;
-        if($menu.is('#modulemenu'))
+        item.hidden    = !item.hidden;
+        if($menu.is('#subNavbar'))
         {
             moduleName = currentModule;
             methodName = item.name;
         }
         $a.parent().toggleClass('menu-hidden', item.hidden);
+
+        /* Update parent menu by sub menu. */
+        if($a.parent().parent().hasClass('dropdown-menu'))
+        {
+            var hidden = true;
+            $a.parent().parent().children().each(function()
+            {
+                hidden = $(this).hasClass('menu-hidden') && hidden;
+            });
+
+            $a.parent().parent().parent().parent().toggleClass('menu-hidden', hidden);
+        }
+
         updateConfig($menu);
+        e.stopPropagation();
     });
 
     $('#saveMenuBtn').click(function()

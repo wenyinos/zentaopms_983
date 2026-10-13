@@ -11,92 +11,91 @@
  */
 ?>
 <?php include '../../common/view/header.html.php';?>
-<div class='row'>
+<div id='mainContent' class='main-content <?php if($mode == 'edit') echo ' main-row';?>'>
   <?php if($mode == 'edit'):?>
-  <div class='col-sm-3 col-lg-2'>
-    <ul class='list-group'>
+  <div class='side-col'>
     <?php
     foreach($lists as $id => $listName)
     {
-        $listClass = ($id == $listID) ? 'list-group-item active' : 'list-group-item';
+        $listClass = ($id == $listID) ? 'btn btn-block active' : 'btn btn-block';
         $shareIcon = in_array($id, $globalContacts) ? '<i class="icon icon-share-sign"></i> ' : '';
         echo html::a(inlink('managecontacts', "listID=$id&mode=edit"), $shareIcon . $listName, '', "class='{$listClass}'");
     }
     ?>
-    </ul>
     <?php echo html::a(inlink('managecontacts', "listID=0&mode=new"), '<i class="icon icon-plus"></i> ' . $lang->user->contacts->createList, '', "class='btn btn-block'"); ?>
   </div>
+  <div class='main-col'>
   <?php endif;?>
-  <?php $class = $mode == 'edit' ? 'col-sm-9 col-lg-10' : 'col-sm-12 col-lg-12';?>
-    <div class='<?php echo $class?>'>
-    <form class='form-condensed' method='post' target='hiddenwin' id='dataform'>
-      <div class='panel panel-sm'>
-        <div class='panel-heading'>
-          <?php if($mode == 'new'):?>
-          <i class='icon-plus'></i> <strong><?php echo $lang->user->contacts->createList;?></strong>
-          <?php else:?>
-          <i class='icon-cogs'></i> <strong><?php echo $lang->user->contacts->manage;?></strong>
-          <?php endif;?>
-        </div>
-        <div class='panel-body'>
-          <table class='table table-form'> 
-            <tr>
-              <th class='w-80px'><?php echo $lang->user->contacts->listName;?></th>
-              <td class='w-300px'>
-              <div class='required required-wrapper'></div>
-              <?php
-              if($mode == 'edit') $readonly = in_array($list->id, $disabled) ? ' readonly' : '';
-              if($mode == 'new')
-              {
-                  echo html::input('newList', '', "class='form-control'");
-              }
-              else
-              {
-                  echo html::input('listName', $list->listName, "$readonly class='form-control'");
-                  echo html::hidden('listID',  $list->id);
-              }
-              ?>
-              </td>
-              <td></td>
-            </tr>
-            <tr>
-              <th><?php echo $lang->user->contacts->selectedUsers;?></th>
-              <td colspan='2'>
-              <?php
-              if($mode == 'new')
-              {
-                  echo html::select('users[]', $users, '', "multiple class='form-control chosen'");
-              }
-              else
-              {
-                  echo html::select('users[]', $users, $list->userList, "multiple $readonly class='form-control chosen'");
-              }
-              ?>
-              </td>
-            </tr>
-            <?php if(common::hasPriv('datatable', 'setGlobal')):?>
-            <tr>
-              <th></th>
-              <td colspan="2">
-                <label class="checkbox-inline">
-                  <input type="checkbox" name="share" value="1" <?php if($mode != 'new' && in_array($list->id, $globalContacts)) echo 'checked';?>/> <?php echo $lang->my->shareContacts;?>
-                </label>
-              </td>
-            </tr>
-            <?php endif;?>
-            <?php if($mode == 'new' || !in_array($list->id, $disabled)):?>
-            <tr>
-              <td></td>
-              <td>
-              <?php echo html::submitButton() . html::hidden('mode', $mode);?>
-              <?php if($mode == 'edit') echo html::a(inlink('deleteContacts', "listID=$listID"), $lang->delete, 'hiddenwin', "class='btn btn-danger'");?>
-              </td>
-            </tr>
-            <?php endif;?>
-          </table>
-        </div>
-      </div>
+    <div class='main-header'>
+      <h2>
+        <?php if($mode == 'new'):?>
+        <i class='icon-plus'></i> <strong><?php echo $lang->user->contacts->createList;?></strong>
+        <?php else:?>
+        <i class='icon-cogs'></i> <strong><?php echo $lang->user->contacts->manage;?></strong>
+        <?php endif;?>
+      </h2>
+    </div>
+
+    <form method='post' target='hiddenwin' id='dataform'>
+      <table class='table table-form'> 
+        <tr>
+          <th class='w-80px'><?php echo $lang->user->contacts->listName;?></th>
+          <td class='w-300px'>
+          <div class='required required-wrapper'></div>
+          <?php
+          if($mode == 'edit') $readonly = in_array($list->id, $disabled) ? ' readonly' : '';
+          if($mode == 'new')
+          {
+              echo html::input('newList', '', "class='form-control'");
+          }
+          else
+          {
+              echo html::input('listName', $list->listName, "$readonly class='form-control'");
+              echo html::hidden('listID',  $list->id);
+          }
+          ?>
+          </td>
+          <td></td>
+        </tr>
+        <tr>
+          <th><?php echo $lang->user->contacts->selectedUsers;?></th>
+          <td colspan='2'>
+          <?php
+          if($mode == 'new')
+          {
+              echo html::select('users[]', $users, '', "multiple class='form-control chosen' data-drop_direction='down'");
+          }
+          else
+          {
+              echo html::select('users[]', $users, $list->userList, "multiple $readonly class='form-control chosen' data-drop_direction='down'");
+          }
+          ?>
+          </td>
+        </tr>
+        <?php if(common::hasPriv('datatable', 'setGlobal')):?>
+        <tr>
+          <th></th>
+          <td colspan="2">
+            <label class="checkbox-primary">
+              <input type="checkbox" name="share" value="1" id="shareCheckbox" <?php if($mode != 'new' && in_array($list->id, $globalContacts)) echo 'checked';?>/>
+              <label for="shareCheckbox"><?php echo $lang->my->shareContacts;?></label>
+            </label>
+          </td>
+        </tr>
+        <?php endif;?>
+        <?php if($mode == 'new' || !in_array($list->id, $disabled)):?>
+        <tr>
+          <td></td>
+          <td class="form-actions">
+          <?php echo html::submitButton('', '', 'btn btn-wide btn-primary') . html::hidden('mode', $mode);?>
+          <?php if($mode == 'edit') echo html::a(inlink('deleteContacts', "listID=$listID"), $lang->delete, 'hiddenwin', "class='btn btn-danger btn-wide'");?>
+          </td>
+        </tr>
+        <?php endif;?>
+      </table>
     </form>
+  <?php if($mode == 'edit'):?>
   </div>
+  <?php endif;?>
 </div>
 <?php include '../../common/view/footer.html.php';?>

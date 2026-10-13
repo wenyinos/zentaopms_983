@@ -18,7 +18,7 @@
     </div>
     <div class='modal-body'>
       <div class='alert alert-danger alert-pure with-icon'>
-        <i class='icon-info-sign'></i>
+        <i class='icon-exclamation-sign'></i>
         <div class='content'><?php echo $error;?></div>
       </div>
     </div>
@@ -31,7 +31,7 @@
     </div>
     <div class='modal-body'>
       <div class='alert alert-success alert-pure with-icon'>
-        <i class='icon-ok-sign'></i>
+        <i class='icon-check-circle'></i>
         <div class='content'><?php echo $afterSuccess;?></div>
       </div>
     </div>
@@ -43,11 +43,11 @@
       <strong><?php echo $lang->install->getPriv;?></strong>
     </div>
     <div class='modal-body'>
-      <form class='form-condensed' method='post' target='hiddenwin'>
+      <form method='post' target='hiddenwin'>
         <table class='table table-form mw-400px' style='margin: 0 auto'>
           <tr>
-            <th class='w-100px'><?php echo $lang->install->company;?></th>
-            <td><?php echo html::input('company', '', "class='form-control' autocomplete='off'");?></td>
+            <th class='w-200px'><?php echo $lang->install->company;?></th>
+            <td class='w-300px'><?php echo html::input('company', '', "class='form-control' autocomplete='off'");?></td>
           </tr>
           <tr>
             <th><?php echo $lang->install->working;?></th>

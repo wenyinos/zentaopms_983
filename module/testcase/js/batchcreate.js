@@ -1,6 +1,7 @@
 $(document).ready(function()
 {
     removeDitto();//Remove 'ditto' in first row.
+    if($('#batchCreateForm table thead tr th.c-title').width() < 150) $('#batchCreateForm table thead tr th.c-title').width('150');
 
     $(document).on('click', '.chosen-with-drop', function()
     {
@@ -100,6 +101,6 @@ function setModules(branchID, productID, num)
         if(!modules) modules = '<select id="module' + num + '" name="module[' + num + ']" class="form-control"></select>';
         $('#module' + num).replaceWith(modules);
         $("#module" + num + "_chosen").remove();
-        $("#module" + num).chosen(defaultChosenOptions);
+        $("#module" + num).chosen();
     });
 }

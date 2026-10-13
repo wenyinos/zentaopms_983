@@ -1,7 +1,7 @@
 $(function() 
 {
-    $("#story, #mailto").chosen(defaultChosenOptions);
-    $('.iframe').modalTrigger({width:900, type:'iframe', afterHide:function(){parent.location.href=parent.location.href;}});
+    $("#story, #mailto").chosen();
+    $('.record-estimate-toggle').modalTrigger({width:900, type:'iframe', afterHide: function(){parent.location.href=parent.location.href;}});
 })
 
 /**
@@ -15,8 +15,8 @@ function loadAll(projectID)
 {
     if(!changeProjectConfirmed)
     {
-         firstChoice = confirm(confirmChangeProject);
-         changeProjectConfirmed = true;    // Only notice the user one time.
+        firstChoice = confirm(confirmChangeProject);
+        changeProjectConfirmed = true;    // Only notice the user one time.
     }
     if(changeProjectConfirmed && firstChoice)
     {
@@ -40,8 +40,8 @@ function loadAll(projectID)
  */
 function loadModuleMenu(projectID)
 {
-    link = createLink('tree', 'ajaxGetOptionMenu', 'rootID=' + projectID + '&viewtype=task');
-    $('#moduleIdBox').load(link, function(){$('#module').chosen(defaultChosenOptions);});
+    var link = createLink('tree', 'ajaxGetOptionMenu', 'rootID=' + projectID + '&viewtype=task');
+    $('#moduleIdBox').load(link, function(){$('#module').chosen();});
 }
 
 /**
@@ -53,8 +53,8 @@ function loadModuleMenu(projectID)
  */
 function loadProjectStories(projectID)
 {
-    link = createLink('story', 'ajaxGetProjectStories', 'projectID=' + projectID + '&productID=0&branch=0&moduleID=0&storyID=' + oldStoryID);
-    $('#storyIdBox').load(link, function(){$('#story').chosen(defaultChosenOptions);});
+    var link = createLink('story', 'ajaxGetProjectStories', 'projectID=' + projectID + '&productID=0&branch=0&moduleID=0&storyID=' + oldStoryID);
+    $('#storyIdBox').load(link, function(){$('#story').chosen();});
 }
 
 /**
@@ -66,17 +66,12 @@ function loadProjectStories(projectID)
  */
 function loadProjectMembers(projectID)
 {
-    link = createLink('project', 'ajaxGetMembers', 'projectID=' + projectID + '&assignedTo=' + oldAssignedTo);
-    $('#assignedToIdBox').load(link, function(){$('#assignedToIdBox').find('select').chosen(defaultChosenOptions)});
+    var link = createLink('project', 'ajaxGetMembers', 'projectID=' + projectID + '&assignedTo=' + oldAssignedTo);
+    $('#assignedToIdBox').load(link, function(){$('#assignedToIdBox').find('select').chosen()});
 }
 
 /* empty function. */
 function setPreview(){}
-$(".btn[data-toggle='modalTeam']").click(function()
-{
-    $('#modalTeam').modal('show')
-    adjustSortBtn();
-});
 
 $(document).ready(function()
 {
@@ -93,4 +88,42 @@ $(document).ready(function()
             $('#teamTr').addClass('hidden');
         }
     });
+
+    /* Init task team manage dialog */
+    var $taskTeamEditor = $('#taskTeamEditor').batchActionForm(
+    {
+        idStart: 0,
+        idEnd: newRowCount - 1,
+        chosen: true,
+        datetimepicker: false,
+        colorPicker: false,
+    });
+    var taskTeamEditor = $taskTeamEditor.data('zui.batchActionForm');
+
+    var adjustButtons = function()
+    {
+        var $deleteBtn = $taskTeamEditor.find('.btn-delete');
+        if ($deleteBtn.length == 1) $deleteBtn.addClass('disabled').attr('disabled', 'disabled');
+    };
+
+    $taskTeamEditor.on('click', '.btn-add', function()
+    {
+        var $newRow = taskTeamEditor.createRow(null, $(this).closest('tr'));
+        $newRow.addClass('highlight');
+        setTimeout(function()
+        {
+            $newRow.removeClass('highlight');
+        }, 1600);
+        adjustButtons();
+    }).on('click', '.btn-delete', function()
+    {
+        var $row = $(this).closest('tr');
+        $row.addClass('highlight').fadeOut(700, function()
+        {
+            $row.remove();
+            adjustButtons();
+        });
+    });
+
+    adjustButtons();
 });

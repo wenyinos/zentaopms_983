@@ -15,41 +15,10 @@ function getList()
 
 $(document).ready(function()
 {
-    $("#story").chosen(defaultChosenOptions);
+    $("#story").chosen();
     
     initSteps();
 });
-
-
-/**
- * Unlink related case.
- *
- * @param  int $caseID
- * @param  int $case2Unlink
- * @access public
- * @return void
- */
-function unlinkCase(caseID, case2Unlink)
-{
-    link = createLink('testcase', 'unlinkCase', 'caseID=' + caseID + '&case2Unlink=' + case2Unlink);
-    $.get(link, function(data)
-    {
-        if(data == 'success') $('#linkCaseBox').load(createLink('testcase', 'ajaxGetLinkCases', 'caseID=' + caseID));
-    });
-}
-
-/**
- * Load linkCases.
- *
- * @param  int    $caseID
- * @access public
- * @return void
- */
-function loadLinkCases(caseID)
-{
-    caseLink = createLink('testcase', 'ajaxGetLinkCases', 'caseID=' + caseID);
-    $('#linkCaseBox').load(caseLink);
-}
 
 /**
  * Load lib modules.
@@ -63,7 +32,7 @@ function loadLibModules(libID)
     link = createLink('tree', 'ajaxGetOptionMenu', 'libID=' + libID + '&viewtype=caselib&branch=0&rootModuleID=0&returnType=html&fieldID=&needManage=true');
     $('#moduleIdBox').load(link, function()
     {
-        $(this).find('select').chosen(defaultChosenOptions)
+        $(this).find('select').chosen()
         if(typeof(caseModule) == 'string') $('#moduleIdBox').prepend("<span class='input-group-addon'>" + caseModule + "</span>")
     });
 }

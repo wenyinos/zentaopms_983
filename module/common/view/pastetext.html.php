@@ -1,62 +1,84 @@
-<div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-hidden="true">
-  <div class="modal-dialog w-800px">
+<div id="importLinesModal" class="modal fade">
+  <div class="modal-dialog modal-lg modal-simple load-indicator">
     <div class="modal-content">
       <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
-        <h4 class="modal-title"><i class="icon-file-text"></i> <?php echo $lang->pasteText?></h4>
+        <button type="button" class="close" data-dismiss="modal"><i class="icon icon-close"></i></button>
+        <h4 class="modal-title"><?php echo $lang->pasteText;?></h4>
       </div>
       <div class="modal-body">
-        <?php echo html::textarea('pasteText', '', "class='form-control mgb-10' rows='10' placeholder='$lang->pasteTextInfo'")?>
-        <?php echo html::submitButton()?>
+    	<?php echo html::textarea('importLines', '', "class='form-control mgb-10' rows='10' placeholder='$lang->pasteTextInfo'")?>
+      </div>
+      <div class="modal-footer text-left">
+        <button type="button" class="btn btn-primary btn-wide" id="importLinesBtn"><?php echo $lang->save;?></button>
       </div>
     </div>
   </div>
 </div>
 <script>
-$("button[data-toggle='myModal']").click(function(){$('#myModal').modal('show')})
-$("#myModal button[type='submit']").click(function()
+$(function()
 {
-    var pasteText = $('#myModal #pasteText').val();
+    var $form = $('#batchCreateForm');
+    var batchForm = $form.data('zui.batchActionForm');
 
-    $('#myModal').modal('hide')
-    $('#myModal #pasteText').val('');
-
-    var dataList = pasteText.split("\n");
-
-    if(typeof(mainField) == 'undefined') mainField = 'title';
-    var index = 0;
-    for(i in dataList)
+    var rowTpl, $formTbody;
+    var createRow = function()
     {
-        var data = dataList[i].replace(/(^\s*)|(\s*$)/g, "");;
+        if(!rowTpl) rowTpl = $('#trTemp tbody').html();
+        if(!$formTbody) $formTbody = $form.find('table > tbody');
+        var lastIndex = parseInt($formTbody.find('tr:last > td:first').text());
+        var $newRow = $(rowTpl.replace(/%s/g, lastIndex + 1));
+        $newRow.find('.chosen').chosen();
+        $newRow.find('[data-provide="colorpicker-later"]').colorPicker();
+        $formTbody.append($newRow);
+        return $newRow;
+    };
+    
+    var $importLines = $('#importLines');
+    $('#importLinesBtn').on('click', function()
+    {
+        var $modal = $('#importLinesModal');
+        var $dialog = $modal.find('.modal-dialog').addClass('loading');
 
-        if(data.length == 0) continue;
-        while(true)
+        setTimeout(function()
         {
-            var title = $('form tbody tr').eq(index).find("input[id*='" + mainField + "']");
-            if($(title).size() == 0)
+            var importText = $importLines.val();
+            var lines = importText.split('\n');
+            var $lastRow, $firstRow;
+            $.each(lines, function(index, line)
             {
-                if(index == 0) break;
-                cloneTr = $('#trTemp tbody').html();
-                cloneTr = cloneTr.replace(/%s/g, index);
-                $('form tbody tr').eq(index - 1).after(cloneTr);
-                $('form tbody tr').eq(index).find('td:first').html(index + 1);
-                $('form tbody tr').eq(index - 1).find('td').each(function()
+                line = $.trim(line);
+                if (!line.length) return;
+                if (!$lastRow) $row = $form.find('tbody>tr:first');
+                else $row = $lastRow.next();
+                while ($row.length && $row.find('.title-import').val().length)
                 {
-                    if($(this).find('div.chosen-container').size() != 0)
-                    {
-                        $('form tbody tr').eq(index).find("td").eq($(this).index()).find('select').chosen(defaultChosenOptions);
-                    }
-                });
-                title = $('form tbody tr').eq(index).find("input[id*='" + mainField + "']");
-                $('#color\\[' + index + '\\]').colorPicker();//Update color picker.
-            }
-
-            index++;
-
-            if($(title).val() != '') continue;
-            if($(title).val() == '')$(title).val(data);
-            break;
-        }
-    }
+                    $row = $row.next();
+                }
+                if (!$row || !$row.length)
+                {
+                    if (batchForm) $row = batchForm.createRow();
+                    else $row = createRow();
+                }
+                $row.find('.title-import').val(line).addClass('highlight');
+                $lastRow = $row;
+                if(!$firstRow) $firstRow = $row;
+            });
+            $importLines.val('');
+            $dialog.removeClass('loading');
+            $modal.on('hidden.zui.modal', function()
+            {
+                $firstRow[0].scrollIntoView();
+            }).modal('hide');
+            setTimeout(function()
+            {
+                $form.find('.title-import.highlight').removeClass('highlight');
+            }, 3000);
+        }, 200);
+    });
+    
+    $importLines.on('scroll', function()
+    {
+        $importLines.css('background-position-y', -$importLines.scrollTop() + 6);
+    });
 });
 </script>

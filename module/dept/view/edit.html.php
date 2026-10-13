@@ -17,12 +17,12 @@ $jsRoot  = $webRoot . "js/";
 <?php include '../../common/view/chosen.html.php';?>
 <div class='modal-dialog w-500px'>
   <div class="modal-header">
-    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
-    <h4 class="modal-title"><strong><small class='text-muted'><?php echo html::icon($lang->icons['edit']);?></small> <?php echo $lang->dept->edit;?></strong></h4>
+    <button type="button" class="close" data-dismiss="modal"><i class="icon icon-close"></i></button>
+    <h4 class="modal-title"><strong><?php echo $lang->dept->edit;?></strong></h4>
   </div>
   <div class='modal-body'>
-    <form action="<?php echo inlink('edit', 'deptID=' . $dept->id);?>" target='hiddenwin' class='form-condensed' method='post' class='mt-10px' id='dataform'>
-      <table class='table table-form' style='width:100%'> 
+    <form action="<?php echo inlink('edit', 'deptID=' . $dept->id);?>" target='hiddenwin' method='post' class='mt-10px' id='dataform'>
+      <table class='table table-form' style='width:100%'>
         <tr>
           <th class='w-80px'><?php echo $lang->dept->parent;?></th>
           <td><?php echo html::select('parent', $optionMenu, $dept->parent, "class='form-control chosen'");?></td>
@@ -34,10 +34,10 @@ $jsRoot  = $webRoot . "js/";
         <tr>
           <th class='w-80px'><?php echo $lang->dept->manager;?></th>
           <td><?php echo html::select('manager', $users, $dept->manager, "class='form-control chosen'", true);?></td>
-        </tr>  
+        </tr>
         <tr>
           <td colspan='2' class='text-center'>
-          <?php echo html::submitButton();?>
+          <?php echo html::submitButton('', '', 'btn btn-wide btn-primary');?>
           </td>
         </tr>
       </table>

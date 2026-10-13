@@ -1,1 +1,4 @@
-#buildList td, tr, th{ border:1px solid #E4E4E4;}
+.table-group-btns {width: 200px;}
+.fixed-header-copy .group-menu .btn {background-color: transparent; color: #fff;}
+.fixed-header-copy .group-menu .btn .icon {background: transparent!important; color: #fff; opacity: .5;}
+.icon-caret-right.text-muted {color: #CBD0DB;}

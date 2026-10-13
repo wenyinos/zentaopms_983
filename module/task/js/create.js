@@ -2,9 +2,11 @@
 function copyStoryTitle()
 {
     var storyTitle = $('#story option:selected').text();
-    startPosition = storyTitle.indexOf(':') + 1;
-    endPosition   = storyTitle.lastIndexOf('(');
-    storyTitle = storyTitle.substr(startPosition, endPosition - startPosition);
+    var startPosition = storyTitle.indexOf(':') + 1;
+    if (startPosition > 0) {
+        var endPosition   = storyTitle.lastIndexOf('(');
+        storyTitle = storyTitle.substr(startPosition, endPosition - startPosition);
+    }
 
     $('#name').attr('value', storyTitle);
     $('#estimate').val($('#storyEstimate').val());
@@ -27,7 +29,7 @@ function setOwners(result)
     {
         $('#assignedTo').attr('multiple', 'multiple');
         $('#assignedTo').chosen('destroy');
-        $('#assignedTo').chosen(defaultChosenOptions);
+        $('#assignedTo').chosen();
         $('.affair').hide();
         $('.team-group').addClass('hidden');
         $('#selectAllUser').removeClass('hidden');
@@ -36,7 +38,7 @@ function setOwners(result)
     {
         $('#assignedTo').removeAttr('multiple');
         $('#assignedTo').chosen('destroy');
-        $('#assignedTo').chosen(defaultChosenOptions);
+        $('#assignedTo').chosen();
         $('.affair').show();
         $('#selectAllUser').addClass('hidden');
     }
@@ -74,7 +76,8 @@ function setPreview()
     if(!$('#story').val())
     {
         $('#preview').addClass('hidden');
-        $('#copyButton').parent().addClass('hidden');
+        $('#copyButton').addClass('hidden');
+        $('div.colorpicker').css('right', '1px');//Adjust for task #4151;
     }
     else
     {
@@ -83,7 +86,8 @@ function setPreview()
         storyLink  = storyLink + concat + 'onlybody=yes';
         $('#preview').removeClass('hidden');
         $('#preview a').attr('href', storyLink);
-        $('#copyButton').parent().removeClass('hidden');
+        $('#copyButton').removeClass('hidden');
+        $('div.colorpicker').css('right', '57px');//Adjust for task #4151;
     }
 
     setAfter();
@@ -152,7 +156,7 @@ function setStories(moduleID, projectID)
         $('#story').val(storyID);
         setPreview();
         $('#story_chosen').remove();
-        $("#story").chosen(defaultChosenOptions);
+        $("#story").chosen();
     });
 }
 
@@ -172,64 +176,83 @@ $(document).ready(function()
 
     $('[data-toggle=tooltip]').tooltip();
 
-    /* Adjust form controls layout */
-    var ajustFormControls = function()
+    $(window).resize();
+
+    /* show team menu. */
+    $('[name^=multiple]').change(function()
     {
-        /* Adjust style for file box */
-        applyCssStyle('.fileBox > tbody > tr > td:first-child {transition: none; width: ' + ($('#dataPlanGroup').width() - 1) + 'px}', 'filebox');
-
-        /* Adjust #priRowCol and #estRowCol size */
-        var $priRowCol = $('#priRowCol'),
-            $estRowCol = $('#estRowCol');
-        $priRowCol.css('width', 54 + $priRowCol.find('.input-group-addon').outerWidth());
-        $estRowCol.css('width', 55 + $estRowCol.find('.input-group-addon').outerWidth());
-    };
-    ajustFormControls();
-    $(window).resize(ajustFormControls);
-
-    /* First unbind ajaxForm for form.*/
-    $("form[data-type='ajax']").unbind('submit');
-    setForm();
-
-    /* Bind ajaxForm for form again. */
-    $.ajaxForm("form[data-type='ajax']", function(response)
-    {
-        if(response.message) alert(response.message);
-        if(response.locate)
+        if($(this).prop('checked'))
         {
-            if(response.locate == 'reload' && response.target == 'parent')
-            {
-                parent.$.cookie('selfClose', 1);
-                parent.$.closeModal(null, 'this');
-            }
-            else
-            {
-                location.href = response.locate;
-            }
+            $('#assignedTo, #assignedTo_chosen').addClass('hidden');
+            $('.team-group').removeClass('hidden');
+            $('#estimate').attr('readonly', true);
         }
-        return false;
+        else
+        {
+            $('#assignedTo, #assignedTo_chosen').removeClass('hidden');
+            $('.team-group').addClass('hidden');
+            $('#estimate').attr('readonly', false);
+        }
     });
+
+
+    /* Init task team manage dialog */
+    var $taskTeamEditor = $('#taskTeamEditor').batchActionForm(
+    {
+        idStart: 0,
+        idEnd: 5,
+        chosen: true,
+        datetimepicker: false,
+        colorPicker: false,
+    });
+    var taskTeamEditor = $taskTeamEditor.data('zui.batchActionForm');
+
+    var adjustButtons = function()
+    {
+        var $deleteBtn = $taskTeamEditor.find('.btn-delete');
+        if ($deleteBtn.length == 1) $deleteBtn.addClass('disabled').attr('disabled', 'disabled');
+    };
+
+    $taskTeamEditor.on('click', '.btn-add', function()
+    {
+        var $newRow = taskTeamEditor.createRow(null, $(this).closest('tr'));
+        $newRow.addClass('highlight');
+        setTimeout(function()
+        {
+            $newRow.removeClass('highlight');
+        }, 1600);
+        adjustButtons();
+    }).on('click', '.btn-delete', function()
+    {
+        var $row = $(this).closest('tr');
+        $row.addClass('highlight').fadeOut(700, function()
+        {
+            $row.remove();
+            adjustButtons();
+        });
+    });
+
+    adjustButtons();
 });
 
-/* show team menu. */
-$('[name^=multiple]').change(function()
+$('#modalTeam .btn').click(function()
 {
-    if($(this).prop('checked'))
+    var team = '';
+    var time = 0;
+    $('[name*=team]').each(function()
     {
-        $('#assignedTo, #assignedTo_chosen').addClass('hidden');
-        $('.team-group').removeClass('hidden');
-        $('#estimate').attr('readonly', true);
-    }
-    else
-    {
-        $('#assignedTo, #assignedTo_chosen').removeClass('hidden');
-        $('.team-group').addClass('hidden');
-        $('#estimate').attr('readonly', false);
-    }
-});
-$(".team-group[data-toggle='modalTeam']").css('cursor', 'pointer');
-$(".team-group[data-toggle='modalTeam']").click(function()
-{
-    $('#modalTeam').modal('show');
-    adjustSortBtn();
+        if($(this).find('option:selected').text() != '')
+        {
+            team += ' ' + $(this).find('option:selected').text();
+        }
+
+        estimate = parseFloat($(this).parents('td').next('td').find('[name*=teamEstimate]').val());
+        if(!isNaN(estimate))
+        {
+            time += estimate;
+        }
+
+        $('#teamMember').val(team);
+        $('#estimate').val(time);
+    })
 });

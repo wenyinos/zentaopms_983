@@ -11,21 +11,21 @@
 ?>
 <?php include '../../common/view/header.html.php'; ?>
 <div class="alert with-icon" id="scoreStart">
-  <i class="icon-inbox"></i>
+  <i class="icon-cube"></i>
   <div class="content">
     <p><?php echo $lang->score->resetTips; ?></p>
     <p><button class="btn btn-primary" id="scoreReset"><?php echo $lang->score->resetStart; ?></button></p>
   </div>
 </div>
 <div class="alert with-icon hidden" id="scoreLoading">
-  <i class="icon-info-sign"></i>
+  <i class="icon-exclamation-sign"></i>
   <div class="content">
     <p><?php echo $lang->score->resetTips; ?></p>
     <p id="loadingContent"></p>
   </div>
 </div>
 <div class="alert with-icon hidden" id="scoreFinish">
-  <i class="icon-ok-sign"></i>
+  <i class="icon-check-circle"></i>
   <div class="content">
     <strong><?php echo $lang->score->resetFinish; ?></strong>
   </div>

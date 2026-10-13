@@ -11,14 +11,19 @@
  */
 ?>
 <?php include '../../common/view/header.html.php';?>
-<div class='container mw-500px'>
-  <div id='titlebar'>
-    <div class='heading'><i class='icon-key'></i> <?php echo $lang->my->changePassword;?></div>
+<?php if(!isonlybody()):?>
+<style>
+.main-content{width: 500px; margin: 0 auto;}
+</style>
+<?php endif;?>
+<div id='mainContent' class='main-content'>
+  <div class='main-header'>
+    <h2><i class='icon-key'></i> <?php echo $lang->my->changePassword;?></h2>
   </div>
-  <form class='form-condensed' method='post' target='hiddenwin'>
+  <form method='post' target='hiddenwin'>
     <table align='center' class='table table-form w-320px'>
       <tr>
-        <th class='rowhead w-120px'><?php echo $lang->user->account;?></th>
+        <th class='rowhead w-90px'><?php echo $lang->user->account;?></th>
         <td><?php echo $user->account . html::hidden('account',$user->account);?></td>
       </tr>  
       <tr>
@@ -39,8 +44,7 @@
         <td><?php echo html::password('password2', '', "class='form-control'");?></td>
       </tr>
       <tr>
-        <td></td>
-        <td><?php echo html::submitButton() . html::backButton();?></td>
+        <td colspan='2' class='text-center form-actions'><?php echo html::submitButton('', '', 'btn btn-wide btn-primary') . html::backButton('', '', 'btn btn-wide');?></td>
       </tr>
     </table>
     <?php if(!empty($this->app->user->modifyPasswordReason)):?>
@@ -50,9 +54,8 @@
       <?php echo $this->app->user->modifyPasswordReason == 'weak' ? $lang->admin->safe->changeWeak : $lang->admin->safe->modifyPasswordFirstLogin;?>
     </div>
     <?php endif;?>
-  </form>  
+  </form>
 </div>
-
 <?php js::set('passwordStrengthList', $lang->user->passwordStrengthList)?>
 <script>
 function checkPassword(password)

@@ -22,7 +22,7 @@ function loadProjectBuilds(projectID)
     selectedBuild = $('#build').val();
     if(!selectedBuild) selectedBuild = 0;
     link = createLink('build', 'ajaxGetProjectBuilds', 'projectID=' + projectID + '&productID=' + $('#product').val() + '&varName=testTaskBuild&build=' + selectedBuild);
-    $('#buildBox').load(link, function(){$('#build').chosen(defaultChosenOptions);});
+    $('#buildBox').load(link, function(){$('#build').chosen();});
 }
 
 /**
@@ -61,5 +61,5 @@ function suitEndDate()
 /* If the mouse hover over the manage contacts button, give tip. */
 $(function()
 {
-    $('[data-toggle=tooltip]').tooltip();
+    adjustPriBoxWidth();
 });

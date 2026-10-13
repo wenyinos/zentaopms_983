@@ -11,23 +11,24 @@
  */
 ?>
 <?php include '../../common/view/header.html.php';?>
-<div id='titlebar'>
-  <div class='heading'><?php echo $lang->cron->common;?></div>
-  <div class='actions'>
+<div id='mainMenu' class='clearfix'>
+  <div class='btn-toolbar pull-left'>
+    <span class='btn btn-link btn-active-text'><span class='text'><?php echo $lang->cron->common;?></span></span>
+  </div>
+  <div class='btn-toolbar pull-right'>
     <?php if(common::hasPriv('cron', 'openProcess') and !empty($config->global->cron)) echo html::a(inlink('openProcess'), $lang->cron->openProcess, 'hiddenwin', "class='btn'")?>
     <?php if(common::hasPriv('cron', 'turnon') and !empty($config->global->cron)) echo html::a(inlink('turnon'), $lang->cron->turnonList[0], 'hiddenwin', "class='btn'");?>
   </div>
 </div>
-
-<?php if(!empty($config->global->cron)):?>
-<div class='panel'>
-  <div class='panel-heading'>
-    <strong><?php echo $lang->cron->list?></strong>
-    <div class='panel-actions pull-right'>
-      <?php if(common::hasPriv('cron', 'create'))      echo html::a(inlink('create'), $lang->cron->create, '', "class='btn btn-primary btn-sm'")?>
+<div id='mainContent' class='main-content'>
+  <?php if(!empty($config->global->cron)):?>
+  <div class='main-header'>
+    <h2><?php echo $lang->cron->list?></h2>
+    <div class='btn-toolbar pull-right'>
+      <?php if(common::hasPriv('cron', 'create')) echo html::a(inlink('create'), $lang->cron->create, '', "class='btn btn-primary'")?>
     </div>
   </div>
-  <table class='table table-condensed table-bordered active-disabled table-fixed'>
+  <table class='table table-condensed table-bordered table-fixed main-table'>
     <thead>
       <tr>
         <th class='w-50px'><?php echo $lang->cron->m?></th>
@@ -36,8 +37,8 @@
         <th class='w-50px'><?php echo $lang->cron->mon?></th>
         <th class='w-50px'><?php echo $lang->cron->dow?></th>
         <th><?php echo $lang->cron->command?></th>
-        <th class='w-160px'><?php echo $lang->cron->remark?></th>
-        <th class='w-120px'><?php echo $lang->cron->lastTime?></th>
+        <th class='w-200px'><?php echo $lang->cron->remark?></th>
+        <th class='w-130px'><?php echo $lang->cron->lastTime?></th>
         <th class='w-60px'><?php echo $lang->cron->status?></th>
         <th class='w-100px'><?php echo $lang->actions;?></th>
       </tr>
@@ -65,17 +66,17 @@
     <?php endforeach;?>
     </tbody>
   </table>
-</div>
-<div class='alert alert-info'><?php echo $lang->cron->notice->help?></div>
-<?php else:?>
-<div class='container mw-700px'>
-  <div class='panel-body'>
-    <?php
-    echo $lang->cron->introduction;
-    if(common::hasPriv('cron', 'turnon')) printf($lang->cron->confirmOpen, inlink('turnon'));
-    ?>
+  <div class='space'></div>
+  <div class='alert alert-info no-margin'><?php echo $lang->cron->notice->help?></div>
+  <?php else:?>
+  <div class='container mw-700px'>
+    <div class='panel-body'>
+      <?php
+      echo $lang->cron->introduction;
+      if(common::hasPriv('cron', 'turnon')) printf($lang->cron->confirmOpen, inlink('turnon'));
+      ?>
+    </div>
   </div>
+  <?php endif;?>
 </div>
-<?php endif;?>
 <?php include '../../common/view/footer.html.php';?>
-

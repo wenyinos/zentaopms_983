@@ -17,11 +17,11 @@ $jsRoot  = $webRoot . "js/";
 <?php include '../../common/view/chosen.html.php';?>
 <div class='modal-dialog w-500px'>
   <div class="modal-header">
-    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+    <button type="button" class="close" data-dismiss="modal"><i class="icon icon-close"></i></button>
     <h4 class="modal-title"><strong><?php echo $lang->tree->edit;?></strong></h4>
   </div>
   <div class='modal-body'>
-    <form action="<?php echo inlink('edit', 'module=' . $module->id .'&type=' .$type);?>" target='hiddenwin' class='form-condensed' method='post' class='mt-10px' id='dataform'>
+    <form action="<?php echo inlink('edit', 'module=' . $module->id .'&type=' .$type);?>" target='hiddenwin' method='post' class='mt-10px' id='dataform'>
       <table class='table table-form'> 
         <?php if($showProduct):?>
         <tr>

@@ -13,13 +13,21 @@
 <?php 
 if($contactLists)
 {
-    echo html::select('', $contactLists, '', "class='form-control chosen' onchange=\"setMailto('mailto', this.value)\"");
+    echo html::select('contactListMenu', $contactLists, '', "class='form-control chosen' onchange=\"setMailto('mailto', this.value)\"");
 }
 else
 {
     echo '<span class="input-group-btn">';
-    echo '<a data-toggle="tooltip" title="' . $lang->user->contacts->manage . '" href="' . $this->createLink('my', 'managecontacts', "listID=0&mode=new", '', true) . "\" target='_blank' data-icon='cog' data-title='{$lang->user->contacts->manage}' class='btn iframe'><i class='icon icon-cog'></i></a>";
-    echo '<a data-toggle="tooltip" title="' . $lang->refresh . '" href="###" class="btn" onclick="ajaxGetContacts(this)"><i class="icon icon-refresh"></i></a>';
+    echo '<a title="' . $lang->user->contacts->manage . '" href="' . $this->createLink('my', 'managecontacts', "listID=0&mode=new", '', true) . "\" target='_blank' data-icon='cog' data-title='{$lang->user->contacts->manage}' class='btn btn-icon iframe'><i class='icon icon-cog'></i></a>";
+    echo '</span>';
+    echo '<span class="input-group-btn">';
+    echo '<button type="button" title="' . $lang->refresh . '" class="btn btn-icon" onclick="ajaxGetContacts(this)"><i class="icon icon-refresh"></i></button>';
     echo '</span>';
 }
 ?>
+<style>
+#contactListMenu + .chosen-container {min-width: 100px;}
+td > #mailto + .chosen-container .chosen-choices {border-radius: 2px 2px 0 0;}
+td > #mailto + .chosen-container + #contactListMenu + .chosen-container > .chosen-single {border-radius: 0 0 2px 2px; border-top-width: 0; padding-top: 6px;}
+#contactListMenu + .chosen-container.chosen-container-active > .chosen-single {border-top-width: 1px!important; padding-top: 5px!important;}
+</style>

@@ -1,3 +1,16 @@
+$(function()
+{
+    $('#subNavbar a[data-toggle=dropdown]').parent().addClass('dropdown dropdown-hover');
+
+    if(window.flow != 'full')
+    {
+        $('.querybox-toggle').click(function()
+        {
+            $(this).parent().toggleClass('active');
+        });
+    }
+})
+
 var newRowID = 0;
 /**
  * Load modules and stories of a product.
@@ -72,7 +85,7 @@ function loadProductModules(productID, branch)
     link = createLink('tree', 'ajaxGetOptionMenu', 'productID=' + productID + '&viewtype=case&branch=' + branch + '&rootModuleID=0&returnType=html&fieldID=&needManage=true');
     $('#moduleIdBox').load(link, function()
     {
-        $(this).find('select').chosen(defaultChosenOptions)
+        $(this).find('select').chosen()
         if(typeof(caseModule) == 'string') $('#moduleIdBox').prepend("<span class='input-group-addon'>" + caseModule + "</span>")
     });
     setStories();
@@ -92,7 +105,7 @@ function loadLibModules(libID, branch)
     link = createLink('tree', 'ajaxGetOptionMenu', 'rootID=' + libID + '&viewtype=caselib&branch=' + branch + '&rootModuleID=0&returnType=html&fieldID=&needManage=true');
     $('#moduleIdBox').load(link, function()
     {
-        $(this).find('select').chosen(defaultChosenOptions)
+        $(this).find('select').chosen()
         if(typeof(caseModule) == 'string') $('#moduleIdBox').prepend("<span class='input-group-addon'>" + caseModule + "</span>")
     });
 }
@@ -117,7 +130,7 @@ function setStories()
         $('#story').replaceWith(stories);
         $('#story').val(value);
         $('#story_chosen').remove();
-        $("#story").chosen(defaultChosenOptions);
+        $("#story").chosen();
     });
 }
 
@@ -130,14 +143,17 @@ function setStories()
  */
 function initSteps(selector)
 {
-    if(navigator.userAgent.indexOf("Firefox") < 0)
+    $(document).on('input keyup paste change', 'textarea.autosize', function()
     {
-        $(document).on('input keyup paste change', 'textarea.autosize', function()
+        var height = (this.scrollHeight + 2) + "px";
+        this.style.height = 'auto';
+        this.style.height = height; 
+        $(this).closest('tr').find('textarea').each(function()
         {
-            this.style.height = 'auto';
-            this.style.height = (this.scrollHeight + 2) + "px"; 
+            this.style.height = height; 
         });
-    }
+    });
+
     var $steps = $(selector || '#steps');
     var $stepTemplate = $('#stepTemplate').detach().removeClass('template').attr('id', null);
     var initSortableCallTask = null;

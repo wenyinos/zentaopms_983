@@ -3,19 +3,17 @@ function showLink(planID, type, orderBy, param)
     var method = type == 'story' ? 'linkStory' : 'linkBug';
     $.get(createLink('productplan', method, 'planID=' + planID + (typeof(param) == 'undefined' ? '' : param) + (typeof(orderBy) == 'undefined' ? '' : "&orderBy=" + orderBy)), function(data)
     {
-        var obj = type == 'story' ? '.tab-pane#stories .linkBox' : '.tab-pane#bugs .linkBox';
-        $(obj).html(data);
-        $('#' + type + 'List').hide();
-
-        var formID = type == 'story' ? '#unlinkedStoriesForm' : '#unlinkedBugsForm';
-        setTimeout(function(){fixedTfootAction(formID)}, 100);
-        checkTable($(formID).find('table'));
+        var $pane = $(type == 'story' ? '#stories' : '#bugs');
+        $pane.find('.main-table').hide();
+        var $linkBox = $pane.find('.linkBox').html(data).removeClass('hidden');
+        $linkBox.find('[data-ride="table"]').table();
+        $.toggleQueryBox(true, $linkBox.find('#queryBox'));
     });
 }
+
 $(function()
 {
     if(link == 'true') showLink(planID, type, orderBy, param);
-    fixedTfootAction($('#' + type + 'List').closest('form'));
     $('.nav.nav-tabs a[data-toggle="tab"]').on('shown.zui.tab', function(e)
     {
         var href = $(e.target).attr('href');
@@ -23,7 +21,6 @@ $(function()
         if(tabPane.size() == 0) return;
         var formID = tabPane.find('.linkBox').find('form:last');
         if(formID.size() == 0) formID = tabPane.find('form:last');
-        setTimeout(function(){fixedTfootAction(formID)}, 100);
     });
 
     $('.dropdown-menu.with-search .menu-search').click(function(e)
@@ -45,7 +42,7 @@ $(function()
     $('#storyList').on('sort.sortable', function(e, data)
     {
         var list = '';
-        for(i = 0; i < data.list.length; i++) list += $(data.list[i]).attr('data-id') + ',';
+        for(i = 0; i < data.list.length; i++) list += $(data.list[i].item).attr('data-id') + ',';
         $.post(createLink('productplan', 'ajaxStorySort', 'planID=' + planID), {'storys' : list, 'orderBy' : orderBy}, function()
         {
             var $target = $(data.element[0]);

@@ -1,13 +1,3 @@
-/* Swtich to search module. */
-function browseBySearch(active)
-{
-    $('#querybox').removeClass('hidden');
-    $('.divider').addClass('hidden');
-    $('#' + active + 'Tab').removeClass('active');
-    $('#bysearchTab').addClass('active');
-    $('#bymoduleTab').removeClass('active');
-}
-
 /**
  * Confirm batch delete cases.
  * 
@@ -21,44 +11,24 @@ function confirmBatchDelete(actionLink)
     return false;
 }
 
-$(document).ready(function()
+$(function()
 {
-    if(browseType == 'bysearch') ajaxGetSearchForm();
-    setTimeout(function(){fixedTfootAction('#batchForm')}, 100);
-    setTimeout(function(){fixedTheadOfList('#caseList')}, 100);
-    if($('#caseList thead th.w-title').width() < 150) $('#caseList thead th.w-title').width(150);
-
-    $('.dropdown-menu .with-search .menu-search').click(function(e)
-    {
-        e.stopPropagation();
-        return false;
-    }).on('keyup change paste', 'input', function()
-    {
-        var val = $(this).val().toLowerCase();
-        var $options = $(this).closest('.dropdown-menu.with-search').find('.option');
-        if(val == '') return $options.removeClass('hide');
-        $options.each(function()
-        {
-            var $option = $(this);
-            $option.toggleClass('hide', $option.text().toString().toLowerCase().indexOf(val) < 0 && $option.data('key').toString().toLowerCase().indexOf(val) < 0);
-        });
-    });
-
-    setModal4List('runCase', 'caseList');
+    if($('#caseList thead th.c-title').width() < 150) $('#caseList thead th.c-title').width(150);
 
     if(flow == 'onlyTest')
     {
-        $('#modulemenu > .nav').append($('#featurebar > .submenu').html());
+        $('#subNavbar > .nav li[data-id=' + browseType + ']').addClass('active');
 
-        toggleSearch();
-        $('.export').modalTrigger({width:650, type:'iframe', afterShown: setCheckedCookie})
-
-        $('#modulemenu > .nav > li').removeClass('active');
-        $('#modulemenu > .nav > li[data-id=' + browseType + ']').addClass('active');
+        if(browseType == 'bysuite')
+        {
+            var $moreSuite = $('#subNavbar > .nav > li[data-id=bysuite]');
+            if($moreSuite.find('.dropdown-menu').children().length)
+            {
+                $moreSuite.find('.dropdown-menu').children().each(function()
+                {
+                    if($(this).data('id') == suiteID) $(this).addClass('active');
+                });
+            }
+        }
     }
 });
-
-function setQueryBar(queryID, title)
-{
-    $('#bysearchTab').before("<li id='QUERY" + queryID + "Tab' class='active'><a href='" + createLink('testcase', 'browse', "productID=" + productID + "&branch=" + branch + "&browseType=bysearch&param=" + queryID) + "'>" + title + "</a></li>");
-}

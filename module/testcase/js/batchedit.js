@@ -31,10 +31,13 @@ function loadBranches(product, branch, caseID)
     if(!branch) branch = 0;
 
     moduleLink = createLink('tree', 'ajaxGetOptionMenu', 'productID=' + product + '&viewtype=case&branch=' + branch + '&rootModuleID=0&returnType=html&fieldID=' + caseID + '&needManage=true');
-    $('#modules' + caseID).parent('td').load(moduleLink, function(){$('#modules' + caseID).chosen(defaultChosenOptions);})
+    $('#modules' + caseID).parent('td').load(moduleLink, function(){$('#modules' + caseID).chosen();})
 }
 
-$(document).ready(removeDitto());//Remove 'ditto' in first row.
+$(function()
+{
+    removeDitto();  //Remove 'ditto' in first row.
+});
 
 $(document).on('click', '.chosen-with-drop', function(){oldValue = $(this).prev('select').val();})//Save old value.
 

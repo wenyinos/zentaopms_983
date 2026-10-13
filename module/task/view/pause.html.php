@@ -12,26 +12,43 @@
 ?>
 <?php include '../../common/view/header.html.php';?>
 <?php include '../../common/view/kindeditor.html.php';?>
-<div id='titlebar'>
-  <div class='heading'>
-    <span class='prefix'><?php echo html::icon($lang->icons['task']);?> <strong><?php echo $task->id;?></strong></span>
-    <strong><?php echo html::a($this->createLink('task', 'view', 'task=' . $task->id), $task->name, '_blank');?></strong>
-    <small class='text-danger'> <?php echo $lang->task->pause;?> <?php echo html::icon($lang->icons['pause']);?></small>
-  </div>
-</div>
+<div id='mainContent' class='main-content'>
+  <div class='center-block'>
+    <?php if(!empty($task->team) && $task->assignedTo != $this->app->user->account):?>
+    <div class="alert with-icon">
+      <i class="icon-exclamation-sign"></i>
+      <div class="content">
+        <p><?php echo sprintf($lang->task->deniedNotice, '<strong>' . $task->assignedToRealName . '</strong>', $lang->task->pause);?></p>
+      </div>
+    </div>
+    <?php else:?>
+    <div class='main-header'>
+      <h2>
+        <span class='label label-id'><?php echo $task->id;?></span>
+        <?php echo isonlybody() ? ("<span title='$task->name'>" . $task->name . '</span>') : html::a($this->createLink('task', 'view', 'task=' . $task->id), $task->name);?>
+        <?php if(!isonlybody()):?>
+        <small><?php echo $lang->arrow . $lang->task->pause;?></small>
+        <?php endif;?>
+      </div>
+    </div>
 
-<form class='form-condensed' method='post' target='hiddenwin'>
-  <table class='table table-form'>
-    <tr>
-      <th class='w-60px'><?php echo $lang->comment;?></th>
-      <td><?php echo html::textarea('comment', '', "rows='6' class='form-control'");?></td>
-    </tr>
-    <tr>
-      <th></th><td><?php echo html::submitButton();?></td>
-    </tr>
-  </table>
-</form>
-<div class='main'>
-  <?php include '../../common/view/action.html.php';?>
+    <form method='post' target='hiddenwin'>
+      <table class='table table-form'>
+        <tr>
+          <th class='w-60px'><?php echo $lang->comment;?></th>
+          <td><?php echo html::textarea('comment', '', "rows='6' class='form-control'");?></td>
+        </tr>
+        <tr>
+          <td colspan='2' class='text-center form-actions'>
+            <?php echo html::submitButton('', '', 'btn btn-wide btn-primary');?>
+            <?php echo html::linkButton($lang->goback, $this->session->taskList, 'self', '', 'btn btn-wide');?>
+          </td>
+        </tr>
+      </table>
+    </form>
+    <hr class='small' />
+    <div class='main'><?php include '../../common/view/action.html.php';?></div>
+    <?php endif;?>
+  </div>
 </div>
 <?php include '../../common/view/footer.html.php';?>

@@ -13,16 +13,7 @@ function updateAction(date)
   location.href=link;
 }
 
-function switchDateList(number)
+$(function()
 {
-    if($('#switchDate' + number).attr('checked') == 'checked')
-    {
-        $('#begins' + number).attr('disabled', 'disabled').trigger('chosen:updated');
-        $('#ends' + number).attr('disabled', 'disabled').trigger('chosen:updated');
-    }
-    else
-    {
-        $('#begins' + number).removeAttr('disabled').trigger('chosen:updated');
-        $('#ends' + number).removeAttr('disabled').trigger('chosen:updated');
-    }
-}
+    setBeginsAndEnds();
+})

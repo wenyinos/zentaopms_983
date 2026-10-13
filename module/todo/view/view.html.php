@@ -13,54 +13,56 @@
 <?php include '../../common/view/header.html.php';?>
 <?php include '../../common/view/kindeditor.html.php';?>
 <?php if(!$todo->private or ($todo->private and $todo->account == $app->user->account)):?>
-<div class='container mw-700px'>
-  <div id='titlebar'>
-    <div class='heading'>
-      <span class='prefix' title='TODO'><?php echo html::icon($lang->icons['todo']);?> <strong><?php echo $todo->id;?></strong></span>
-      <strong><?php echo $todo->name;?></strong>
+<div id="mainMenu" class="clearfix">
+  <div class="btn-toolbar pull-left">
+    <div class="page-title">
+      <span class="label label-id"><?php echo $todo->id?></span>
+      <span class='text' title='<?php echo $todo->name;?>'><?php echo $todo->name;?></span>
     </div>
   </div>
-  <div class='row-table'>
-    <div class='col-main'>
-      <div class='main'>
-        <fieldset>
-          <legend>
-            <?php
-            echo $lang->todo->desc;
-            if($todo->type == 'bug')   echo html::a($this->createLink('bug',   'view', "id={$todo->idvalue}"), '  BUG#'   . $todo->idvalue);
-            if($todo->type == 'task')  echo html::a($this->createLink('task',  'view', "id={$todo->idvalue}"), '  TASK#'  . $todo->idvalue);
-            if($todo->type == 'story') echo html::a($this->createLink('story', 'view', "id={$todo->idvalue}"), '  STORY#' . $todo->idvalue);
-            ?>
-          </legend>
-          <div><?php echo $todo->desc;?></div>
-        </fieldset>
-        <?php $actionTheme = 'fieldset'; include '../../common/view/action.html.php';?>
+</div>
+<div id="mainContent" class="main-row">
+  <div class='main-col col-8'>
+    <div class='cell'>
+      <div class='detail'>
+        <div class='detail-title'>
+          <?php
+          echo $lang->todo->desc;
+          if($todo->type == 'bug')   echo html::a($this->createLink('bug',   'view', "id={$todo->idvalue}"), '  BUG#'   . $todo->idvalue);
+          if($todo->type == 'task')  echo html::a($this->createLink('task',  'view', "id={$todo->idvalue}"), '  TASK#'  . $todo->idvalue);
+          if($todo->type == 'story') echo html::a($this->createLink('story', 'view', "id={$todo->idvalue}"), '  STORY#' . $todo->idvalue);
+          ?>
+        </div>
+        <div class='detail-content'><?php echo $todo->desc;?></div>
       </div>
+      <?php include '../../common/view/action.html.php';?>
     </div>
-    <div class='col-side'>
-      <div class='main main-side'>
-        <fieldset>
-          <legend><?php echo $lang->todo->legendBasic;?></legend>
-          <table class='table table-data table-condensed table-borderless'>
+  </div>
+  <div class='side-col col-4'>
+    <div class='cell'>
+      <div class='detail'>
+        <div class='detail-title'><?php echo $lang->todo->legendBasic;?></div>
+        <div class='detail-content'>
+          <table class='table table-data'>
             <tr>
-              <th><?php echo $lang->todo->pri;?></th>
-              <td><?php echo $lang->todo->priList[$todo->pri];?></td>
+              <th class='w-90px'><?php echo $lang->todo->pri;?></th>
+              <td><span title="<?php echo zget($lang->todo->priList, $todo->pri);?>" class='label-pri <?php echo 'label-pri-' . $todo->pri;?>' title='<?php echo zget($lang->todo->priList, $todo->pri, $todo->pri);?>'><?php echo zget($lang->todo->priList, $todo->pri)?></span></td>
             </tr>
             <tr>
               <th><?php echo $lang->todo->status;?></th>
-              <td class='todo-<?php echo $todo->status?>'><?php echo $lang->todo->statusList[$todo->status];?></td>
+              <td><span class="status-<?php echo $todo->status;?>"><span class="label label-dot"></span> <?php echo $lang->todo->statusList[$todo->status];?></span></td>
             </tr>
             <tr>
               <th><?php echo $lang->todo->type;?></th>
               <td><?php echo $lang->todo->typeList[$todo->type];?></td>
             </tr>
             <tr>
-              <th class='w-80px'><?php echo $lang->todo->account;?></th>
+              <th><?php echo $lang->todo->account;?></th>
               <td><?php echo zget($users, $todo->account);?></td>
             </tr>
             <tr>
-              <th class='w-80px'><?php echo $lang->todo->date;?></th>
-              <td><?php echo $todo->date == '20300101' ? $lang->todo->periods['future'] : date(DT_DATE1, strtotime($todo->date));?></td>
+              <th><?php echo $lang->todo->date;?></th>
+              <td><?php echo $todo->date == '20300101' ? $lang->todo->periods['future'] : formatTime($todo->date, DT_DATE1);?></td>
             </tr>
             <tr>
               <th><?php echo $lang->todo->beginAndEnd;?></th>
@@ -73,16 +75,18 @@
             </tr>
             <tr>
               <th><?php echo $lang->todo->assignTo . $lang->todo->date;?></th>
-              <td><?php echo $todo->assignedDate;?></td>
+              <td><?php echo formatTime($todo->assignedDate, DT_DATE1);?></td>
             </tr>
             <?php endif;?>
           </table>
-        </fieldset>
-        <?php if($todo->cycle):?>
-        <?php $todo->config = json_decode($todo->config);?>
-        <fieldset>
-          <legend><?php echo $lang->todo->cycle;?></legend>
-          <table class='table table-data table-condensed table-borderless'>
+        </div>
+      </div>
+      <?php if($todo->cycle):?>
+      <?php $todo->config = json_decode($todo->config);?>
+      <div class='detail'>
+        <div class='detail-title'><?php echo $lang->todo->cycle;?></div>
+        <div class='detail-content'>
+          <table class='table table-data'>
             <tr>
               <th class='w-80px'><?php echo $lang->todo->beginAndEnd?></th>
               <td><?php echo $todo->config->begin . " ~ " . $todo->config->end;?></td>
@@ -109,21 +113,24 @@
               </td>
             </tr>
           </table>
-        </fieldset>
-        <?php endif;?>
+        </div>
       </div>
+      <?php endif;?>
     </div>
   </div>
-  <div class='panel-footer text-center'>
+</div>
+<div id="mainActions">
+  <div class="container"></div>
+  <div class="btn-toolbar">
     <?php
     if($todo->account == $app->user->account)
     {
-        if($todo->status != 'closed') echo html::a($this->createLink('todo', 'edit', "todoID=$todo->id"), "<i class='icon icon-edit'></i> " . $lang->todo->edit, '', "class='btn showinonlybody'");
-        if($todo->status == 'done' || $todo->status == 'closed') echo html::a($this->createLink('todo', 'activate', "todoID=$todo->id"), "<i class='icon icon-magic'></i> " . $lang->todo->activate, 'hiddenwin', "class='btn showinonlybody'");
-        if($todo->status == 'done') echo html::a($this->createLink('todo', 'close', "todoID=$todo->id"), "<i class='icon icon-off'></i> " . $lang->todo->close, 'hiddenwin', "class='btn showinonlybody'");
-        echo html::a($this->createLink('todo', 'delete', "todoID=$todo->id"), "<i class='icon icon-remove'></i> " . $lang->todo->delete, 'hiddenwin', "class='btn showinonlybody'");
+        if($todo->status != 'closed') echo html::a($this->createLink('todo', 'edit', "todoID=$todo->id"), "<i class='icon icon-edit'></i>", '', "title='{$lang->todo->edit}' class='btn showinonlybody'");
+        if($todo->status == 'done' || $todo->status == 'closed') echo html::a($this->createLink('todo', 'activate', "todoID=$todo->id"), "<i class='icon icon-magic'></i>", 'hiddenwin', "title='{$lang->todo->activate}' class='btn showinonlybody'");
+        if($todo->status == 'done') echo html::a($this->createLink('todo', 'close', "todoID=$todo->id"), "<i class='icon icon-off'></i>", 'hiddenwin', "title='{$lang->todo->close}' class='btn showinonlybody'");
+        echo html::a($this->createLink('todo', 'delete', "todoID=$todo->id"), "<i class='icon icon-trash'></i>", 'hiddenwin', "title='{$lang->todo->delete}' class='btn showinonlybody'");
 
-        echo html::a('#commentBox', '<i class="icon-comment-alt"></i>', '', "title='$lang->comment' onclick='setComment()' class='btn'");
+        echo html::a('#commentModal', '<i class="icon-chat-line"></i>', '', "title='{$lang->comment}' data-toggle='modal' class='btn'");
     }
 
     if($this->session->todoList)
@@ -142,7 +149,7 @@
     if($todo->status != 'done' && $todo->status != 'closed')
     {
         echo "<div class='btn-group dropup'>";
-        echo html::a($this->createLink('todo', 'finish', "id=$todo->id", 'html', true), "<i class='icon icon-ok'></i> " . $lang->todo->finish, 'hiddenwin', "class='btn showinonlybody btn-success'");
+        echo html::a($this->createLink('todo', 'finish', "id=$todo->id", 'html', true), "<i class='icon icon-checked'></i>", 'hiddenwin', "title='{$lang->todo->finish}' class='btn showinonlybody btn-success'");
         $createStoryPriv = common::hasPriv('story', 'create');
         $createTaskPriv  = common::hasPriv('task', 'create');
         $createBugPriv   = common::hasPriv('bug', 'create');
@@ -152,9 +159,9 @@
             unset($_GET['onlybody']);
             echo "<button type='button' class='btn btn-success dropdown-toggle' data-toggle='dropdown'><span class='caret'></span></button>";
             echo "<ul class='dropdown-menu pull-right' role='menu'>";
-            if($createStoryPriv) echo '<li>' . html::a('###', $lang->todo->reasonList['story'], '', "data-toggle='modal' data-target='#productModal' data-moveable='true' data-position='193px' id='toStoryLink'") . '</li>';
-            if($createTaskPriv)  echo '<li>' . html::a('###', $lang->todo->reasonList['task'], '', "data-toggle='modal' data-target='#projectModal' data-moveable='true' data-position='193px' id='toTaskLink'") . '</li>';
-            if($createBugPriv)   echo '<li>' . html::a('###', $lang->todo->reasonList['bug'], '', "data-toggle='modal' data-target='#productModal' data-moveable='true' data-position='193px' id='toBugLink'") . '</li>';
+            if($createStoryPriv) echo '<li>' . html::a('###', $lang->todo->reasonList['story'], '', "data-toggle='modal' data-target='#productModal' data-backdrop='false' data-moveable='true' data-position='center' id='toStoryLink'") . '</li>';
+            if($createTaskPriv)  echo '<li>' . html::a('###', $lang->todo->reasonList['task'], '', "data-toggle='modal' data-target='#projectModal' data-backdrop='false' data-moveable='true' data-position='center' id='toTaskLink'") . '</li>';
+            if($createBugPriv)   echo '<li>' . html::a('###', $lang->todo->reasonList['bug'], '', "data-toggle='modal' data-target='#productModal' data-backdrop='false' data-moveable='true' data-position='center' id='toBugLink'") . '</li>';
             echo "</ul>";
             if($isonlybody) $_GET['onlybody'] = 'yes';
         }
@@ -165,42 +172,69 @@
     ?>
   </div>
 </div>
-<fieldset id='commentBox' class='hide'>
-  <legend><?php echo $lang->comment;?></legend>
-  <form method='post' action='<?php echo $this->createLink('action', 'comment', "objectType=todo&objectID=$todo->id")?>' target='hiddenwin'>
-    <div class="form-group"><?php echo html::textarea('comment', '',"rows='5' class='w-p100'");?></div>
-    <?php echo html::submitButton();?>
-  </form>
-</fieldset>
-<div class="modal fade" id="projectModal">
-  <div class="modal-dialog">
+<div class="modal fade" id="commentModal">
+  <div class="modal-dialog mw-600px">
     <div class="modal-content">
       <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
-        <h4 class="modal-title"><i class="icon-file-text"></i> <?php echo $lang->project->selectProject;?></h4>
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true"><i class="icon icon-close"></i></button>
+        <h4 class="modal-title"><?php echo $lang->comment;?></h4>
       </div>
       <div class="modal-body">
+        <form method='post' action='<?php echo $this->createLink('action', 'comment', "objectType=todo&objectID=$todo->id")?>' target='hiddenwin'>
+          <div class="form-group"><?php echo html::textarea('comment', '',"rows='5' class='w-p100'");?></div>
+          <div class='text-center'><?php echo html::submitButton('', '', 'btn btn-wide btn-primary');?></div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="modal fade" id="projectModal">
+  <div class="modal-dialog mw-500px">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true"><i class="icon icon-close"></i></button>
+        <h4 class="modal-title"><?php echo $lang->project->selectProject;?></h4>
+      </div>
+      <div class="modal-body">
+        <?php if(empty($projects)):?>
+        <div class="table-empty-tip">
+          <p>
+            <span class="text-muted"><?php echo $lang->project->noProject;?></span>
+            <?php echo html::a("javascript:createProject()", "<i class='icon icon-plus'></i> " . $lang->project->create, '', "class='btn btn-info'");?>
+          </p>
+        </div>
+        <?php else:?>
         <div class='input-group'>
           <?php echo html::select('project', $projects, '', "class='form-control chosen'");?>
-          <span class='input-group-btn'><?php echo html::commonButton($lang->todo->reasonList['task'], "id='toTaskButton'");?></span>
+          <span class='input-group-btn'><?php echo html::commonButton($lang->todo->reasonList['task'], "id='toTaskButton'", 'btn btn-primary');?></span>
         </div>
+        <?php endif;?>
       </div>
     </div>
   </div>
 </div>
 <div class="modal fade" id="productModal">
-  <div class="modal-dialog">
+  <div class="modal-dialog mw-500px">
     <div class="modal-content">
       <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
-        <h4 class="modal-title"><i class="icon-file-text"></i> <?php echo $lang->product->select;?></h4>
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true"><i class="icon icon-close"></i></button>
+        <h4 class="modal-title"><?php echo $lang->product->select;?></h4>
       </div>
       <div class="modal-body">
+        <?php if(empty($products)):?>
+        <div class="table-empty-tip">
+          <p>
+            <span class="text-muted"><?php echo $lang->product->noProduct;?></span>
+            <?php echo html::a("javascript:createProduct()", "<i class='icon icon-plus'></i> " . $lang->product->create, '', "class='btn btn-info'");?>
+          </p>
+        </div>
+        <?php else:?>
         <div class='input-group'>
           <?php echo html::select('product', $products, '', "class='form-control chosen'");?>
-          <span class='input-group-btn'><?php echo html::commonButton($lang->todo->reasonList['story'], "id='toStoryButton'");?></span>
-          <span class='input-group-btn'><?php echo html::commonButton($lang->todo->reasonList['bug'], "id='toBugButton'");?></span>
+          <span class='input-group-btn'><?php echo html::commonButton($lang->todo->reasonList['story'], "id='toStoryButton'", 'btn btn-primary');?></span>
+          <span class='input-group-btn'><?php echo html::commonButton($lang->todo->reasonList['bug'], "id='toBugButton'", 'btn btn-primary');?></span>
         </div>
+        <?php endif;?>
       </div>
     </div>
   </div>

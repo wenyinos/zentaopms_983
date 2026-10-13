@@ -1,14 +1,10 @@
-.tabs{position:relative;}
-.tabs .nav-tabs{border-bottom:none;}
-.tabs .nav-tabs>li{margin-bottom:0px;}
-.tabs .tab-content{padding:0px; border:0px;}
-.tabs .tab-content .tab-pane #querybox{margin:0px; border-left:1px solid #ddd; border-right:1px solid #ddd;}
-.tabs .tab-content .tab-pane #querybox form{padding-left:0px;}
 
-.table-actions {padding-left: 5px;}
-
-#releaseInfo {border-top: 1px solid #ddd;}
+.checkbox.btn{margin-top:0px}
 #releaseInfo > div {padding-top: 15px;}
 
-#querybox form {margin: 0px !important;}
-#moreOrLite {right: 0px !important;}
+.linkBox #queryBox .search-form .form-actions {padding-bottom: 5px;}
+.linkBox .table-header {padding: 8px 15px; border-bottom: 1px solid #cbd0db;}
+#unlinkStoryList, #unlinkBugList, #unlinkLeftBugList {border-top: 1px solid #cbd0db;}
+
+#tabsNav .nav-tabs > li.pull-right {margin-right: 120px; margin-top: -5px}
+#tabsNav .nav-tabs > li.active + li.pull-right {margin-right: 0;}

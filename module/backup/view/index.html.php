@@ -13,19 +13,27 @@
 <?php include '../../common/view/header.html.php';?>
 <?php if(!empty($error)):?>
 <div id="notice" class='alert alert-success' style="margin-bottom:35px;">
-  <div class="content"><i class='icon-info-sign'></i> <?php echo $error;?></div>
+  <div class="content"><i class='icon-exclamation-sign'></i> <?php echo $error;?></div>
 </div>
 <?php endif;?>
 
-<div id='titlebar'>
-  <div class='heading'><?php echo $lang->backup->common;?></div>
-  <div class='actions'><?php common::printIcon('backup', 'backup', 'reload=yes', '', 'button', 'cloud', 'hiddenwin', 'backup');?></div>
+<div id='mainMenu' class='clearfix'>
+  <div class='btn-toolbar pull-left'>
+    <span class='btn btn-link btn-active-text'><span class='text'><?php echo $lang->backup->common;?></span></span>
+  </div>
+  <div class='btn-toolbar pull-right'><?php common::printIcon('backup', 'backup', 'reload=yes', '', 'button', 'cloud', 'hiddenwin', 'backup');?></div>
 </div>
 
-<div class='panel'>
-  <div class='panel-heading'>
-    <strong><?php echo $lang->backup->history?></strong>
-    <span class='label label-info'><?php echo $lang->backup->restoreTip;?></span>
+<div id='mainContent' class='main-content'>
+  <div class='main-header'>
+    <h2>
+      <?php echo $lang->backup->history?>
+      <span class='label label-info'><?php echo $lang->backup->restoreTip;?></span>
+    </h2>
+    <div class='pull-right'>
+      <?php printf($lang->backup->holdDays, $config->backup->holdDays)?>
+      <?php if(common::hasPriv('backup', 'change')) echo html::a(inlink('change'), $lang->backup->changeAB, '', "class='iframe btn btn-sm btn-info' data-width='300'");?>
+    </div>
   </div>
   <table class='table table-condensed table-bordered active-disabled table-fixed'>
     <thead>
@@ -60,14 +68,6 @@
       <?php endforeach;?>
     <?php endforeach;?>
     </tbody>
-    <tfoot>
-      <tr>
-        <td colspan='4'>
-        <?php printf($lang->backup->holdDays, $config->backup->holdDays)?>
-        <?php if(common::hasPriv('backup', 'change')) echo html::a(inlink('change'), $lang->backup->changeAB, '', "class='iframe' data-width='300'");?>
-        </td>
-      </tr>
-    </tfoot>
   </table>
 </div>
 <div class="modal fade" id="waitting" tabindex="-1" role="dialog" aria-hidden="true">

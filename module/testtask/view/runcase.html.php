@@ -13,22 +13,21 @@
 <?php include '../../common/view/header.lite.html.php';?>
 <?php include '../../common/view/form.html.php';?>
 <?php js::set('caseResultSave', $lang->save);?>
-<div id='titlebar'>
-  <div class='heading'>
-    <span class='prefix'><?php echo html::icon($lang->icons['usecase']);?> <strong><?php echo $run->case->id;?></strong></span>
-    <strong><?php echo $run->case->title;?></strong>
-    <small class='text-muted'> <?php echo $lang->testtask->runCase;?> <?php echo html::icon($lang->icons['run']);?></small>
+<div id='mainContent' class='main-content'>
+  <div class='main-header'>
+    <h2>
+      <span class='label label-id'><?php echo $run->case->id;?></span>
+      <span title='<?php echo $run->case->title?>'><?php echo $run->case->title;?></span>
+    </h2>
   </div>
-</div>
-<div class='main'>
-  <form class='form-condensed' method='post' enctype='multipart/form-data' id='dataform' data-type='ajax'>
-    <table class='table table-bordered table-form' style='word-break:break-all' id='steps'>
+  <form method='post' enctype='multipart/form-data' id='dataform' data-type='ajax'>
+    <table class='table table-bordered' style='word-break:break-all' id='steps'>
       <thead>
         <tr>
           <td colspan='5' style='word-break: break-all;'><strong><?php echo $lang->testcase->precondition;?></strong> <?php echo $run->case->precondition;?></td>
         </tr>
         <tr>
-          <th class='w-40px'><?php echo $lang->testcase->stepID;?></th>
+          <th class='w-50px'><?php echo $lang->testcase->stepID;?></th>
           <th class='w-p30'><?php  echo $lang->testcase->stepDesc;?></th>
           <th class='w-p30'><?php  echo $lang->testcase->stepExpect;?></th>
           <th class='w-100px'><?php echo $lang->testcase->result;?></th>
@@ -82,11 +81,11 @@
       <?php $childId ++;?>
       <?php endforeach;?>
       <tr class='text-center'>
-        <td colspan='5'>
+        <td colspan='5' class='form-actions'>
           <?php
-          if($preCase)  echo html::a(inlink('runCase', "runID={$preCase['runID']}&caseID={$preCase['caseID']}&version={$preCase['version']}"), $lang->testtask->pre, '', "id='pre' class='btn'");
-          echo html::submitButton();
-          if($nextCase)  echo html::a(inlink('runCase', "runID={$nextCase['runID']}&caseID={$nextCase['caseID']}&version={$nextCase['version']}"), $lang->testtask->next, '', "id='next' class='btn'");
+          if($preCase)  echo html::a(inlink('runCase', "runID={$preCase['runID']}&caseID={$preCase['caseID']}&version={$preCase['version']}"), $lang->testtask->pre, '', "id='pre' class='btn btn-wide'");
+          echo html::submitButton('', '', 'btn btn-wide btn-primary');
+          if($nextCase)  echo '&nbsp;' . html::a(inlink('runCase', "runID={$nextCase['runID']}&caseID={$nextCase['caseID']}&version={$nextCase['version']}"), $lang->testtask->next, '', "id='next' class='btn btn-wide'");
           echo html::hidden('case',    $run->case->id);
           echo html::hidden('version', $run->case->currentVersion);
           ?>
@@ -99,7 +98,7 @@
       <div class="modal-dialog">
         <div class="modal-content">
           <div class="modal-header">
-            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+            <button type="button" class="close" data-dismiss="modal"><i class="icon icon-close"></i></button>
             <h4 class="modal-title"><?php echo $lang->testtask->files;?></h4>
           </div>
           <div class="modal-body">
@@ -108,7 +107,7 @@
                 <td><?php echo $this->fetch('file', 'buildform', array('fileCount' => 1, 'percent' => 0.9, 'filesName' => "files{$step->id}", 'labelsName' => "labels{$step->id}"));?></td>
               </tr>
               <tr>
-                <td class='text-center'><button type="button" class="btn btn-default" onclick='loadFilesName()' data-dismiss="modal" aria-hidden="true"><?php echo $lang->save;?></button></td>
+                <td class='text-center'><button type="button" class="btn" onclick='loadFilesName()' data-dismiss="modal"><?php echo $lang->save;?></button></td>
               <tr>
             </table>
           </div>
@@ -117,8 +116,7 @@
     </div>
     <?php endforeach;?>
   </form>
-</div>
-<div class='main' id='resultsContainer'>
+  <div class='main' id='resultsContainer'></div>
 </div>
 <script>
 $(function()

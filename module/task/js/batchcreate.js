@@ -1,8 +1,29 @@
-/* Remove width in defaultChosenOptions. */
-delete defaultChosenOptions.width;
-
 /* Remove 'ditto' in first row. */
-$(document).ready(removeDitto());
+$(function()
+{
+    removeDitto();
+    if($('#batchCreateForm table thead tr th.c-name').width() < 200) $('#batchCreateForm table thead tr th.c-name').width(200);
+
+    $('#batchCreateForm').ajaxForm(
+    {
+        finish:function(response)
+        {
+            if(response.locate)
+            {
+                if(response.locate == 'parent')
+                {
+                    parent.$.cookie('selfClose', 1);
+                    setTimeout(function(){parent.$.closeModal(null, 'this')}, 1200);
+                }
+                else
+                {
+                    setTimeout(function(){window.location.href = response.locate;}, 1200);
+                }
+            }
+            return false;
+        }
+    });
+});
 
 /* Get select of stories.*/
 function setStories(moduleID, projectID, num)
@@ -28,7 +49,7 @@ function setStories(moduleID, projectID, num)
             })
         }
         $("#story" + num + "_chosen").remove();
-        $("#story" + num).chosen(defaultChosenOptions);
+        $("#story" + num).chosen();
     });
 }
 
@@ -71,32 +92,25 @@ function setStoryRelated(num)
 /* Toggle zero task story. */
 function toggleZeroTaskStory()
 {
-    if($('#zeroTaskStory').hasClass('zeroTask'))
-    {
-        $('#zeroTaskStory').removeClass('zeroTask');
-        zeroTask = false;
-    }
-    else
-    {
-        $('#zeroTaskStory').addClass('zeroTask');
-        zeroTask = true;
-    }
+    var $toggle = $('#zeroTaskStory').toggleClass('checked');
+    var zeroTask = $toggle.hasClass('checked');
     $.cookie('zeroTask', zeroTask, {expires:config.cookieLife, path:config.webRoot});
     $('select[name^="story"]').each(function()
     {
-        selectVal = $(this).val();
-        $(this).find('option').each(function()
+        var $select = $(this);
+        var selectVal = $select.val();
+        $select.find('option').each(function()
         {
-            value = $(this).attr('value');
-            $(this).show();
+            var $option = $(this);
+            var value = $option.attr('value');
+            $option.show();
             if(value != 'ditto' && storyTasks[value] > 0 && zeroTask)
             {
-              $(this).hide();
-              if(selectVal == value) selectVal = '';
+                $option.hide();
+                if(selectVal == value) selectVal = '';
             }
         })
-        $(this).val(selectVal);
-        $(this).trigger("chosen:updated");
+        $select.val(selectVal).trigger("chosen:updated");
     })
 }
 

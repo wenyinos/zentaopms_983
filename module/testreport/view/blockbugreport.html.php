@@ -1,8 +1,52 @@
 <table class='table table-form'>
-<?php $row = 0;?>
-<?php foreach($bugInfo as $infoKey => $infoValue):?>
-  <?php if(($row % 1) == 0) echo '<tr>';?>
-  <?php $row++;?>
+  <?php foreach($charts as $chartType => $chartOption):?>
+  <tr>
+    <td class='text-top'>
+      <table class='table table-condensed table-report' id='bugSeverityGroups'>
+        <?php if(empty($datas[$chartType])):?>
+        <tr>
+          <td class='none-data'>
+            <h5><?php echo $lang->testtask->report->charts[$chartType];?></h5>
+            <?php echo $lang->testreport->none;?>
+          </td>
+        </tr>
+        <?php else:?>
+        <tr class='text-top'>
+          <td class='w-p70'>
+            <div class='chart-wrapper text-center'>
+              <h5><?php echo $lang->testtask->report->charts[$chartType];?></h5>
+              <div class='chart-canvas'><canvas id='chart-<?php echo $chartType ?>' width='<?php echo $chartOption->width;?>' height='<?php echo $chartOption->height;?>' data-responsive='true'></canvas></div>
+            </div>
+          </td>
+          <td>
+            <div class='table-wrapper' style='overflow:auto'>
+              <table class='table table-condensed table-hover table-striped table-bordered table-chart' data-chart='<?php echo $chartOption->type; ?>' data-target='#chart-<?php echo $chartType ?>' data-animation='false'>
+                <thead>
+                  <tr>
+                    <th class='chart-label' colspan='2'><?php echo $lang->report->item;?></th>
+                    <th class='w-50px'><?php echo $lang->report->value;?></th>
+                    <th class='w-50px'><?php echo $lang->report->percent;?></th>
+                  </tr>
+                </thead>
+                <?php foreach($datas[$chartType] as $key => $data):?>
+                <tr class='text-center'>
+                  <td class='chart-color'><i class='chart-color-dot'></i></td>
+                  <td class='chart-label'><?php echo $data->name;?></td>
+                  <td class='chart-value'><?php echo $data->value;?></td>
+                  <td><?php echo ($data->percent * 100) . '%';?></td>
+                </tr>
+                <?php endforeach;?>
+              </table>
+            </div>
+          </td>
+        </tr>
+        <?php endif;?>
+      </table>
+    </td>
+  </tr>
+  <?php endforeach;?>
+  <?php foreach($bugInfo as $infoKey => $infoValue):?>
+  <tr>
     <td class='text-top'>
       <table class='table table-condensed table-report' id='bugSeverityGroups'>
         <?php if(empty($infoValue)):?>
@@ -33,8 +77,8 @@
                 <thead>
                   <tr>
                     <th class='chart-label' colspan='2'><?php echo $lang->report->item;?></th>
-                    <th><?php echo $lang->report->value;?></th>
-                    <th><?php echo $lang->report->percent;?></th>
+                    <th class='w-50px'><?php echo $lang->report->value;?></th>
+                    <th class='w-50px'><?php echo $lang->report->percent;?></th>
                   </tr>
                 </thead>
                 <?php
@@ -55,7 +99,7 @@
                 if(empty($label) and empty($data)) continue;
                 ?>
                 <tr class='text-center'>
-                  <td class='chart-color w-20px'><i class='chart-color-dot icon-circle'></i></td>
+                  <td class='chart-color w-20px'><i class='chart-color-dot'></i></td>
                   <td class='chart-label'><?php echo $label;?></td>
                   <td class='chart-value'><?php echo $data;?></td>
                   <td><?php echo round($data / $sum * 100, 2) . '%';?></td>
@@ -68,6 +112,6 @@
         <?php endif;?>
       </table>
     </td>
-  <?php if(($row % 1) == 0) echo '<tr>';?>
+  </tr>
   <?php endforeach;?>
 </table>

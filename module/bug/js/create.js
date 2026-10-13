@@ -6,15 +6,17 @@
   */
 function loadAllUsers()
 {
-    link = createLink('bug', 'ajaxLoadAllUsers', 'selectedUser=' + $('#assignedTo').val());
-    $('#assignedToBox').load(link, function()
+    var link = createLink('bug', 'ajaxLoadAllUsers', 'selectedUser=' + $('#assignedTo').val());
+    $.get(link, function(data)
     {
-        moduleID  = $('#module').val();
-        productID = $('#product').val();
-        setAssignedTo(moduleID, productID);
-        $('#assignedTo').chosen(defaultChosenOptions);
+        if (data)
+        {
+            var moduleID  = $('#module').val();
+            var productID = $('#product').val();
+            setAssignedTo(moduleID, productID);
+            $('#assignedTo').empty().append($(data).find('option')).trigger('chosen:updated').trigger('chosen:activate');
+        }
     });
-
 }
 
 /**
@@ -26,8 +28,8 @@ function loadAllUsers()
   */
 function loadProjectTeamMembers(productID)
 {
-    link = createLink('bug', 'ajaxLoadProjectTeamMembers', 'productID=' + productID + '&selectedUser=' + $('#assignedTo').val());
-    $('#assignedToBox').load(link, function(){$('#assignedTo').chosen(defaultChosenOptions);});
+    var link = createLink('bug', 'ajaxLoadProjectTeamMembers', 'productID=' + productID + '&selectedUser=' + $('#assignedTo').val());
+    $('#assignedToBox').load(link, function(){$('#assignedTo').chosen();});
 }
 
 /**
@@ -38,8 +40,8 @@ function loadProjectTeamMembers(productID)
  */
 function loadModuleRelated()
 {
-    moduleID  = $('#module').val();
-    productID = $('#product').val();
+    var moduleID  = $('#module').val();
+    var productID = $('#product').val();
     setAssignedTo(moduleID, productID);
     setStories(moduleID, productID);
 }
@@ -54,7 +56,7 @@ function setAssignedTo(moduleID, productID)
 {
     if(typeof(productID) == 'undefined') productID = $('#product').val();
     if(typeof(moduleID) == 'undefined')  moduleID  = $('#module').val();
-    link = createLink('bug', 'ajaxGetModuleOwner', 'moduleID=' + moduleID + '&productID=' + productID);
+    var link = createLink('bug', 'ajaxGetModuleOwner', 'moduleID=' + moduleID + '&productID=' + productID);
     $.get(link, function(owner)
     {
         $('#assignedTo').val(owner);
@@ -67,7 +69,7 @@ function setTemplate(templateID)
 {
     $('#tplBox .list-group-item.active').removeClass('active');
     $('#tplTitleBox' + templateID).closest('.list-group-item').addClass('active');
-    steps = $('#template' + templateID).html();
+    var steps = $('#template' + templateID).html();
     editor['#'].html(steps);
 }
 
@@ -122,25 +124,17 @@ $(function()
     var adjustBugTypeGroup = function()
     {
         var $group = $('#bugTypeInputGroup');
-        var width = $group.width(), addonWidth = 0;
+        var width = ($group.parent().width()), addonWidth = 0;
         var $controls = $group.find('.chosen-single');
         $group.children('.input-group-addon').each(function()
         {
             addonWidth += $(this).outerWidth();
         });
-        $controls.css('width', Math.floor((width - addonWidth)/$controls.length));
+        var bestWidth = Math.floor((width - addonWidth)/$controls.length);
+        $controls.css('width', bestWidth);
+        var lastWidth = width - addonWidth - bestWidth * ($controls.length - 1);
+        $controls.last().css('width', lastWidth);
     };
     adjustBugTypeGroup();
-
-    // adjust style for file box
-    var ajustFilebox = function()
-    {
-        applyCssStyle('.fileBox > tbody > tr > td:first-child {transition: none; width: ' + ($('#contactListGroup').width() - 2) + 'px}', 'filebox')
-    };
-    ajustFilebox();
-    $(window).resize(function()
-    {
-        ajustFilebox();
-        adjustBugTypeGroup();
-    });
+    $(window).on('resize', adjustBugTypeGroup);
 });

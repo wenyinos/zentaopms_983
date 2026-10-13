@@ -10,66 +10,68 @@
  * @link        http://www.zentao.net
  */
 ?>
-<?php
-$jsRoot = $this->app->getWebRoot() . "js/";
-include '../../common/view/tablesorter.html.php';
-?>
-<div id='querybox' class='show'></div>
+<div id='queryBox' class='show'></div>
 <?php
 $releaseBugs = $type == 'bug' ? $release->bugs : $release->leftBugs;
 $formID      = $type == 'leftBug' ? 'unlinkedLeftBugsForm' : 'unlinkedBugsForm';
 ?>
 <div id='<?php echo $type == 'bug' ? 'unlinkBugList' : 'unlinkLeftBugList';?>'>
-  <form method='post' target='hiddenwin' id='<?php echo $formID?>' action='<?php echo $this->createLink('release', 'linkBug', "releaseID=$release->id&browseType=$browseType&param=$param&type=$type")?>'>
-    <table class='table table-condensed table-hover table-striped tablesorter table-fixed table-selectable'> 
-      <caption class='text-left text-special'><?php echo html::icon('unlink');?> &nbsp;<strong><?php echo $lang->productplan->unlinkedBugs;?></strong></caption>
+  <form class='main-table' method='post' target='hiddenwin' id='<?php echo $formID?>' action='<?php echo $this->createLink('release', 'linkBug', "releaseID=$release->id&browseType=$browseType&param=$param&type=$type")?>' data-ride='table'>
+    <div class='table-header hl-primary text-primary strong'>
+      <?php echo html::icon('unlink');?> <?php echo $lang->productplan->unlinkedBugs;?>
+    </div>
+    <table class='table'> 
       <thead>
-      <tr class='colhead'>
-        <th class='w-id {sorter:"currency"}'><?php echo $lang->idAB;?></th>
-        <th class='w-pri'>   <?php echo $lang->priAB;?></th>
-        <th>                 <?php echo $lang->bug->title;?></th>
-        <th class='w-user text-left'>  <?php echo $lang->openedByAB;?></th>
-        <th class='w-user'> <?php echo $lang->bug->resolvedBy;?></th>
-        <th class='w-80px'>  <?php echo $lang->statusAB;?></th>
-      </tr>
+        <tr class='text-center'>
+          <th class='c-id text-left'>
+            <?php if($allBugs):?>
+            <div class="checkbox-primary check-all" title="<?php echo $lang->selectAll?>">
+              <label></label>
+            </div>
+            <?php endif;?>
+            <?php echo $lang->idAB;?>
+          </th>
+          <th class='c-pri'><?php echo $lang->priAB;?></th>
+          <th class='text-left'><?php echo $lang->bug->title;?></th>
+          <th class='c-user'><?php echo $lang->openedByAB;?></th>
+          <th class='c-user'><?php echo $lang->bug->resolvedBy;?></th>
+          <th class='w-80px'><?php echo $lang->statusAB;?></th>
+        </tr>
       </thead>
-      <tbody>
-      <?php foreach($allBugs as $bug):?>
-      <?php if(strpos(",{$releaseBugs},", ",$bug->id,") !== false) continue;?>
-      <tr>
-        <td class='cell-id'>
-          <input type='checkbox' name='bugs[<?php echo $bug->id?>]'  value='<?php echo $bug->id;?>' <?php if($type == 'leftBug' or $bug->status == 'resolved' or $bug->status == 'closed') echo "checked";?> /> 
-          <?php echo html::a($this->createLink('bug', 'view', "bugID=$bug->id"), $bug->id);?>
-        </td>
-        <td><span class='<?php echo 'pri' . zget($lang->bug->priList, $bug->pri, $bug->pri);?>'><?php echo zget($lang->bug->priList, $bug->pri, $bug->pri)?></span></td>
-        <td class='text-left nobr' title='<?php echo $bug->title?>'><?php echo html::a($this->createLink('bug', 'view', "bugID=$bug->id", '', true), $bug->title, '', "data-toggle='modal' data-type='iframe' data-width='90%'");?></td>
-        <td><?php echo $users[$bug->openedBy];?></td>
-        <td><?php echo $users[$bug->resolvedBy];?></td>
-        <td class='text-center bug-<?php echo $bug->status?>'><?php echo $lang->bug->statusList[$bug->status];?></td>
-      </tr>
-      <?php endforeach;?>
+      <tbody class='text-center'>
+        <?php $unlinkedCount = 0;?>
+        <?php foreach($allBugs as $bug):?>
+        <?php if(strpos(",{$releaseBugs},", ",$bug->id,") !== false) continue;?>
+        <tr>
+          <td class='c-id text-left'>
+            <?php echo html::checkbox('bugs', array($bug->id => sprintf('%03d', $bug->id)), ($type == 'leftBug' or $bug->status == 'resolved' or $bug->status == 'closed') ? $bug->id : '');?>
+          </td>
+          <td><span class='label-pri label-pri-<?php echo $bug->pri;?>' title='<?php echo zget($lang->bug->priList, $bug->pri, $bug->pri)?>'><?php echo zget($lang->bug->priList, $bug->pri, $bug->pri)?></span></td>
+          <td class='text-left nobr' title='<?php echo $bug->title?>'><?php echo html::a($this->createLink('bug', 'view', "bugID=$bug->id", '', true), $bug->title, '', "data-toggle='modal' data-type='iframe' data-width='90%'");?></td>
+          <td><?php echo $users[$bug->openedBy];?></td>
+          <td><?php echo $users[$bug->resolvedBy];?></td>
+          <td>
+            <span class='status-<?php echo $bug->status?>'>
+              <span class='label label-dot'></span>
+              <?php echo $lang->bug->statusList[$bug->status];?>
+            </span>
+          </td>
+        </tr>
+        <?php $unlinkedCount++;?>
+        <?php endforeach;?>
       </tbody>
-      <tfoot>
-      <tr>
-        <td colspan='6' class='text-left'>
-          <?php if(count($allBugs))
-          {
-              echo "<div class='table-actions clearfix'>";
-              echo html::selectButton() . html::submitButton($lang->release->linkBug);
-              echo html::a(inlink('view', "releaseID=$release->id&type=$type"), $lang->goback, '', "class='btn'");
-              echo '</div>';
-          }
-          ?>
-        </td>
-      </tr>
-      </tfoot>
     </table>
+    <div class='table-footer'>
+      <?php if($unlinkedCount):?>
+      <div class="checkbox-primary check-all"><label><?php echo $lang->selectAll?></label></div>
+      <div class="table-actions btn-toolbar">
+        <?php echo html::submitButton($lang->release->linkBug, '', 'btn');?>
+      </div>
+      <?php endif;?>
+      <div class="btn-toolbar">
+        <?php echo html::a(inlink('view', "releaseID=$release->id&type=$type"), $lang->goback, '', "class='btn'");?>
+      </div>
+      <div class='table-statistic'></div>
+    </div>
   </form>
 </div>
-<script>
-$(function()
-{
-    ajaxGetSearchForm('#<?php echo $type == 'bug' ? 'bugs' : 'leftBugs'?> .linkBox #querybox')
-    setModal();
-})
-</script>

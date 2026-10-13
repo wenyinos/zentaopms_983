@@ -3,14 +3,12 @@ $(function()
     $('#projectTableList').on('sort.sortable', function(e, data)
     {
         var list = '';
-        for(i = 0; i < data.list.length; i++) list += $(data.list[i]).attr('data-id') + ',';
+        for(i = 0; i < data.list.length; i++) list += $(data.list[i].item).attr('data-id') + ',';
         $.post(createLink('project', 'updateOrder'), {'projects' : list, 'orderBy' : orderBy});
     });
-    setTimeout(function(){fixedTfootAction('#projectsForm')}, 100);
-    setTimeout(function(){fixedTheadOfList('#projectList')}, 100);
 });
 
-function byProduct(productID, projectID)
+function byProduct(productID, projectID, status)
 {
-    location.href = createLink('project', 'all', "status=byproduct&project=" + projectID + "&orderBy=" + orderBy + '&productID=' + productID);
+    location.href = createLink('project', 'all', "status=" + status + "&project=" + projectID + "&orderBy=" + orderBy + '&productID=' + productID);
 }
