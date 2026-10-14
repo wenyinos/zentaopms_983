@@ -63,6 +63,18 @@ class my extends control
     }
 
     /**
+     * Calendar. 日程视图（UI 10.1 菜单项）：统一指向"我的待办"。
+     * 10.1 中我的地盘菜单的"日程"入口即待办列表，此处按同语义提供跳转，避免菜单点击 404。
+     *
+     * @access public
+     * @return void
+     */
+    public function calendar()
+    {
+        $this->locate($this->createLink('my', 'todo'));
+    }
+
+    /**
      * My todos.
      *
      * @param  string $type
