@@ -62,4 +62,52 @@
             $('#searchTypeName').text($this.text());
         });
     });
+
+    /* ==========================================================================
+     * 三、progress-pie 尺寸守卫（ZUI 1.8.1 边界问题）
+     * 现象：控制台报 "IndexSizeError: The radius provided (-0.25) is negative"
+     *       at doughnutChart → arc（画布半径为负）。
+     * 根因：ZUI 的 Chart 构造器用 canvas 的 offsetWidth/offsetHeight（布局尺寸）设定画布，
+     *       元素隐藏时布局尺寸为 0，半径 (0 - strokeWidth/2)/2 = -0.25 非法。
+     *       ZUI 自带守卫只识别 .hidden 类与未激活 .tab-pane，其他隐藏场景（display:none
+     *       的容器、懒加载占位等）会漏画崩溃。
+     * 处理：尺寸为 0 时暂不绘制，待元素获得布局尺寸后（ResizeObserver）自动补画。
+     * ========================================================================== */
+    (function($)
+    {
+        var originalProgressPie = $.fn.progressPie;
+        if(!originalProgressPie) return;
+
+        $.fn.progressPie = function(options)
+        {
+            return this.each(function()
+            {
+                var element = this;
+                var $element = $(element);
+
+                var getCanvas = function()
+                {
+                    return element.tagName === 'CANVAS' ? element : element.querySelector('canvas');
+                };
+                var isVisible = function()
+                {
+                    var canvas = getCanvas();
+                    return !!canvas && canvas.offsetWidth > 0 && canvas.offsetHeight > 0;
+                };
+
+                /* 有布局尺寸（或尚无 canvas，交给原实现按默认宽高创建）→ 走原生逻辑 */
+                if(isVisible() || !getCanvas()) return originalProgressPie.call($element, options);
+
+                /* 隐藏状态：等可见后补画，期间不触发绘制以避免负半径异常 */
+                if(!window.ResizeObserver) return;
+                var observer = new ResizeObserver(function()
+                {
+                    if(!isVisible()) return;
+                    observer.disconnect();
+                    originalProgressPie.call($element, options);
+                });
+                observer.observe(element);
+            });
+        };
+    })(jQuery);
 })(jQuery);
