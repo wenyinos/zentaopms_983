@@ -85,8 +85,15 @@ Steps for a WenYinOS → WenYinOS upgrade:
 1. **Back up the database** first (the wizard repeats this warning).
 2. Deploy the new code over the old tree.
 3. Create the safe-file gate: `touch www/ok.txt` (or delete an `ok.txt` older than 1 hour — the flow refuses to run without a fresh one).
-4. Open `http://<your-host>/upgrade.php` and click through; the page shows the current and target versions before you confirm.
-5. The installer files are then dead weight again — remove or block them (see step 5 of Installation). The sample Nginx config already returns 404 for `upgrade.php`.
+4. Run the upgrade — either the web wizard or the CLI:
+   - **Web:** open `http://<your-host>/upgrade.php` and click through; the page shows the current and target versions before you confirm.
+   - **CLI (no web entry needed):** with the same PHP binary the site uses, run two commands — useful when `upgrade.php` is blocked at the web server (the recommended production state) and the safe-file gate can be skipped:
+     ```bash
+     php bin/ztcli 'http://<your-host>/upgrade-execute.html'
+     php bin/ztcli 'http://<your-host>/upgrade-afterExec-<installedVersion>.html'   # e.g. upgrade-afterExec-9_8_3_1.html
+     ```
+     The first performs the upgrade work, the second stamps the new version into the database.
+5. Remove or block the installer files again if you had temporarily exposed them (see step 5 of Installation). The sample Nginx config already returns 404 for `upgrade.php`.
 
 ## CLI Helpers (optional)
 ```bash

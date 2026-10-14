@@ -56,24 +56,30 @@ class upgradeModel extends model
     /**
      * Refuse to upgrade when the installed version is not a WenYinOS build.
      *
+     * 版本优先取 $config->installedVersion（web 入口会预先赋值）；CLI 等入口未赋值时
+     * 自行从 setting 读取，保证任何调用方式下守卫都生效。
+     *
      * @access public
      * @return void
      */
     public function checkSource()
     {
-        if($this->isWenyinVersion($this->config->installedVersion)) return true;
-        $this->printUnsupportedSource();
+        $installedVersion = isset($this->config->installedVersion) ? $this->config->installedVersion : '';
+        if(empty($installedVersion)) $installedVersion = $this->loadModel('setting')->getVersion();
+        if($this->isWenyinVersion($installedVersion)) return true;
+        $this->printUnsupportedSource($installedVersion);
     }
 
     /**
      * Print the refusal page for unsupported (official) ZenTao sources and exit.
      *
+     * @param  string $installedVersion
      * @access public
      * @return void
      */
-    public function printUnsupportedSource()
+    public function printUnsupportedSource($installedVersion)
     {
-        $installedVersion = htmlspecialchars((string)$this->config->installedVersion, ENT_QUOTES, 'utf-8');
+        $installedVersion = htmlspecialchars((string)$installedVersion, ENT_QUOTES, 'utf-8');
         $html = <<<EOT
 <!DOCTYPE html>
 <html lang='zh-cn'>
