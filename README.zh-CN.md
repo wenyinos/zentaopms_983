@@ -86,7 +86,7 @@ WenYinOS 禅道项目管理系统基于经典 ZenTao 单体架构，采用 PHP +
 - **官方禅道数据库会被拒绝升级**——`upgrade.php` 会显示「无法升级」页面并给出检测到的版本号，不做任何修改。
 - 一键流程为 备份警告 → 开始升级 → 升级成功；历史 `db/update*.sql` 链路与逐版本选择器均已移除，后续版本如需变更库结构，在 `module/upgrade/model.php::execute()` 中追加一个分支即可。
 
-完整交付包（全量源码 + `zentao-mcp-py/` MCP 客户端，附 `SHA256SUMS` 校验）随每个版本发布在 [Releases 页面](https://github.com/wenyinos/ZenTaoPMS/releases)——解压覆盖到代码根目录即可原地升级，不影响 `config/my.php`、附件与缓存。
+完整交付包（全量源码 + `zentao-mcp-py/` MCP 客户端，附 `SHA256SUMS` 校验）随每个版本发布在 [Releases 页面](https://github.com/wenyinos/ZenTaoPMS/releases)——解压覆盖到代码根目录即可原地升级，不影响 `config/my.php`、附件与缓存；以 root 解压会同时重置 `config/`、`tmp/`、`www/data/` 的属主，解压后执行 `chown -R www:www config tmp www/data`（按实际运行用户调整）。
 
 社区版之间的升级步骤：
 

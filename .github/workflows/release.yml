@@ -75,8 +75,9 @@ jobs:
           mkdir -p dist staging/tmp
 
           # 1) 全量交付包：顶层直出（解压到部署目录即覆盖），.github/.gitignore 按 .gitattributes 排除
-          git archive --format=tar --owner=0 --group=0 -o dist/full.tar HEAD
-          # git 不跟踪空目录：补 tmp/ 条目，保证全新安装的目录可写检查能通过
+          #    注：git archive 不支持 --owner/--group，条目属主默认为 root/root
+          git archive --format=tar -o dist/full.tar HEAD
+          # git 不跟踪空目录（tmp/ 已取消跟踪，属运行期数据）：补 tmp/ 条目，保证全新安装的目录可写检查能通过
           tar --append --file=dist/full.tar --owner=0 --group=0 -C staging tmp
           gzip -9 dist/full.tar
           mv dist/full.tar.gz "dist/ZenTaoPMS-${V}-full.tar.gz"
@@ -150,11 +151,14 @@ jobs:
           cd /www/wwwroot/dev.wenyinos
           tar -xzf ZenTaoPMS-{{VERSION}}-full.tar.gz
 
-          # 2) 执行升级（CLI 通道，免放开 Web 入口；用 php-fpm 用户执行避免属主问题）
+          # 2) 修正可写目录属主（以 root 解压会重置 config/tmp/www/data 的属主与权限）
+          chown -R www:www config tmp www/data
+
+          # 3) 执行升级（CLI 通道，免放开 Web 入口；用 php-fpm 用户执行）
           sudo -u www /www/server/php/85/bin/php bin/ztcli 'http://dev.wenyinos.com/upgrade-execute.html'
           sudo -u www /www/server/php/85/bin/php bin/ztcli 'http://dev.wenyinos.com/upgrade-afterExec.html'
 
-          # 3) 重载 php-fpm（清 opcache）
+          # 4) 重载 php-fpm（清 opcache）
           ```
 
           - 升级来源仅限 **9.8.3_1**（首个社区定制版）及后续社区版本；官方禅道数据库会被明确拒绝，防止数据损坏。

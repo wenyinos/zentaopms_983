@@ -85,7 +85,7 @@ This build has its **own version series**: it ships the ZenTao 9.8.3 business co
 - **Upgrading from an official ZenTao database is refused** — `upgrade.php` shows a "无法升级" (cannot upgrade) page naming the detected version instead of proceeding.
 - The one-click flow is `backup warning → 开始升级 (Start) → 升级成功 (done)`; the historical `db/update*.sql` chain and per-version selectors are gone. New releases that need schema changes add one branch in `module/upgrade/model.php::execute()`.
 
-Prebuilt full packages (complete source + the `zentao-mcp-py/` MCP client, with `SHA256SUMS`) are attached to every release on the [Releases page](https://github.com/wenyinos/ZenTaoPMS/releases) — extracted over the code root they upgrade in place without touching `config/my.php`, attachments or caches.
+Prebuilt full packages (complete source + the `zentao-mcp-py/` MCP client, with `SHA256SUMS`) are attached to every release on the [Releases page](https://github.com/wenyinos/ZenTaoPMS/releases). Extract over the code root to upgrade in place — `config/my.php`, attachments and caches are left untouched; as root extraction also resets the ownership of `config/`, `tmp/` and `www/data/`, run `chown -R www:www config tmp www/data` (adjust the user) afterwards.
 
 Steps for a WenYinOS → WenYinOS upgrade:
 
