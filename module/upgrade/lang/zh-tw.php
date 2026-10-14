@@ -14,9 +14,7 @@ $lang->upgrade->result  = '升級結果';
 $lang->upgrade->fail    = '升級失敗';
 $lang->upgrade->success = '升級成功';
 $lang->upgrade->tohome  = '訪問禪道';
-$lang->upgrade->license = '禪道項目管理軟件已更換授權協議至 Z PUBLIC LICENSE(ZPL) 1.2';
 $lang->upgrade->warnning= '警告';
-$lang->upgrade->checkExtension  = '檢查插件';
 $lang->upgrade->warnningContent = <<<EOT
 <p>升級有危險，請先備份資料庫，以防萬一。</p>
 <pre>
@@ -35,14 +33,6 @@ $lang->upgrade->setStatusFile      = '<h4>升級之前請先完成下面的操�
                                       <li>或者刪掉"<strong style="color:#ed980f">%s</strong>" 這個檔案 ，重新創建一個<strong style="color:#ed980f">ok.txt</strong>檔案，不需要內容。</li>
                                       </ul>
                                       <p><strong style="color:red">我已經仔細閲讀上面提示且完成上述工作，<a href="upgrade.php">繼續更新</a></strong></p>';
-$lang->upgrade->selectVersion = '選擇版本';
-$lang->upgrade->continue      = '繼續';
-$lang->upgrade->noteVersion   = "務必選擇正確的版本，否則會造成數據丟失。";
-$lang->upgrade->fromVersion   = '原來的版本';
-$lang->upgrade->toVersion     = '升級到';
-$lang->upgrade->confirm       = '確認要執行的SQL語句';
-$lang->upgrade->sureExecute   = '確認執行';
-$lang->upgrade->forbiddenExt  = '以下插件與新版本不兼容，已經自動禁用：';
-$lang->upgrade->updateFile    = '需要更新附件信息。';
-
-include dirname(__FILE__) . '/version.php';
+$lang->upgrade->fromVersion = '當前版本';
+$lang->upgrade->toVersion   = '升級到';
+$lang->upgrade->sureExecute = '開始升級';

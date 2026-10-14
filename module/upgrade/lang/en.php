@@ -14,9 +14,7 @@ $lang->upgrade->result  = 'Result';
 $lang->upgrade->fail    = 'Failed';
 $lang->upgrade->success = 'Upgraded';
 $lang->upgrade->tohome  = 'Visit ZenTao';
-$lang->upgrade->license = 'Zentao PMS has started using Z PUBLIC LICENSE(ZPL) 1.2.';
 $lang->upgrade->warnning= 'Warning!';
-$lang->upgrade->checkExtension  = 'Check Extension';
 $lang->upgrade->warnningContent = <<<EOT
 <p>Please backup your database before upgrading ZenTao!</p>
 <pre>
@@ -35,14 +33,6 @@ $lang->upgrade->setStatusFile      = '<h4>Please finish the following action</h4
                                       <li>Or delete "<strong style="color:#ed980f">%s</strong>" and create <strong style="color:#ed980f">ok.txt</strong> and leave it blank.</li>
                                       </ul>
                                       <p><strong style="color:red">I have read and done as instructed above. <a href="upgrade.php">Continue update.</a></strong></p>';
-$lang->upgrade->selectVersion = 'Select Version';
-$lang->upgrade->continue      = 'Continue';
-$lang->upgrade->noteVersion   = "Select the compatible version, or it might cause data loss.";
-$lang->upgrade->fromVersion   = 'From Version';
-$lang->upgrade->toVersion     = 'Upgrade to Version';
-$lang->upgrade->confirm       = 'Confirm SQL';
-$lang->upgrade->sureExecute   = 'Execute';
-$lang->upgrade->forbiddenExt  = 'Extension is not compatible with the upgraded version. It has been deactivated:';
-$lang->upgrade->updateFile    = 'Attachment information has to be updated.';
-
-include dirname(__FILE__) . '/version.php';
+$lang->upgrade->fromVersion = 'Current Version';
+$lang->upgrade->toVersion   = 'Upgrade to';
+$lang->upgrade->sureExecute = 'Start Upgrade';

@@ -72,6 +72,22 @@ No SQL import is needed — the built-in wizard creates the database, tables, co
 > - To enable the SSO connector and the MCP module's extension hooks, add `$config->framework->extensionLevel = 1;` to `config/my.php` (see the sections above).
 > - If the site is served through a web server, configure the pseudo-static rewrite below before using clean URLs.
 
+## Upgrade
+
+This build has its **own version series**: it ships the ZenTao 9.8.3 business core with the 10.1 interface, so it is compatible with neither upstream 9.8.3 nor upstream 10.x data layouts. The upgrade script is therefore deliberately narrow:
+
+- **Supported sources:** `9.8.3_1` (the first WenYinOS build) and later WenYinOS releases (`9.9.x` onward).
+- **Upgrading from an official ZenTao database is refused** — `upgrade.php` shows a "无法升级" (cannot upgrade) page naming the detected version instead of proceeding.
+- The one-click flow is `backup warning → 开始升级 (Start) → 升级成功 (done)`; the historical `db/update*.sql` chain and per-version selectors are gone. New releases that need schema changes add one branch in `module/upgrade/model.php::execute()`.
+
+Steps for a WenYinOS → WenYinOS upgrade:
+
+1. **Back up the database** first (the wizard repeats this warning).
+2. Deploy the new code over the old tree.
+3. Create the safe-file gate: `touch www/ok.txt` (or delete an `ok.txt` older than 1 hour — the flow refuses to run without a fresh one).
+4. Open `http://<your-host>/upgrade.php` and click through; the page shows the current and target versions before you confirm.
+5. The installer files are then dead weight again — remove or block them (see step 5 of Installation). The sample Nginx config already returns 404 for `upgrade.php`.
+
 ## CLI Helpers (optional)
 ```bash
 bash bin/init.sh /usr/bin/php http://127.0.0.1:8080    # generate bin/backup.sh, bin/checkdb.sh, ...
@@ -83,7 +99,7 @@ php bin/ztcli 'http://127.0.0.1:8080/index.php?m=admin&f=checkdb'
 - `framework/`: core runtime, base classes, routing
 - `www/`: web entry points and static assets
 - `config/`: runtime configuration
-- `db/`: SQL schema/bootstrap resources
+- `db/`: SQL schema/bootstrap resources (fresh install only — `zentao.sql`, `demo.sql`)
 - `extension/`: extension and customization entry points
 - `tmp/`: runtime cache/log/temp data
 
