@@ -62,7 +62,7 @@ jobs:
             case " $skip " in *" $f "*) continue;; esac
             total=$((total + 1))
             php -l "$f" >/dev/null 2>&1 || { echo "::error::Lint failed: $f"; fail=1; }
-          done < <(find . -path ./.git -prune -o -name '*.php' -print0)
+          done < <(find . \( -path ./.git -o -path ./tmp -o -path ./www/data \) -prune -o -name '*.php' -print0)
           echo "linted $total php files"
           exit $fail
 
