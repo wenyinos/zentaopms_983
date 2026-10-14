@@ -75,7 +75,7 @@ class upgrade extends control
      * @access public
      * @return void
      */
-    public function afterExec($fromVersion)
+    public function afterExec($fromVersion = '')
     {
         $this->upgrade->checkSource();
 

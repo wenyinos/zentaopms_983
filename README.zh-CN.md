@@ -86,6 +86,8 @@ WenYinOS 禅道项目管理系统基于经典 ZenTao 单体架构，采用 PHP +
 - **官方禅道数据库会被拒绝升级**——`upgrade.php` 会显示「无法升级」页面并给出检测到的版本号，不做任何修改。
 - 一键流程为 备份警告 → 开始升级 → 升级成功；历史 `db/update*.sql` 链路与逐版本选择器均已移除，后续版本如需变更库结构，在 `module/upgrade/model.php::execute()` 中追加一个分支即可。
 
+完整交付包（全量源码 + `zentao-mcp-py/` MCP 客户端，附 `SHA256SUMS` 校验）随每个版本发布在 [Releases 页面](https://github.com/wenyinos/ZenTaoPMS/releases)——解压覆盖到代码根目录即可原地升级，不影响 `config/my.php`、附件与缓存。
+
 社区版之间的升级步骤：
 
 1. **先备份数据库**（向导页会重复此警告）。
@@ -96,7 +98,7 @@ WenYinOS 禅道项目管理系统基于经典 ZenTao 单体架构，采用 PHP +
    - **CLI 方式（无需放开任何 Web 入口）**：用站点相同的 PHP 二进制执行两条命令——CLI 通道不受 Web 服务器封禁影响，也无需 `ok.txt`：
      ```bash
      php bin/ztcli 'http://<你的地址>/upgrade-execute.html'
-     php bin/ztcli 'http://<你的地址>/upgrade-afterExec-<当前版本>.html'   # 如 upgrade-afterExec-9_8_3_1.html
+     php bin/ztcli 'http://<你的地址>/upgrade-afterExec.html'
      ```
      第一条执行升级动作，第二条把新版本号写入数据库。
 5. 仅 Web 方式需要恢复现场（恢复 nginx 封禁或再次删除安装文件）；CLI 方式无此步骤。
@@ -148,6 +150,7 @@ rewrite /(.*)$ /index.php/$1 last;
 - 默认流程不依赖 Node/Composer 构建管线。
 - 自定义功能优先通过 `extension/` 增量实现。
 - 变更后建议通过页面流程与 `ztcli` 双重验证。
+- **发布已自动化**：推送 `v9.*` tag（如 `v9.9.0`）后，`.github/workflows/release.yml` 会全量 lint PHP、校验 tag 与 `config/config.php` 的 `$config->version`、`VERSION` 三处一致，然后把全量源码包（顶层布局，可直接覆盖部署）与独立 MCP 客户端包挂到 GitHub Release。打 tag 前先同步这三处版本号。
 
 ## 安全与运维
 - 将 `tmp/` 与运行期数据排除在版本控制之外。

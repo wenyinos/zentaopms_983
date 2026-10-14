@@ -1,0 +1,183 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v9.*'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: '要发布的已存在 tag（例如 v9.9.0）'
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    env:
+      TAG: ${{ github.event_name == 'push' && github.ref_name || inputs.tag }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event_name == 'push' && github.ref_name || inputs.tag }}
+
+      - name: Ensure PHP CLI
+        run: |
+          if ! command -v php >/dev/null 2>&1; then
+            sudo apt-get update -qq
+            sudo apt-get install -y -qq php-cli
+          fi
+          php -v | head -1
+
+      - name: Resolve version and verify against tag
+        id: ver
+        run: |
+          set -euo pipefail
+          version="${TAG#v}"
+          config_version=$(grep -oP "config->version\s*=\s*'\K[^']+" config/config.php | head -1)
+          file_version=$(tr -d '[:space:]' < VERSION)
+          client_version=$(grep -oP "^VERSION\s*=\s*'\K[^']+" zentao-mcp-py/mcp.py | head -1)
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "client_version=$client_version" >> "$GITHUB_OUTPUT"
+          echo "tag=$TAG / config=$config_version / VERSION=$file_version / mcp-client=$client_version"
+          test "$version" = "$config_version" || { echo "::error::tag $TAG 与 config/config.php 版本 $config_version 不一致"; exit 1; }
+          test "$version" = "$file_version"  || { echo "::error::tag $TAG 与 VERSION 文件 $file_version 不一致"; exit 1; }
+
+      - name: PHP lint (all sources)
+        run: |
+          set -euo pipefail
+          # module/*/ext/model/ 下两个文件是"部分类体"扩展（框架运行时并入类再执行），不单独参与 lint
+          skip='./module/common/ext/model/mcp.php ./module/user/ext/model/wyauth.php'
+          fail=0
+          total=0
+          while IFS= read -r -d '' f; do
+            case " $skip " in *" $f "*) continue;; esac
+            total=$((total + 1))
+            php -l "$f" >/dev/null 2>&1 || { echo "::error::Lint failed: $f"; fail=1; }
+          done < <(find . -path ./.git -prune -o -name '*.php' -print0)
+          echo "linted $total php files"
+          exit $fail
+
+      - name: Build packages
+        run: |
+          set -euo pipefail
+          V="${{ steps.ver.outputs.version }}"
+          C="${{ steps.ver.outputs.client_version }}"
+          rm -rf dist staging
+          mkdir -p dist staging/tmp
+
+          # 1) 全量交付包：顶层直出（解压到部署目录即覆盖），.github/.gitignore 按 .gitattributes 排除
+          git archive --format=tar --owner=0 --group=0 -o dist/full.tar HEAD
+          # git 不跟踪空目录：补 tmp/ 条目，保证全新安装的目录可写检查能通过
+          tar --append --file=dist/full.tar --owner=0 --group=0 -C staging tmp
+          gzip -9 dist/full.tar
+          mv dist/full.tar.gz "dist/ZenTaoPMS-${V}-full.tar.gz"
+
+          # 2) MCP 客户端独立包（服务端模块 module/mcp 随全量包发布，不单独出包）
+          git archive --format=zip --prefix=zentao-mcp-py/ -o "dist/zentao-mcp-client-${C}.zip" HEAD:zentao-mcp-py
+
+          # 3) 校验和
+          (cd dist && sha256sum ./*.tar.gz ./*.zip > SHA256SUMS)
+          ls -la dist/
+
+      - name: Verify package contents
+        run: |
+          set -euo pipefail
+          V="${{ steps.ver.outputs.version }}"
+          C="${{ steps.ver.outputs.client_version }}"
+          rm -rf verify
+          mkdir -p verify
+          tar -xzf "dist/ZenTaoPMS-${V}-full.tar.gz" -C verify
+
+          # 关键文件必须在
+          test -f verify/config/config.php
+          test -f verify/www/index.php
+          test -f verify/www/upgrade.php
+          test -f verify/module/upgrade/model.php
+          test -f verify/module/upgrade/control.php
+          test -f verify/module/mcp/model.php
+          test -f verify/zentao-mcp-py/mcp.py
+          test -f verify/bin/ztcli
+          test -f verify/www/ok.txt
+          test -d verify/tmp
+          test -d verify/www/data
+          # 敏感/无关内容必须不在
+          test ! -e verify/config/my.php
+          test ! -e verify/.github
+          test ! -e verify/.gitignore
+          test ! -e verify/.gitattributes
+          # 版本一致性
+          grep -q "$V" verify/config/config.php
+          # 升级守卫就位（社区版白名单 + 官方版拒绝）
+          grep -q "isWenyinVersion" verify/module/upgrade/model.php
+          grep -q "printUnsupportedSource" verify/module/upgrade/model.php
+          # 客户端包结构
+          unzip -l "dist/zentao-mcp-client-${C}.zip" | grep -q "zentao-mcp-py/mcp.py"
+          # 校验和自检
+          (cd dist && sha256sum -c SHA256SUMS)
+
+      - name: Publish GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          V="${{ steps.ver.outputs.version }}"
+          C="${{ steps.ver.outputs.client_version }}"
+          cat > notes.md <<'EOF'
+          ## ZenTaoPMS {{VERSION}} 全量交付包
+
+          **9.8.3 功能内核 + 10.1 全新界面**（非官方社区定制版）。
+          本包可直接解压到线上部署目录覆盖，然后执行升级。
+
+          ### 包内组成
+          - 完整源码（`framework/` `module/` `www/` `lib/` 等全量文件）
+          - MCP 服务端模块 `module/mcp/`（标配组件，无需单独部署）
+          - MCP Python 客户端 `zentao-mcp-py/`（单文件，仅需 `python3` + `git`）；也提供独立客户端包 `zentao-mcp-client-{{CLIENT_VERSION}}.zip`
+
+          ### 覆盖部署（升级既有站点）
+          ```bash
+          # 0) 先备份数据库！
+
+          # 1) 解压覆盖（不影响 config/my.php、附件与各 .env 密钥）
+          cd /www/wwwroot/dev.wenyinos
+          tar -xzf ZenTaoPMS-{{VERSION}}-full.tar.gz
+
+          # 2) 执行升级（CLI 通道，免放开 Web 入口；用 php-fpm 用户执行避免属主问题）
+          sudo -u www /www/server/php/85/bin/php bin/ztcli 'http://dev.wenyinos.com/upgrade-execute.html'
+          sudo -u www /www/server/php/85/bin/php bin/ztcli 'http://dev.wenyinos.com/upgrade-afterExec.html'
+
+          # 3) 重载 php-fpm（清 opcache）
+          ```
+
+          - 升级来源仅限 **9.8.3_1**（首个社区定制版）及后续社区版本；官方禅道数据库会被明确拒绝，防止数据损坏。
+          - Web 向导升级：需临时放行 nginx 的 `install|upgrade|checktable` 封禁行并 `touch www/ok.txt`，完成后立即恢复封禁。
+          - 覆盖式解压只增改、不删除文件；历史遗留的 `db/update*.sql` 等废弃文件残留无害，可手动清理。
+
+          ### 完整性校验
+          ```bash
+          sha256sum -c SHA256SUMS
+          ```
+
+          ### 全新安装
+          解压后按 README「安装」章节执行：`chmod -R 777 tmp www/data config` → 浏览器打开 `/install.php` 完成后删除/封禁安装入口。
+
+          > 本版本号 9.9.0 为社区版专属（上游不存在该版本）；内核行为与禅道 9.8.3 一致，界面为 10.1 移植，主题：WenYin（默认）/ 亮蓝 / 黑莓。
+          EOF
+          sed -i "s/{{VERSION}}/${V}/g; s/{{CLIENT_VERSION}}/${C}/g" notes.md
+
+          if gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            gh release upload "$TAG" dist/*.tar.gz dist/*.zip dist/SHA256SUMS --repo "$GITHUB_REPOSITORY" --clobber
+          else
+            gh release create "$TAG" dist/*.tar.gz dist/*.zip dist/SHA256SUMS \
+              --repo "$GITHUB_REPOSITORY" \
+              --title "ZenTaoPMS ${V}（全量交付包 · 9.8.3 内核 + 10.1 界面）" \
+              --notes-file notes.md
+          fi

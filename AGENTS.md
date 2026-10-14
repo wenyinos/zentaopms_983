@@ -18,6 +18,9 @@ No Node/Composer build pipeline is defined in this snapshot. Use PHP and bundled
 - `bash bin/init.sh /usr/bin/php http://127.0.0.1:8080` — generate CLI helper scripts (`bin/backup.sh`, `bin/checkdb.sh`, etc.).
 - `php bin/ztcli 'http://127.0.0.1:8080/index.php?m=admin&f=checkdb'` — execute a module action from CLI.
 
+## Release Automation
+Pushing a `v9.*` tag (e.g. `v9.9.0`) triggers `.github/workflows/release.yml`, which lints all PHP (the two partial-class ext files `module/common/ext/model/mcp.php` and `module/user/ext/model/wyauth.php` are excluded by design — the framework merges them into a class at runtime), checks the tag against `config/config.php::$config->version` and the `VERSION` file, and attaches to the GitHub Release: the full source tarball (top-level layout so it can be extracted straight over a deployment; `config/my.php`, attachments and `.env` keys are not in the archive, and an empty `tmp/` entry is injected) plus the standalone `zentao-mcp-py` client zip. Bump the three version markers together before tagging.
+
 ## Coding Style & Naming Conventions
 - Follow existing PHP style: 4-space indentation, K&R braces, and guarded conditionals.
 - Keep module names lowercase (`module/bug`, `module/testtask`).

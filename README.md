@@ -85,6 +85,8 @@ This build has its **own version series**: it ships the ZenTao 9.8.3 business co
 - **Upgrading from an official ZenTao database is refused** — `upgrade.php` shows a "无法升级" (cannot upgrade) page naming the detected version instead of proceeding.
 - The one-click flow is `backup warning → 开始升级 (Start) → 升级成功 (done)`; the historical `db/update*.sql` chain and per-version selectors are gone. New releases that need schema changes add one branch in `module/upgrade/model.php::execute()`.
 
+Prebuilt full packages (complete source + the `zentao-mcp-py/` MCP client, with `SHA256SUMS`) are attached to every release on the [Releases page](https://github.com/wenyinos/ZenTaoPMS/releases) — extracted over the code root they upgrade in place without touching `config/my.php`, attachments or caches.
+
 Steps for a WenYinOS → WenYinOS upgrade:
 
 1. **Back up the database** first (the wizard repeats this warning).
@@ -95,7 +97,7 @@ Steps for a WenYinOS → WenYinOS upgrade:
    - **CLI (no web exposure needed):** with the same PHP binary the site uses, run two commands — this path is unaffected by the web-server block and skips the safe-file gate:
      ```bash
      php bin/ztcli 'http://<your-host>/upgrade-execute.html'
-     php bin/ztcli 'http://<your-host>/upgrade-afterExec-<installedVersion>.html'   # e.g. upgrade-afterExec-9_8_3_1.html
+     php bin/ztcli 'http://<your-host>/upgrade-afterExec.html'
      ```
      The first performs the upgrade work, the second stamps the new version into the database.
 5. Nothing to restore for the CLI path; for the web path, re-enable the nginx rule (or re-remove the installer files) immediately after finishing.
@@ -147,6 +149,7 @@ rewrite /(.*)$ /index.php/$1 last;
 - This repository does not depend on a Node/Composer build pipeline in its default flow.
 - Prefer incremental changes in `extension/` for custom behavior.
 - Validate affected flows via UI plus `ztcli` checks.
+- **Releases** are automated: pushing a `v9.*` tag (e.g. `v9.9.0`) makes `.github/workflows/release.yml` lint every PHP file, verify the tag equals `config/config.php`'s `$config->version` and `VERSION`, then attach the full source package (top-level layout, extract-over-deploy ready) and the standalone MCP client zip to the GitHub Release. Keep those three version markers in sync before tagging.
 
 ## Security and Operations
 - Keep `tmp/` and runtime data out of version control.
