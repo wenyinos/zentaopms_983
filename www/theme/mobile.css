@@ -120,9 +120,13 @@
     .datetimepicker, .datepicker { max-width: 100vw; }
 
     /* ========== 十二、底部 ========== */
-    /* 桌面端 #poweredBy 为绝对定位（右上悬浮），窄屏下会与面包屑重叠：改为常规流居中堆叠 */
-    #footer { font-size: 12px; }
+    /* 桌面端 #footer 为 fixed 固定底部、高 40px（body 以 60px padding-bottom 补偿）；
+       窄屏下内容需两行堆叠（约 56px）：超出固定高度且 fixed 不撑开文档，末行被裁切，
+       且 #poweredBy 绝对定位会与面包屑重叠。移动端整体改为常规流 + 高度自适应。 */
+    #footer { position: static !important; height: auto !important; font-size: 12px; }
     #footer .container { text-align: center; position: static; }
     #footer .breadcrumb { padding: 6px 0 0; margin: 0; white-space: normal; overflow-wrap: anywhere; }
     #footer #poweredBy { position: static; padding: 6px 0 8px; }
+    /* 固定页脚已改为常规流：去掉 body 的 60px 补偿留白 */
+    body { padding-bottom: 0 !important; }
 }

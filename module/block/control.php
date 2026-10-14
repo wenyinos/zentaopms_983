@@ -200,7 +200,10 @@ class block extends control
      */
     public function dashboard($module)
     {
-        if($this->loadModel('user')->isLogon()) $this->session->set('blockModule', $module);
+        /* 记录当前仪表盘模块。block 构造函数用 session->blockModule 识别站内自调用：
+           未登录访客（游客组可浏览仪表盘）也必须记录，否则内联渲染 printBlock 时
+           会被守卫 die('') 静默中断整个请求（页面截断、区块与页脚丢失）。 */
+        $this->session->set('blockModule', $module);
         $blocks = $this->block->getBlockList($module);
         $inited = empty($this->config->$module->common->blockInited) ? '' : $this->config->$module->common->blockInited;
 
