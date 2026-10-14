@@ -821,12 +821,12 @@ class commonModel extends model
             if(isset($order[1]) and $order[1] == 'asc')
             {
                 $orderBy   = "{$order[0]}_desc";
-                $className = $isMobile ? 'SortUp' : 'headerSortDown';
+                $className = $isMobile ? 'SortUp' : 'sort-down';
             }
             else
             {
                 $orderBy = "{$order[0]}_asc";
-                $className = $isMobile ? 'SortDown' : 'headerSortUp';
+                $className = $isMobile ? 'SortDown' : 'sort-up';
             }
         }
         else
@@ -835,7 +835,10 @@ class commonModel extends model
             $className = 'header';
         }
         $link = helper::createLink($module, $method, sprintf($vars, $orderBy));
-        echo $isMobile ? html::a($link, $label, '', "class='$className'") : "<div class='$className'>" . html::a($link, $label) . '</div>';
+        /* UI 10.1：排序链接直接输出 inline <a>（9.8.3 旧实现用 <div> 包裹，block 级会让
+           表头内的复选框与文字换行错位）。类名同步为 sort-up/sort-down，配套 10.1 皮肤的
+           .table.has-sort-head 箭头样式。 */
+        echo $isMobile ? html::a($link, $label, '', "class='$className'") : html::a($link, $label, '', "class='$className'");
     }
 
     /**

@@ -1168,8 +1168,13 @@ class baseCSS
     public static function import($url, $attrib = '')
     {
         global $config;
+
+        /* 已带查询参数（如 ?t=文件指纹）时用 & 追加版本号，与 js::import 行为一致。 */
+        $mark = '?';
+        if(strpos($url, '?') !== false) $mark = '&';
+
         if(!empty($attrib)) $attrib = ' ' . $attrib;
-        echo "<link rel='stylesheet' href='$url?v={$config->version}' type='text/css' media='screen'{$attrib} />\n";
+        echo "<link rel='stylesheet' href='$url{$mark}v={$config->version}' type='text/css' media='screen'{$attrib} />\n";
     }
 
     /**

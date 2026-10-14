@@ -1,4 +1,8 @@
-#mainContent {padding-top: 50px!important;}
-#mainContent .main-header {display: none;}
+/* UI 10.1：关于页样式
+   原实现无条件隐藏 .main-header 并留 50px 上边距，导致"关于禅道"标题不可见、顶部大片空白
+   （弹窗 iframe 与独立访问加载的是同一 URL，CSS 无法区分场景）。
+   现统一显示页内标题并收紧留白，两种场景观感一致。 */
+#mainContent {padding-top: 20px!important;}
+#mainContent .main-header {display: block;}
 #mainContent .copyright {line-height: 20px;}
 #mainContent .copyright a {vertical-align: baseline;}

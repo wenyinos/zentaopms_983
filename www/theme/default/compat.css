@@ -325,3 +325,14 @@ fieldset.fieldset-pure{background:0;padding:0;border:0;padding-top:5px}
 #search{padding:2px 8px;height:28px}
 #dropMenu.searching ul>li.show-search{display:block}
 #allchecker,#reversechecker{padding-right:5px;padding-left:5px}
+
+/* ========== 5. 表单/表头修正（10.1 皮肤规则与老模板的冲突） ========== */
+/* 10.1 皮肤将 .table-form 内的 textarea 固定为 32px，导致老模板的多行文本框（rows=N）
+   被压成单行（如 MCP 密钥页的客户端配置）。恢复按 rows 自适应高度。 */
+.table-form textarea.form-control{height:auto;min-height:32px}
+/* 9.8.3 老模板的表头排序链接为 block 级 <div>，在 10.1 的 has-sort-head 表头中
+   会与复选框换行错位；统一为 inline 呈现（printOrderLink 已改用 10.1 输出，此处兜底历史片段）。 */
+.table.has-sort-head thead>tr>th>.header,.table.has-sort-head thead>tr>th>.headerSortUp,.table.has-sort-head thead>tr>th>.headerSortDown{display:inline-block;vertical-align:middle}
+.table.has-sort-head thead>tr>th>.headerSortUp a:after,.table.has-sort-head thead>tr>th>.headerSortDown a:after{font-family:ZentaoIcon;font-weight:normal;font-size:12px;margin-left:2px}
+.table.has-sort-head thead>tr>th>.headerSortUp a:after{content:"\f0de";color:#6f42c1}
+.table.has-sort-head thead>tr>th>.headerSortDown a:after{content:"\f0dd";color:#6f42c1}

@@ -46,7 +46,11 @@ $onlybody     = zget($_GET, 'onlybody', 'no');
       js::import($jsRoot . 'all.js');
       js::import($jsRoot . 'compat.js');
       css::import($defaultTheme . $clientLang . '.' . $clientThemeName . '.css');
-      css::import($defaultTheme . 'compat.css');
+      /* 兼容层随 UI 调整会持续更新，用文件修改时间作缓存指纹（内容变 URL 即变），
+         避免 v=9.9.0 这类固定版本号导致浏览器一直用旧缓存。 */
+      $compatFile = $this->app->getWwwRoot() . 'theme/default/compat.css';
+      $compatTs   = file_exists($compatFile) ? filemtime($compatFile) : 0;
+      css::import($defaultTheme . 'compat.css?t=' . $compatTs);
   }
 
   if(!defined('IN_INSTALL') and commonModel::isTutorialMode())
