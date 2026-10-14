@@ -43,14 +43,17 @@ $onlybody     = zget($_GET, 'onlybody', 'no');
   }
   else
   {
-      js::import($jsRoot . 'all.js');
-      js::import($jsRoot . 'compat.js');
-      css::import($defaultTheme . $clientLang . '.' . $clientThemeName . '.css');
       /* 兼容层随 UI 调整会持续更新，用文件修改时间作缓存指纹（内容变 URL 即变），
          避免 v=9.9.0 这类固定版本号导致浏览器一直用旧缓存。 */
-      $compatFile = $this->app->getWwwRoot() . 'theme/default/compat.css';
-      $compatTs   = file_exists($compatFile) ? filemtime($compatFile) : 0;
-      css::import($defaultTheme . 'compat.css?t=' . $compatTs);
+      $compatCssFile = $this->app->getWwwRoot() . 'theme/default/compat.css';
+      $compatCssTs   = file_exists($compatCssFile) ? filemtime($compatCssFile) : 0;
+      $compatJsFile  = $this->app->getWwwRoot() . 'js/compat.js';
+      $compatJsTs    = file_exists($compatJsFile) ? filemtime($compatJsFile) : 0;
+
+      js::import($jsRoot . 'all.js');
+      js::import($jsRoot . 'compat.js?t=' . $compatJsTs);
+      css::import($defaultTheme . $clientLang . '.' . $clientThemeName . '.css');
+      css::import($defaultTheme . 'compat.css?t=' . $compatCssTs);
   }
 
   if(!defined('IN_INSTALL') and commonModel::isTutorialMode())
