@@ -61,10 +61,15 @@ No SQL import is needed — the built-in wizard creates the database, tables, co
    4. **Database config** — host, port, user, password, database name, table prefix. The wizard creates the database and all tables automatically; leave "清空现有数据" unchecked unless reinstalling over existing data
    5. **Save config & admin account** — the wizard writes `config/my.php` (verify the on-screen content is saved to that path), then fill in company name, admin account and password (optionally import demo data)
 4. After "安装成功" (Installation successful), log in with the admin account you just created.
-5. **Security — remove the installers from the web root:**
+5. **Security — close the installer entry points.** Either delete the files:
    ```bash
    rm www/install.php www/upgrade.php
    ```
+   …or keep them and block them at the web server — a hardened config 404s all three residue entries, case- and path-info-insensitive:
+   ```nginx
+   location ~* /(install|upgrade|checktable)\.php(/|$) { return 404; }
+   ```
+   With the block in place, an install or upgrade needs **this one line temporarily commented out** (or narrowed to `allow <your-ip>; deny all;`), then restored right after with an `nginx -s reload`. Never lift the `api`/`editor` blocks. The Upgrade section has the exact web procedure and a CLI path that needs no web exposure at all.
 6. Optional post-install check: visit `admin → checkdb` ("数据库" consistency check) — all tables should report OK.
 
 > Notes
@@ -86,14 +91,14 @@ Steps for a WenYinOS → WenYinOS upgrade:
 2. Deploy the new code over the old tree.
 3. Create the safe-file gate: `touch www/ok.txt` (or delete an `ok.txt` older than 1 hour — the flow refuses to run without a fresh one).
 4. Run the upgrade — either the web wizard or the CLI:
-   - **Web:** open `http://<your-host>/upgrade.php` and click through; the page shows the current and target versions before you confirm.
-   - **CLI (no web entry needed):** with the same PHP binary the site uses, run two commands — useful when `upgrade.php` is blocked at the web server (the recommended production state) and the safe-file gate can be skipped:
+   - **Web:** if the web server blocks `upgrade.php` (the recommended production state — see Installation step 5), first **temporarily comment out that one 404 rule** (or narrow it to `allow <your-ip>; deny all;`) and reload nginx. Open `http://<your-host>/upgrade.php`, follow the wizard (the current and target versions are shown before you confirm), then **restore the rule and reload again**. Keep the `api`/`editor` blocks enabled throughout.
+   - **CLI (no web exposure needed):** with the same PHP binary the site uses, run two commands — this path is unaffected by the web-server block and skips the safe-file gate:
      ```bash
      php bin/ztcli 'http://<your-host>/upgrade-execute.html'
      php bin/ztcli 'http://<your-host>/upgrade-afterExec-<installedVersion>.html'   # e.g. upgrade-afterExec-9_8_3_1.html
      ```
      The first performs the upgrade work, the second stamps the new version into the database.
-5. Remove or block the installer files again if you had temporarily exposed them (see step 5 of Installation). The sample Nginx config already returns 404 for `upgrade.php`.
+5. Nothing to restore for the CLI path; for the web path, re-enable the nginx rule (or re-remove the installer files) immediately after finishing.
 
 ## CLI Helpers (optional)
 ```bash
@@ -146,6 +151,7 @@ rewrite /(.*)$ /index.php/$1 last;
 ## Security and Operations
 - Keep `tmp/` and runtime data out of version control.
 - Review file permissions for `config/`, `tmp/`, and upload/runtime directories in deployment.
+- Keep the install/upgrade residue (`install.php`, `upgrade.php`, `checktable.php`) and the `api`/`editor` debug entry points blocked at runtime; lift only the residue rule for an install/upgrade and restore it immediately (see Installation step 5).
 - Run DB consistency checks after database-related changes.
 
 ## License
