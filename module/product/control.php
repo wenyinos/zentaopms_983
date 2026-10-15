@@ -470,7 +470,7 @@ class product extends control
      * @access public
      * @return void
      */
-    public function dynamic($productID = 0, $type = 'today', $param = '', $orderBy = 'date_desc', $recTotal = 0, $recPerPage = 20, $pageID = 1)
+    public function dynamic($productID = 0, $type = 'today', $param = '', $recTotal = 0, $date = '', $direction = 'next')
     {
         /* Save session. */
         $uri   = $this->app->getURI(true);
@@ -488,15 +488,18 @@ class product extends control
         $this->product->setMenu($this->products, $productID);
 
         /* Append id for secend sort. */
-        $sort = $this->loadModel('common')->appendOrder($orderBy);
+        $orderBy = $direction == 'next' ? 'date_desc' : 'date_asc';
+        $sort    = $this->loadModel('common')->appendOrder($orderBy);
 
-        /* Set the pager. */
+        /* Load pager. */
         $this->app->loadClass('pager', $static = true);
-        $pager = pager::init($recTotal, $recPerPage, $pageID);
+        $pager = new pager($recTotal, $recPerPage = 50, $pageID = 1);
 
         /* Set the user and type. */
         $account = $type == 'account' ? $param : 'all';
         $period  = $type == 'account' ? 'all'  : $type;
+        $date    = empty($date) ? '' : date('Y-m-d', $date);
+        $actions = $this->loadModel('action')->getDynamic($account, $period, $sort, $pager, $productID, 'all', $date, $direction);
 
         /* The header and position. */
         $this->view->title      = $this->products[$productID] . $this->lang->colon . $this->lang->product->dynamic;
@@ -504,14 +507,15 @@ class product extends control
         $this->view->position[] = $this->lang->product->dynamic;
 
         /* Assign. */
-        $this->view->productID = $productID;
-        $this->view->type      = $type;
-        $this->view->users     = $this->loadModel('user')->getPairs('noletter|nodeleted');
-        $this->view->account   = $account;
-        $this->view->orderBy   = $orderBy;
-        $this->view->pager     = $pager;
-        $this->view->param     = $param;
-        $this->view->actions   = $this->loadModel('action')->getDynamic($account, $period, $sort, $pager, $productID);
+        $this->view->productID  = $productID;
+        $this->view->type       = $type;
+        $this->view->users      = $this->loadModel('user')->getPairs('noletter|nodeleted');
+        $this->view->account    = $account;
+        $this->view->orderBy    = $orderBy;
+        $this->view->param      = $param;
+        $this->view->pager      = $pager;
+        $this->view->dateGroups = $this->action->buildDateGroup($actions, $direction);
+        $this->view->direction  = $direction;
         $this->display();
     }
 

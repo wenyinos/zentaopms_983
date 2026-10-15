@@ -2663,4 +2663,83 @@ class projectModel extends model
         }
         return $productPlans;
     }
+
+    /**
+     * Stat story, task, bug data for project.
+     *
+     * 10.1 特性：项目概览页的关联数据统计（需求/任务(仅顶层)/Bug 计数）。
+     *
+     * @param  int    $projectID
+     * @access public
+     * @return object
+     */
+    public function statRelatedData($projectID)
+    {
+        $storyCount = $this->dao->select('count(t2.story) as storyCount')->from(TABLE_STORY)->alias('t1')
+            ->leftJoin(TABLE_PROJECTSTORY)->alias('t2')->on('t1.id = t2.story')
+            ->where('project')->eq($projectID)
+            ->andWhere('t1.deleted')->eq(0)
+            ->fetch('storyCount');
+
+        $taskCount = $this->dao->select('count(id) as taskCount')->from(TABLE_TASK)->where('project')->eq($projectID)->andWhere('parent')->eq(0)->andWhere('deleted')->eq(0)->fetch('taskCount');
+        $bugCount  = $this->dao->select('count(id) as bugCount')->from(TABLE_BUG)->where('project')->eq($projectID)->andWhere('deleted')->eq(0)->fetch('bugCount');
+
+        $statData = new stdclass();
+        $statData->storyCount = $storyCount;
+        $statData->taskCount  = $taskCount;
+        $statData->bugCount   = $bugCount;
+
+        return $statData;
+    }
+
+    /**
+     * Print the html of a project tree.
+     *
+     * 10.1 特性：树状图页面的 HTML 渲染器（视图 tree.html.php 直接 echo 本方法输出），
+     * 任务/需求节点链接到 treeTask/treeStory 侧栏内容页。
+     *
+     * @param  array  $trees
+     * @access public
+     * @return string
+     */
+    public function printTree($trees)
+    {
+        $html = '';
+        foreach($trees as $tree)
+        {
+            if(is_array($tree)) $tree = (object)$tree;
+            switch($tree->type)
+            {
+                case 'module':
+                    $this->app->loadLang('tree');
+                    $html .= "<li class='item-module'>";
+                    $html .= '<a class="tree-toggle"><span class="label label-type">' . (empty($tree->parent) ? $this->lang->tree->module : $this->lang->tree->child) . "</span><span class='title' title='{$tree->name}'>" . $tree->name . '</span></a>';
+                    break;
+                case 'task':
+                    $link = helper::createLink('project', 'treeTask', "taskID={$tree->id}");
+                    $html .= '<li class="item-task">';
+                    $html .= '<a class="tree-link" href="' . $link . '"><span class="label label-id">' . $tree->id . '</span><span class="label label-type">' . (empty($tree->parent) ? $this->lang->task->common : $this->lang->task->children) . "</span><span class='title' title='{$tree->title}'>" . $tree->title . '</span> <span class="user"><i class="icon icon-person"></i> ' . (empty($tree->assignedTo) ? $tree->openedBy : $tree->assignedTo) . '</span></a>';
+                    break;
+                case 'product':
+                    $this->app->loadLang('product');
+                    $html .= '<li class="item-product">';
+                    $html .= '<a class="tree-toggle"><span class="label label-type">' . $this->lang->productCommon . "</span><span class='title' title='{$tree->name}'>" . $tree->name . '</span></a>';
+                    break;
+                case 'story':
+                    $this->app->loadLang('story');
+                    $link = helper::createLink('project', 'treeStory', "storyID={$tree->storyId}");
+                    $html .= '<li class="item-story">';
+                    $html .= '<a class="tree-link" href="' . $link . '"><span class="label label-id">' . $tree->storyId . '</span><span class="label label-type">' . $this->lang->story->common . "</span><span class='title' title='{$tree->title}'>" . $tree->title . '</span> <span class="user"><i class="icon icon-person"></i> ' . (empty($tree->assignedTo) ? $tree->openedBy : $tree->assignedTo) . '</span></a>';
+                    break;
+            }
+            if(isset($tree->children))
+            {
+                $html .= '<ul>';
+                $html .= $this->printTree($tree->children);
+                $html .= '</ul>';
+            }
+            $html .= '</li>';
+        }
+        return $html;
+    }
 }

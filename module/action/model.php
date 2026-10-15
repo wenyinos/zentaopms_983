@@ -564,13 +564,14 @@ class actionModel extends model
      * @access public
      * @return array
      */
-    public function getDynamic($account = 'all', $period = 'all', $orderBy = 'date_desc', $pager = null, $productID = 'all', $projectID = 'all')
+    public function getDynamic($account = 'all', $period = 'all', $orderBy = 'date_desc', $pager = null, $productID = 'all', $projectID = 'all', $date = '', $direction = 'next')
     {
         /* Computer the begin and end date of a period. */
         $beginAndEnd = $this->computeBeginAndEnd($period);
         extract($beginAndEnd);
 
         /* Build has priv condition. */
+        $condition = 1;
         if($productID == 'all') $products = $this->loadModel('product')->getPairs();
         if($projectID == 'all') $projects = $this->loadModel('project')->getPairs();
         if($productID == 'all' or $projectID == 'all')
@@ -595,17 +596,25 @@ class actionModel extends model
             ->where(1)
             ->beginIF($period != 'all')->andWhere('date')->gt($begin)->fi()
             ->beginIF($period != 'all')->andWhere('date')->lt($end)->fi()
+            ->beginIF($date)->andWhere('date' . ($direction == 'next' ? '<' : '>') . "'{$date}'")->fi()
             ->beginIF($account != 'all')->andWhere('actor')->eq($account)->fi()
             ->beginIF(is_numeric($productID))->andWhere('product')->like("%,$productID,%")->fi()
             ->beginIF(is_numeric($projectID))->andWhere('project')->eq($projectID)->fi()
             ->beginIF($productID == 'notzero')->andWhere('product')->gt(0)->andWhere('product')->notlike('%,0,%')->fi()
             ->beginIF($projectID == 'notzero')->andWhere('project')->gt(0)->fi()
             ->beginIF($projectID == 'all' or $productID == 'all')->andWhere("IF((objectType!= 'doc' && objectType!= 'doclib'), ($condition), '1=1')")->fi()
-            ->beginIF($docs)->andWhere("IF(objectType != 'doc', '1=1', objectID " . helper::dbIN($docs) . ")")->fi()
-            ->beginIF($libs)->andWhere("IF(objectType != 'doclib', '1=1', objectID " . helper::dbIN(array_keys($libs)) . ') ')->fi()
-            ->orderBy($orderBy)->page($pager)->fetchAll();
+            ->beginIF($docs and !$this->app->user->admin)->andWhere("IF(objectType != 'doc', '1=1', objectID " . helper::dbIN($docs) . ")")->fi()
+            ->beginIF($libs and !$this->app->user->admin)->andWhere("IF(objectType != 'doclib', '1=1', objectID " . helper::dbIN(array_keys($libs)) . ') ')->fi()
+            ->beginIF($this->config->global->flow == 'onlyStory')->andWhere('objectType')->notin('bug,build,project,task,taskcase,testreport,testsuite,testtask')->fi()
+            ->beginIF($this->config->global->flow == 'onlyTask')->andWhere('objectType')->notin('product,productplan,release,story,testcase,testreport,testsuite')->fi()
+            ->beginIF($this->config->global->flow == 'onlyTest')->andWhere('objectType')->notin('project,productplan,release,story,task')->fi()
+            ->orderBy($orderBy)
+            ->page($pager)
+            ->fetchAll();
 
         if(!$actions) return array();
+
+        $this->loadModel('common')->saveQueryCondition($this->dao->get(), 'action');
         return $this->transformActions($actions);
     }
 
@@ -620,7 +629,7 @@ class actionModel extends model
      * @access public
      * @return array 
      */
-    public function getDynamicBySearch($products, $projects, $queryID, $orderBy = 'date_desc', $pager)
+    public function getDynamicBySearch($products, $projects, $queryID, $orderBy = 'date_desc', $pager = null, $date = '', $direction = 'next')
     {
         $query = $queryID ? $this->loadModel('search')->getQuery($queryID) : '';
 
@@ -662,9 +671,11 @@ class actionModel extends model
         }
 
         $actionQuery = str_replace("`product` = '$productID'", "`product` LIKE '%,$productID,%'", $actionQuery);
+        if($date) $actionQuery = "($actionQuery) AND " . ('date' . ($direction == 'next' ? '<' : '>') . "'{$date}'");
 
         $actions = $this->getBySQL($actionQuery, $orderBy, $pager);
         if(!$actions) return array();
+        $this->loadModel('common')->saveQueryCondition($this->dao->get(), 'action');
         return $this->transformActions($actions);
     }
 
@@ -739,6 +750,7 @@ class actionModel extends model
 
             $actionType = strtolower($action->action);
             $objectType = strtolower($action->objectType);
+            $action->originalDate = $action->date;    // 保留原始日期（10.1 动态流按日分组/翻页依赖，date 会被格式化覆盖）
             $action->date        = date(DT_MONTHTIME2, strtotime($action->date));
             $action->actionLabel = isset($this->lang->action->label->$actionType) ? $this->lang->action->label->$actionType : $action->action;
             $action->objectLabel = $objectType;
@@ -771,8 +783,78 @@ class actionModel extends model
             {
                 $action->objectLink = '';
             }
+
+            /* 10.1 动态流：标记重点动作（时间线高亮），配置见 action/config.php 的 majorList */
+            $action->major = (isset($this->config->action->majorList[$action->objectType]) && in_array($action->action, $this->config->action->majorList[$action->objectType])) ? 1 : 0;
         }
         return $actions;
+    }
+
+    /**
+     * Group actions by date for the 10.1 dynamic timeline.
+     *
+     * 将动作按自然日分组（10.1 动态流视图用 $dateGroups 渲染）；
+     * direction 为 pre（查看更早）时倒序。翻页时若末组不完整，整组重查补全，
+     * 保证分页边界上的同一天动作不被截断。
+     *
+     * @param  array  $actions
+     * @param  string $direction
+     * @access public
+     * @return array
+     */
+    public function buildDateGroup($actions, $direction = 'next')
+    {
+        $dateGroup = array();
+        $date      = '';
+        foreach($actions as $action)
+        {
+            $timeStamp    = strtotime(isset($action->originalDate) ? $action->originalDate : $action->date);
+            $date         = date(DT_DATE4, $timeStamp);
+            $action->time = date(DT_TIME2, $timeStamp);
+            $dateGroup[$date][] = $action;
+        }
+
+        if($dateGroup)
+        {
+            $lastDateActions = $this->dao->select('*')->from(TABLE_ACTION)->where($this->session->actionQueryCondition)->andWhere('`date`')->like(substr($action->originalDate, 0, 10) . '%')->orderBy($this->session->actionOrderBy)->fetchAll('id');
+            if(count($dateGroup[$date]) < count($lastDateActions))
+            {
+                unset($dateGroup[$date]);
+                $lastDateActions = $this->transformActions($lastDateActions);
+                foreach($lastDateActions as $action)
+                {
+                    $timeStamp    = strtotime(isset($action->originalDate) ? $action->originalDate : $action->date);
+                    $date         = date(DT_DATE4, $timeStamp);
+                    $action->time = date(DT_TIME2, $timeStamp);
+                    $dateGroup[$date][] = $action;
+                }
+            }
+        }
+
+        if($direction != 'next') $dateGroup = array_reverse($dateGroup);
+        return $dateGroup;
+    }
+
+    /**
+     * Check whether there are actions before/after the given date.
+     *
+     * 10.1 动态流日期翻页按钮的可用性判断：从当前查询条件中去掉日期区间条件后，
+     * 判断该日期之前（pre）/之后（next）是否还有动作记录。
+     *
+     * @param  string $date
+     * @param  string $direction pre|next
+     * @access public
+     * @return bool
+     */
+    public function hasPreOrNext($date, $direction = 'next')
+    {
+        $condition = $this->session->actionQueryCondition;
+        /* Remove date condition for direction. */
+        $condition = preg_replace("/AND +date[\<\>]'\d{4}\-\d{2}\-\d{2}'/", '', $condition);
+        $count     = $this->dao->select('count(*) as count')->from(TABLE_ACTION)->where($condition)
+            ->andWhere('date' . ($direction == 'next' ? '<' : '>') . "'{$date}'")
+            ->fetch('count');
+        return $count > 0;
     }
 
     /**

@@ -419,6 +419,27 @@ class todo extends control
     }
 
     /**
+     * Batch close todos.
+     *
+     * 10.1 特性：批量关闭已完成的待办（我的待办列表批量操作按钮，权限独立为 todo::batchClose）。
+     *
+     * @access public
+     * @return void
+     */
+    public function batchClose()
+    {
+        if(!empty($_POST['todoIDList']))
+        {
+            foreach($_POST['todoIDList'] as $todoID)
+            {
+                $todo = $this->todo->getById($todoID);
+                if($todo->status == 'done') $this->todo->close($todoID);
+            }
+            die(js::reload('parent'));
+        }
+    }
+
+    /**
      * Import selected todoes to today.
      *
      * @access public

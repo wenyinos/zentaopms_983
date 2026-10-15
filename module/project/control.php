@@ -1303,6 +1303,10 @@ class project extends control
 
         /* Set menu. */
         $this->project->setMenu($this->projects, $project->id);
+        $this->app->loadLang('bug');
+
+        list($dateList, $interval) = $this->project->getDateList($project->begin, $project->end, 'noweekend', 0, 'Y-m-d');
+        $chartData = $this->project->buildBurnData($projectID, $dateList, 'noweekend');
 
         $this->view->title      = $this->lang->project->view;
         $this->view->position[] = html::a($this->createLink('project', 'browse', "projectID=$projectID"), $project->name);
@@ -1314,7 +1318,12 @@ class project extends control
         $this->view->planGroups   = $this->project->getPlans($products);
         $this->view->groups       = $this->loadModel('group')->getPairs();
         $this->view->actions      = $this->loadModel('action')->getList('project', $projectID);
+        $this->view->dynamics     = $this->loadModel('action')->getDynamic('all', 'all', 'date_desc', $pager = null, 'all', $projectID);
         $this->view->users        = $this->loadModel('user')->getPairs('noletter');
+        $this->view->teamMembers  = $this->project->getTeamMembers($projectID);
+        $this->view->docLibs      = $this->loadModel('doc')->getLibsByObject('project', $projectID);
+        $this->view->statData     = $this->project->statRelatedData($projectID);
+        $this->view->chartData    = $chartData;
 
         $this->display();
     }
@@ -1395,7 +1404,93 @@ class project extends control
         $this->view->project    = $project;
         $this->view->projectID  = $projectID;
         $this->view->level      = $type;
-        $this->view->tree       = $tree;
+        $this->view->tree       = $this->project->printTree($tree);
+        $this->display();
+    }
+
+    /**
+     * Show a story of the project tree in the side panel.
+     *
+     * 10.1 特性：树状图右侧内容区（需求详情），由 printTree 生成的节点链接进入。
+     *
+     * @param  int    $storyID
+     * @param  int    $version
+     * @access public
+     * @return void
+     */
+    public function treeStory($storyID, $version = 0)
+    {
+        $this->loadModel('story');
+        $story = $this->story->getById($storyID, $version, true);
+
+        $story->files = $this->loadModel('file')->getByObject('story', $storyID);
+        $product      = $this->dao->findById($story->product)->from(TABLE_PRODUCT)->fields('name, id, type')->fetch();
+        $plan         = $this->dao->findById($story->plan)->from(TABLE_PRODUCTPLAN)->fetch('title');
+        $bugs         = $this->dao->select('id,title')->from(TABLE_BUG)->where('story')->eq($storyID)->andWhere('deleted')->eq(0)->fetchAll();
+        $fromBug      = $this->dao->select('id,title')->from(TABLE_BUG)->where('toStory')->eq($storyID)->fetch();
+        $cases        = $this->dao->select('id,title')->from(TABLE_CASE)->where('story')->eq($storyID)->andWhere('deleted')->eq(0)->fetchAll();
+        $modulePath   = $this->loadModel('tree')->getParents($story->module);
+        $users        = $this->loadModel('user')->getPairs('noletter');
+
+        $this->view->product    = $product;
+        $this->view->branches   = $product->type == 'normal' ? array() : $this->loadModel('branch')->getPairs($product->id);
+        $this->view->plan       = $plan;
+        $this->view->bugs       = $bugs;
+        $this->view->fromBug    = $fromBug;
+        $this->view->cases      = $cases;
+        $this->view->story      = $story;
+        $this->view->users      = $users;
+        $this->view->projects   = $this->loadModel('project')->getPairs('nocode');
+        $this->view->actions    = $this->loadModel('action')->getList('story', $storyID);
+        $this->view->modulePath = $modulePath;
+        $this->view->version    = $version == 0 ? $story->version : $version;
+        $this->view->preAndNext = $this->loadModel('common')->getPreAndNextObject('story', $storyID);
+        $this->display();
+    }
+
+    /**
+     * Show a task of the project tree in the side panel.
+     *
+     * 10.1 特性：树状图右侧内容区（任务详情），由 printTree 生成的节点链接进入。
+     *
+     * @param  int    $taskID
+     * @access public
+     * @return void
+     */
+    public function treeTask($taskID)
+    {
+        $this->loadModel('task');
+        $task = $this->task->getById($taskID, true);
+        if($task->fromBug != 0)
+        {
+            $bug = $this->loadModel('bug')->getById($task->fromBug);
+            $task->bugSteps = '';
+            if($bug)
+            {
+                $task->bugSteps = $this->loadModel('file')->setImgSize($bug->steps);
+                foreach($bug->files as $file) $task->files[] = $file;
+            }
+            $this->view->fromBug = $bug;
+        }
+        else
+        {
+            $story = $this->loadModel('story')->getById($task->story);
+            $task->storySpec     = empty($story) ? '' : $this->loadModel('file')->setImgSize($story->spec);
+            $task->storyVerify   = empty($story) ? '' : $this->loadModel('file')->setImgSize($story->verify);
+            $task->storyFiles    = $this->loadModel('file')->getByObject('story', $task->story);
+        }
+
+        if($task->team) $this->lang->task->assign = $this->lang->task->transfer;
+
+        /* Update action. */
+        if($task->assignedTo == $this->app->user->account) $this->loadModel('action')->read('task', $taskID);
+
+        $project = $this->project->getById($task->project);
+
+        $this->view->task    = $task;
+        $this->view->project = $project;
+        $this->view->actions = $this->loadModel('action')->getList('task', $taskID);
+        $this->view->users   = $this->loadModel('user')->getPairs('noletter');
         $this->display();
     }
 
@@ -1920,7 +2015,7 @@ class project extends control
      * @access public
      * @return void
      */
-    public function dynamic($projectID = 0, $type = 'today', $param = '', $orderBy = 'date_desc', $recTotal = 0, $recPerPage = 20, $pageID = 1)
+    public function dynamic($projectID = 0, $type = 'today', $param = '', $recTotal = 0, $date = '', $direction = 'next')
     {
         /* Save session. */
         $uri   = $this->app->getURI(true);
@@ -1939,7 +2034,8 @@ class project extends control
         if(!isset($this->projects[$projectID])) $projectID = key($this->projects);
 
         /* Append id for secend sort. */
-        $sort = $this->loadModel('common')->appendOrder($orderBy);
+        $orderBy = $direction == 'next' ? 'date_desc' : 'date_asc';
+        $sort    = $this->loadModel('common')->appendOrder($orderBy);
 
         /* Set the menu. If the projectID = 0, use the indexMenu instead. */
         $this->project->setMenu($this->projects, $projectID);
@@ -1953,11 +2049,13 @@ class project extends control
 
         /* Set the pager. */
         $this->app->loadClass('pager', $static = true);
-        $pager = pager::init($recTotal, $recPerPage, $pageID);
+        $pager = new pager($recTotal, $recPerPage = 50, $pageID = 1);
 
         /* Set the user and type. */
         $account = $type == 'account' ? $param : 'all';
         $period  = $type == 'account' ? 'all'  : $type;
+        $date    = empty($date) ? '' : date('Y-m-d', $date);
+        $actions = $this->loadModel('action')->getDynamic($account, $period, $sort, $pager, 'all', $projectID, $date, $direction);
 
         /* The header and position. */
         $project = $this->project->getByID($projectID);
@@ -1966,14 +2064,15 @@ class project extends control
         $this->view->position[] = $this->lang->project->dynamic;
 
         /* Assign. */
-        $this->view->projectID = $projectID;
-        $this->view->type      = $type;
-        $this->view->users     = $this->loadModel('user')->getPairs('noletter|nodeleted');
-        $this->view->account   = $account;
-        $this->view->orderBy   = $orderBy;
-        $this->view->pager     = $pager;
-        $this->view->param     = $param;
-        $this->view->actions   = $this->loadModel('action')->getDynamic($account, $period, $sort, $pager, 'all', $projectID);
+        $this->view->projectID  = $projectID;
+        $this->view->type       = $type;
+        $this->view->users      = $this->loadModel('user')->getPairs('noletter|nodeleted');
+        $this->view->account    = $account;
+        $this->view->orderBy    = $orderBy;
+        $this->view->pager      = $pager;
+        $this->view->param      = $param;
+        $this->view->dateGroups = $this->action->buildDateGroup($actions, $direction);
+        $this->view->direction  = $direction;
         $this->display();
     }
 

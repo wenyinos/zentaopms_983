@@ -25,15 +25,51 @@ class upgradeModel extends model
      */
     public function execute($fromVersion)
     {
+        /* 补充 9.9.0 新增的文档收藏字段（幂等：旧库用旧版 zentao.sql 安装时缺 collector 列）。 */
+        $this->addCollectorColumns();
+
         switch($fromVersion)
         {
             case '9_8_3_1':
-                /* 9.9.0 相对 9.8.3_1 无数据库结构变更。 */
+                /* 9.9.0 相对 9.8.3_1 无其他数据库结构变更。 */
                 break;
         }
 
         $this->deletePatch();
         $this->clearModelCache();
+    }
+
+    /**
+     * Add the collector columns required by the 10.1 doc-collect feature.
+     *
+     * doc/doclib/module 三表新增 collector 列（10.1 收藏功能的存储位置）。
+     * 11.3 血统的库（本社区生产库）已含该列，检测到即跳过，可重复执行。
+     *
+     * @access public
+     * @return void
+     */
+    public function addCollectorColumns()
+    {
+        $tables = array(TABLE_DOC, TABLE_DOCLIB, TABLE_MODULE);
+        foreach($tables as $table)
+        {
+            $tableName = trim($table, '`');
+            $exists = $this->dao->select('COUNT(*) AS count')->from('information_schema.columns')
+                ->where('table_schema')->eq($this->config->db->name)
+                ->andWhere('table_name')->eq($tableName)
+                ->andWhere('column_name')->eq('collector')
+                ->fetch('count');
+            if($exists) continue;
+
+            try
+            {
+                $this->dbh->exec("ALTER TABLE `{$tableName}` ADD COLUMN `collector` TEXT NOT NULL");
+            }
+            catch (PDOException $e)
+            {
+                self::$errors[] = $e->getMessage() . "<p>The sql is: ALTER TABLE `{$tableName}` ADD COLUMN `collector` TEXT NOT NULL</p>";
+            }
+        }
     }
 
     /**

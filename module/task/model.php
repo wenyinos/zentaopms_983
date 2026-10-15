@@ -246,7 +246,11 @@ class taskModel extends model
         }
 
         if(!dao::isError()) $this->loadModel('score')->create('ajax', 'batchCreate');
-        if($parentID && !empty($taskID)) $this->updateParentStatus($taskID);
+        if($parentID && !empty($taskID))
+        {
+            $this->updateParentStatus($taskID);
+            $this->computeBeginAndEnd($parentID);
+        }
         return $mails;
     }
 
@@ -387,6 +391,40 @@ class taskModel extends model
                 $this->action->logHistory($actionID, $changes);
             }
         }
+    }
+
+    /**
+     * Compute the parent task's begin and end dates from its children.
+     *
+     * 10.1 特性：父任务日期自动汇总——取所有非取消子任务中最早的预计/实际开始与最晚截止，
+     * 回写父任务（estStarted/realStarted/deadline），避免父任务日期与子任务脱节。
+     *
+     * @param  int    $taskID
+     * @access public
+     * @return bool
+     */
+    public function computeBeginAndEnd($taskID)
+    {
+        $tasks = $this->dao->select('estStarted, realStarted, deadline')->from(TABLE_TASK)->where('parent')->eq($taskID)->andWhere('status')->ne('cancel')->andWhere('deleted')->eq(0)->fetchAll();
+        if(empty($tasks)) return true;
+
+        foreach($tasks as $task)
+        {
+            $estStarted  = formatTime($task->estStarted);
+            $realStarted = formatTime($task->realStarted);
+            $deadline    = formatTime($task->deadline);
+            if(!isset($earliestEstStarted) or (!empty($estStarted) and $earliestEstStarted > $estStarted))     $earliestEstStarted  = $estStarted;
+            if(!isset($earliestRealStarted) or (!empty($realStarted) and $earliestRealStarted > $realStarted)) $earliestRealStarted = $realStarted;
+            if(!isset($latestDeadline) or (!empty($deadline) and $latestDeadline < $deadline))                 $latestDeadline      = $deadline;
+        }
+
+        $newTask = new stdClass();
+        $newTask->estStarted  = $earliestEstStarted;
+        $newTask->realStarted = $earliestRealStarted;
+        $newTask->deadline    = $latestDeadline;
+        $this->dao->update(TABLE_TASK)->data($newTask)->autoCheck()->where('id')->eq($taskID)->exec();
+
+        return !dao::isError();
     }
     
     /**
@@ -580,7 +618,11 @@ class taskModel extends model
             ->batchCheckIF($task->closedReason == 'cancel', 'finishedBy, finishedDate', 'empty')
             ->where('id')->eq((int)$taskID)->exec();
 
-        if($oldTask->parent) $this->updateParentStatus($taskID);
+        if($oldTask->parent)
+        {
+            $this->updateParentStatus($taskID);
+            $this->computeBeginAndEnd($oldTask->parent);
+        }
 
         if($this->post->story != false) $this->loadModel('story')->setStage($this->post->story);
         if(!dao::isError())
@@ -747,7 +789,11 @@ class taskModel extends model
             if($oldTask->story != false) $this->loadModel('story')->setStage($oldTask->story);
             if(!dao::isError())
             {
-                if($oldTask->parent) $this->updateParentStatus($oldTask->id);
+                if($oldTask->parent)
+                {
+                    $this->updateParentStatus($oldTask->id);
+                    $this->computeBeginAndEnd($oldTask->parent);
+                }
                 if($task->status == 'done')   $this->loadModel('score')->create('task', 'finish', $taskID);
                 if($task->status == 'closed') $this->loadModel('score')->create('task', 'close', $taskID);
                 $allChanges[$taskID] = common::createChanges($oldTask, $task);
@@ -906,7 +952,11 @@ class taskModel extends model
             ->check('consumed,left', 'float')
             ->where('id')->eq((int)$taskID)->exec();
 
-        if($oldTask->parent) $this->updateParentStatus($taskID);
+        if($oldTask->parent)
+        {
+            $this->updateParentStatus($taskID);
+            $this->computeBeginAndEnd($oldTask->parent);
+        }
         if($oldTask->story) $this->loadModel('story')->setStage($oldTask->story);
         if(!dao::isError()) return common::createChanges($oldTask, $task);
     }

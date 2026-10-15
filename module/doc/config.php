@@ -2,20 +2,25 @@
 global $lang;
 
 $config->doc = new stdclass();
-$config->doc->createLib = new stdclass();
-$config->doc->editLib   = new stdclass();
+$config->doc->createlib = new stdclass();
+$config->doc->editlib   = new stdclass();
 $config->doc->create    = new stdclass();
 $config->doc->edit      = new stdclass();
 
-$config->doc->createLib->requiredFields = 'name';
-$config->doc->editLib->requiredFields   = 'name';
+$config->doc->createlib->requiredFields = 'name';
+$config->doc->editlib->requiredFields   = 'name';
 $config->doc->create->requiredFields = 'title';
 $config->doc->edit->requiredFields   = 'title';
+
+$config->doc->customObjectLibs = 'files,customFiles';
+
+$config->doc->custom = new stdclass();
+$config->doc->custom->objectLibs = $config->doc->customObjectLibs;
 
 $config->doc->editor = new stdclass();
 $config->doc->editor->create = array('id' => 'content', 'tools' => 'fullTools');
 $config->doc->editor->edit   = array('id' => 'content', 'tools' => 'fullTools');
-$config->doc->editor->view   = array('id' => 'comment,lastComment', 'tools' => 'fullTools');
+$config->doc->editor->view   = array('id' => 'comment,lastComment', 'tools' => 'simple');
 
 $config->doc->markdown = new stdclass();
 $config->doc->markdown->create = array('id' => 'contentMarkdown', 'tools' => 'withchange');

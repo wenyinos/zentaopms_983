@@ -255,6 +255,7 @@ CREATE TABLE IF NOT EXISTS `zt_doc` (
   `keywords` varchar(255) NOT NULL,
   `type` varchar(30) NOT NULL,
   `views` smallint(5) unsigned NOT NULL,
+  `collector` text NOT NULL,
   `addedBy` varchar(30) NOT NULL,
   `addedDate` datetime NOT NULL,
   `editedBy` varchar(30) NOT NULL,
@@ -290,6 +291,7 @@ CREATE TABLE IF NOT EXISTS `zt_doclib` (
   `groups` varchar(255) NOT NULL,
   `users` text NOT NULL,
   `main` enum('0','1') NOT NULL default '0',
+  `collector` text NOT NULL,
   `order` tinyint(5) unsigned NOT NULL,
   `deleted` enum('0','1') NOT NULL default '0',
   PRIMARY KEY  (`id`)
@@ -402,6 +404,7 @@ CREATE TABLE IF NOT EXISTS `zt_module` (
   `order` smallint(5) unsigned NOT NULL default '0',
   `type` char(30) NOT NULL,
   `owner` varchar(30) NOT NULL,
+  `collector` text NOT NULL,
   `short` varchar(30) NOT NULL,
   `deleted` enum('0','1') NOT NULL default '0',
   PRIMARY KEY (`id`),
