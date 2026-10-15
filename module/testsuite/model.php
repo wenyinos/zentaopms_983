@@ -25,11 +25,40 @@ class testsuiteModel extends model
     {
         $this->loadModel('product')->setMenu($products, $productID);
         $selectHtml = $this->select($products, $productID, 'testsuite', 'browse');
-        if(strpos($selectHtml, 'currentBranch') !== false) $selectHtml = substr($selectHtml, 0, strrpos($selectHtml, '<li>'));
+        if(strpos($selectHtml, 'currentBranch') !== false) $selectHtml = substr($selectHtml, 0, strrpos($selectHtml, "<div class='btn-group'>")) . '</div>';
+
+        /* UI 10.1：切换器放入子导航区（modulePageNav），不再注入菜单项。 */
+        $pageNav     = '';
+        $pageActions = '';
+        $isMobile    = $this->app->viewType == 'mhtml';
+        if($isMobile)
+        {
+            $this->app->loadLang('qa');
+            $pageNav  = html::a(helper::createLink('qa', 'index'), $this->lang->qa->index) . $this->lang->colon;
+        }
+        else
+        {
+            if($this->config->global->flow == 'full')
+            {
+                $this->app->loadLang('qa');
+                $pageNav = '<div class="btn-group angle-btn"><div class="btn-group">' . html::a(helper::createLink('qa', 'index', 'locate=no'), $this->lang->qa->index, '', "class='btn'") . '</div></div>';
+            }
+            else
+            {
+                if(common::hasPriv('testsuite', 'create'))
+                {
+                    $link = helper::createLink('testsuite', 'create', "productID=$productID");
+                    $pageActions .= html::a($link, "<i class='icon icon-plus'></i> {$this->lang->testsuite->create}", '', "class='btn btn-primary'");
+                }
+            }
+        }
+        $pageNav .= $selectHtml;
+
+        $this->lang->modulePageNav     = $pageNav;
+        $this->lang->modulePageActions = $pageActions;
         foreach($this->lang->testsuite->menu as $key => $value)
         {
-            $replace = ($key == 'product') ? $selectHtml : $productID;
-            common::setMenuVars($this->lang->testsuite->menu, $key, $replace);
+            common::setMenuVars($this->lang->testsuite->menu, $key, $productID);
         }
     }
 
@@ -54,14 +83,20 @@ class testsuiteModel extends model
 
         setCookie("lastProduct", $productID, $this->config->cookieLife, $this->config->webRoot);
         $currentProduct = $this->product->getById($productID);
-        $output = "<a id='currentItem' href=\"javascript:showSearchMenu('product', '$productID', '$currentModule', '$currentMethod', '$extra')\"><span class='title'>{$currentProduct->name}</span> <span class='icon-caret-down'></span></a><div id='dropMenu'><i class='icon icon-spin icon-spinner'></i></div>";
+        $dropMenuLink = helper::createLink('product', 'ajaxGetDropMenu', "objectID=$productID&module=$currentModule&method=$currentMethod&extra=$extra");
+        /* UI 10.1：切换器改用 ZUI dropdown + search-list（ajax 加载），
+           旧的 showSearchMenu 函数已随 ZUI 1.8.1 移除，旧标记点击无响应且错位。 */
+        $output  = "<div class='btn-group angle-btn'><div class='btn-group'><button data-toggle='dropdown' type='button' class='btn btn-limit' id='currentItem' title='{$currentProduct->name}'>{$currentProduct->name} <span class='caret'></span></button><div id='dropMenu' class='dropdown-menu search-list' data-ride='searchList' data-url='$dropMenuLink'>";
+        $output .= '<div class="input-control search-box has-icon-left has-icon-right search-example"><input type="search" class="form-control search-input" /><label class="input-control-icon-left search-icon"><i class="icon icon-search"></i></label><a class="input-control-icon-right search-clear-btn"><i class="icon icon-close icon-sm"></i></a></div>';
+        $output .= "</div></div>";
         if($currentProduct->type != 'normal')
         {
             $this->app->loadLang('branch');
             $branchName = $this->lang->branch->all . $this->lang->product->branchName[$currentProduct->type];
-            $output .= '</li><li>';
-            $output .= "<a id='currentBranch'>{$branchName} <i class='icon icon-caret-right'></i></a> ";
+            $output .= "<div class='btn-group'><button id='currentBranch' type='button' class='btn btn-limit'>{$branchName} </button></div></div>";
         }
+        $output .= '</div>';
+
         return $output;
     }
 
@@ -76,18 +111,36 @@ class testsuiteModel extends model
     public function setLibMenu($libraries, $libID, $moduleID = 0)
     {
         $currentLibName = zget($libraries, $libID, '');
-        $selectHtml = empty($libraries) ? '' : "<a id='currentItem' href=\"javascript:showSearchMenu('testsuite', '$libID', 'testsuite', 'library', '')\">{$currentLibName} <span class='icon-caret-down'></span></a><div id='dropMenu'><i class='icon icon-spin icon-spinner'></i></div>";
+        $isMobile       = $this->app->viewType == 'mhtml';
+        $selectHtml     = '';
+        if(!empty($libraries))
+        {
+            /* UI 10.1：切换器改用 ZUI dropdown + search-list（ajax 加载），
+               旧的 showSearchMenu 函数已随 ZUI 1.8.1 移除，旧标记点击无响应且错位。 */
+            if($isMobile)
+            {
+                $selectHtml = "<a id='currentItem' href=\"javascript:showSearchMenu('testsuite', '$libID', 'testsuite', 'library', '')\">{$currentLibName} <span class='icon-caret-down'></span></a><div id='currentItemDropMenu' class='hidden affix enter-from-bottom layer'></div>";
+            }
+            else
+            {
+                $dropMenuLink = helper::createLink('testsuite', 'ajaxGetDropMenu', "objectID=$libID&module=testsuite&method=library");
+                $selectHtml  = "<div class='btn-group angle-btn'><div class='btn-group'><button data-toggle='dropdown' type='button' class='btn btn-limit' id='currentItem'>{$currentLibName} <span class='caret'></span></button><div id='dropMenu' class='dropdown-menu search-list' data-ride='searchList' data-url='$dropMenuLink'>";
+                $selectHtml .= '<div class="input-control search-box has-icon-left has-icon-right search-example"><input type="search" class="form-control search-input" /><label class="input-control-icon-left search-icon"><i class="icon icon-search"></i></label><a class="input-control-icon-right search-clear-btn"><i class="icon icon-close icon-sm"></i></a></div>';
+                $selectHtml .= "</div></div></div>";
+            }
+        }
 
         if($this->config->global->flow == 'onlyTest')
         {
-            $isMobile   = $this->app->viewType == 'mhtml';
             $modules    = $this->loadModel('tree')->getModulePairs($libID, 'caselib');
             $moduleName = ($moduleID && isset($modules[$moduleID])) ? $modules[$moduleID] : $this->lang->tree->all;
 
             if(!$isMobile)
             {
-                $selectHtml .= '</li><li>';
-                $selectHtml .= "<a id='currentModule' href=\"javascript:showSearchMenu('tree', '$libID', 'testsuite', 'library', '')\">{$moduleName} <span class='icon-caret-down'></span></a><div id='dropMenu'><i class='icon icon-spin icon-spinner'></i></div>";
+                $dropMenuLink = helper::createLink('tree', 'ajaxGetDropMenu', "objectID=$libID&module=testsuite&method=library");
+                $selectHtml .= "<div class='btn-group'><button id='currentModule' data-toggle='dropdown' type='button' class='btn btn-limit'>{$moduleName} <span class='caret'></span></button><div id='dropMenu' class='dropdown-menu search-list' data-ride='searchList' data-url='$dropMenuLink'>";
+                $selectHtml .= '<div class="input-control search-box has-icon-left has-icon-right search-example"><input type="search" class="form-control search-input" /><label class="input-control-icon-left search-icon"><i class="icon icon-search"></i></label><a class="input-control-icon-right search-clear-btn"><i class="icon icon-close icon-sm"></i></a></div>';
+                $selectHtml .= "</div></div>";
             }
             else
             {
@@ -96,13 +149,71 @@ class testsuiteModel extends model
         }
 
         setCookie("lastCaseLib", $libID, $this->config->cookieLife, $this->config->webRoot);
+
+        /* UI 10.1：切换器放入子导航区（modulePageNav）。旧实现注入 menu->lib，该键在 10.1 语言包中已不存在。 */
+        $pageNav     = '';
+        $pageActions = '';
+        if($isMobile)
+        {
+            $this->app->loadLang('qa');
+            $pageNav = html::a(helper::createLink('qa', 'index'), $this->lang->qa->index) . $this->lang->colon;
+        }
+        else
+        {
+            if($this->config->global->flow == 'full')
+            {
+                $this->app->loadLang('qa');
+                $pageNav .= '<div class="btn-group angle-btn"><div class="btn-group"><button data-toggle="dropdown" type="button" class="btn">' . $this->lang->qa->index . ' <span class="caret"></span></button>';
+                $pageNav .= '<ul class="dropdown-menu">';
+                if(common::hasPriv('testsuite', 'createLib')) $pageNav .= '<li>' . html::a(helper::createLink('testsuite', 'createLib'), '<i class="icon icon-plus"></i> ' . $this->lang->testsuite->createLib) . '</li>';
+                $pageNav .= '</ul></div></div>';
+
+                if(common::hasPriv('testsuite', 'libView'))
+                {
+                    $link = helper::createLink('testsuite', 'libView', "libID=$libID");
+                    $pageActions .= html::a($link, "<i class='icon icon-list-alt muted'> </i>" . $this->lang->testsuite->view, '', "class='btn'");
+                }
+            }
+            else
+            {
+                $this->app->loadLang('testcase');
+                $pageActions .= "<div class='btn-group'>";
+                if(common::hasPriv('testsuite', 'exportTemplet'))
+                {
+                    $link = helper::createLink('testsuite', 'exportTemplet', "libID=$libID");
+                    $pageActions .= html::a($link, "<i class='icon icon-export muted'> </i>" . $this->lang->testsuite->exportTemplet, '', "class='btn btn-link export'");
+                }
+                if(common::hasPriv('testsuite', 'import'))
+                {
+                    $link = helper::createLink('testsuite', 'import', "libID=$libID");
+                    $pageActions .= html::a($link, "<i class='icon muted icon-import'> </i>" . $this->lang->testcase->importFile, '', "class='btn btn-link export'");
+                }
+                $pageActions .= '</div>';
+                $params = "libID=$libID&moduleID=" . (isset($moduleID) ? $moduleID : 0);
+                if(common::hasPriv('testsuite', 'batchCreateCase'))
+                {
+                    $link = helper::createLink('testsuite', 'batchCreateCase', $params);
+                    $pageActions .= html::a($link, "<i class='icon-plus'></i>" . $this->lang->testcase->batchCreate, '', "class='btn btn-secondary'");
+                }
+                if(common::hasPriv('testsuite', 'createCase'))
+                {
+                    $link = helper::createLink('testsuite', 'createCase', $params);
+                    $pageActions .= html::a($link, "<i class='icon-plus'></i>" . $this->lang->testcase->create, '', "class='btn btn-primary'");
+                }
+            }
+        }
+        $pageNav .= $selectHtml;
+
+        $this->lang->modulePageNav     = $pageNav;
+        $this->lang->modulePageActions = $pageActions;
         foreach($this->lang->caselib->menu as $key => $value)
         {
-            $replace = ($key == 'lib') ? $selectHtml : '';
-            if($this->config->global->flow == 'onlyTest') $replace = ($key == 'lib') ? $selectHtml : $libID;
+            $replace = '';
+            if($this->config->global->flow == 'onlyTest') $replace = $libID;
             common::setMenuVars($this->lang->caselib->menu, $key, $replace);
         }
         $this->lang->testsuite->menu = $this->lang->caselib->menu;
+        if($this->config->global->flow != 'full' && $this->app->getMethodName() != 'libview') $this->lang->testsuite->menu->bysearch = "<a class='querybox-toggle' id='bysearchTab'><i class='icon icon-search muted'> </i>{$this->lang->testcase->bySearch}</a>";
     }
 
     public function saveLibState($libID = 0, $libraries = array())

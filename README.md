@@ -29,6 +29,7 @@ Themes registered in this build: **WenYin** (purple, default), **LightBlue**, **
 - **Three themes**: WenYin purple (default) / Light Blue / Blackberry.
 - **New dashboard layout**: the my/product/project/qa dashboards silently migrate to the 10.1 layout (two columns, statistic tiles, progress rings).
 - **Full mobile adaptation**: responsive across all three themes; single-column stacking and horizontally scrollable nav on narrow screens.
+- **Switchers moved to the 10.1 dropdown mechanism**: the top-left project / product / branch / case-library / module switchers now use the ZUI `dropdown + search-list` component (ajax-loaded with live filtering). The legacy implementation relied on `showSearchMenu`, which was removed with ZUI 1.8.1 and left the switcher unresponsive and misaligned; `product`/`testsuite` also lost their switcher entirely because the menu key they injected into no longer exists in the 10.1 language pack.
 
 ### Features (newly ported onto the 9.8.3 core)
 - **Activity stream**: date-grouped dynamics (my/company/product/project/user) with bidirectional paging (older/newer) and highlighted major actions.
