@@ -21,6 +21,28 @@ Themes registered in this build: **WenYin** (purple, default), **LightBlue**, **
 - Document and knowledge management
 - User, organization, and daily collaboration support
 
+## What's New (9.8.3_1 → 9.9.0)
+
+### Interface (ported from ZenTao 10.1)
+- **Entirely new UI**: the 10.1 application skeleton, 615 page templates, 126 language files and the skin base, ported wholesale.
+- **Front-end framework upgraded**: ZUI 1.7 → 1.8.1, with a compatibility layer (`www/theme/default/compat.css` + `www/js/compat.js`) keeping legacy pages render correctly.
+- **Three themes**: WenYin purple (default) / Light Blue / Blackberry.
+- **New dashboard layout**: the my/product/project/qa dashboards silently migrate to the 10.1 layout (two columns, statistic tiles, progress rings).
+- **Full mobile adaptation**: responsive across all three themes; single-column stacking and horizontally scrollable nav on narrow screens.
+
+### Features (newly ported onto the 9.8.3 core)
+- **Activity stream**: date-grouped dynamics (my/company/product/project/user) with bidirectional paging (older/newer) and highlighted major actions.
+- **Document favorites**: star/unstar documents and libraries, with a "My Favorites" browse entry and homepage statistics.
+- **Parent task date roll-up**: child task date changes are rolled up to the parent task (earliest start / latest deadline).
+- **Project overview statistics**: linked story/task/bug counts plus burn-down chart.
+- **Batch close for todos**: select and close finished todos in batch.
+- **Test report charts**: case result/type/module/runner distribution charts.
+- **Project tree view**: node tree rendering with a story/task detail side panel.
+
+### Platform
+- **Upgrade flow (community single channel)**: only 9.8.3_1 and later community builds are accepted; official ZenTao databases are explicitly refused to prevent data corruption; a CLI upgrade channel is available.
+- **Automated releases**: GitHub Actions builds the full delivery package (full lint + triple version check + content assertions + SHA256 sums).
+
 ## Unified Authentication (wenyinos SSO)
 
 This build integrates with the **WenYin Open Source Community unified authentication center**: the ZenTao login page and logout are redirected to the central auth service, with automatic sign-in when you are already logged in on <https://wenyinos.com/auth/> — one account covers both the community forum and ZenTao. Password/profile changes made in ZenTao are synchronized back to the center.
