@@ -1319,47 +1319,12 @@ class testcase extends control
             $fileName = $this->file->savePath . $this->file->getSaveName($file['pathname']);
             move_uploaded_file($file['tmpname'], $fileName);
 
-            $rows   = $this->file->parseCSV($fileName);
+            /* 走 file 通用导入层：剥 BOM、按选择/探测的编码转换、列名精确+宽松匹配。
+               旧实现只做列名精确匹配，带 UTF-8 BOM 的文件列名匹配不上会落到 gbk 兜底、
+               把内容按 gbk 再转一次变成乱码，最后报「编码错误」。 */
             $fields = $this->testcase->getImportFields($productID);
-            $fields = array_flip($fields);
-            $header = array();
-            foreach($rows[0] as $i => $rowValue)
-            {
-                if(empty($rowValue)) break;
-                $header[$i] = $rowValue;
-            }
-            unset($rows[0]);
-
-            $columnKey = array();
-            foreach($header as $title)
-            {
-                if(!isset($fields[$title])) continue;
-                $columnKey[] = $fields[$title];
-            }
-
-            if(count($columnKey) == 0 or $this->post->encode != 'utf-8')
-            {
-                $fc     = file_get_contents($fileName);
-                $encode = $this->post->encode != "utf-8" ? $this->post->encode : 'gbk';
-                $fc     = helper::convertEncoding($fc, $encode, 'utf-8');
-                file_put_contents($fileName, $fc);
-
-                $rows      = $this->file->parseCSV($fileName);
-                $columnKey = array();
-                $header    = array();
-                foreach($rows[0] as $i => $rowValue)
-                {
-                    if(empty($rowValue)) break;
-                    $header[$i] = $rowValue;
-                }
-                unset($rows[0]);
-                foreach($header as $title)
-                {
-                    if(!isset($fields[$title])) continue;
-                    $columnKey[] = $fields[$title];
-                }
-                if(count($columnKey) == 0) die(js::alert($this->lang->testcase->errorEncode));
-            }
+            $parsed = $this->file->parseImportFile($fileName, $fields, $this->post->encode);
+            if(empty($parsed['columns'])) die(js::alert($this->lang->testcase->errorEncode));
 
             $this->session->set('importFile', $fileName);
 
@@ -1461,32 +1426,18 @@ class testcase extends control
         $caseConfig = $this->config->testcase;
         $modules    = $this->loadModel('tree')->getOptionMenu($productID, 'case', 0, $branch);
         $stories    = $this->loadModel('story')->getProductStoryPairs($productID, $branch);
-        $fields     = $this->testcase->getImportFields($productID);
-        $fields     = array_flip($fields);
+        $fields  = $this->testcase->getImportFields($productID);
+        $parsed  = $this->loadModel('file')->parseImportFile($file, $fields, $this->post->encode);
+        $columns = $parsed['columns'];
+        $rows    = $parsed['rows'];
 
-        $rows   = $this->loadModel('file')->parseCSV($file);
-        $header = array();
-        foreach($rows[0] as $i => $rowValue)
-        {
-            if(empty($rowValue)) break;
-            $header[$i] = $rowValue;
-        }
-        unset($rows[0]);
-
-        foreach($header as $title)
-        {
-            if(!isset($fields[$title])) continue;
-            $columnKey[] = $fields[$title];
-        }
-
-        $endField = end($fields);
         $caseData = array();
         $stepData = array();
         $stepVars = 0;
         foreach($rows as $row => $data)
         {
             $case = new stdclass();
-            foreach($columnKey as $key => $field)
+            foreach($columns as $key => $field)
             {
                 if(!isset($data[$key])) continue;
                 $cellValue = $data[$key];
