@@ -44,7 +44,7 @@ $config->pivot->builtins['bugsassign'] = array(
     'fields' => array(
         'user'    => array('type' => 'user',   'object' => 'user',    'field' => 'account'),
         'product' => array('type' => 'object', 'object' => 'product', 'field' => 'name'),
-        'total'   => array('type' => 'number'),
+        'total'   => array('type' => 'number', 'object' => '', 'field' => ''),
     ),
     'langs' => array(
         'user'    => array('zh-cn' => '指派给', 'en' => 'Assigned To'),
@@ -79,10 +79,10 @@ $config->pivot->builtins['bugscreate'] = array(
                 GROUP BY t1.openedBy",
     'fields' => array(
         'user'      => array('type' => 'user',   'object' => 'user', 'field' => 'account'),
-        'total'     => array('type' => 'number'),
-        'resolved'  => array('type' => 'number'),
-        'fixed'     => array('type' => 'number'),
-        'postponed' => array('type' => 'number'),
+        'total'     => array('type' => 'number', 'object' => '', 'field' => ''),
+        'resolved'  => array('type' => 'number', 'object' => '', 'field' => ''),
+        'fixed'     => array('type' => 'number', 'object' => '', 'field' => ''),
+        'postponed' => array('type' => 'number', 'object' => '', 'field' => ''),
     ),
     'langs' => array(
         'user'      => array('zh-cn' => '由谁创建', 'en' => 'Opened By'),
@@ -123,9 +123,9 @@ $config->pivot->builtins['projectdeviation'] = array(
                 GROUP BY t2.name",
     'fields' => array(
         'project'   => array('type' => 'object', 'object' => 'project', 'field' => 'name'),
-        'estimate'  => array('type' => 'number'),
-        'consumed'  => array('type' => 'number'),
-        'deviation' => array('type' => 'number'),
+        'estimate'  => array('type' => 'number', 'object' => '', 'field' => ''),
+        'consumed'  => array('type' => 'number', 'object' => '', 'field' => ''),
+        'deviation' => array('type' => 'number', 'object' => '', 'field' => ''),
     ),
     'langs' => array(
         'project'   => array('zh-cn' => '项目名称', 'en' => 'Project'),
@@ -166,9 +166,9 @@ $config->pivot->builtins['productsummary'] = array(
                 GROUP BY p.name, planName, t1.status",
     'fields' => array(
         'product' => array('type' => 'object', 'object' => 'product', 'field' => 'name'),
-        'planName'=> array('type' => 'string'),
-        'status'  => array('type' => 'string'),
-        'total'   => array('type' => 'number'),
+        'planName'=> array('type' => 'string', 'object' => '', 'field' => ''),
+        'status'  => array('type' => 'string', 'object' => '', 'field' => ''),
+        'total'   => array('type' => 'number', 'object' => '', 'field' => ''),
     ),
     'langs' => array(
         'product' => array('zh-cn' => '产品名称', 'en' => 'Product'),
@@ -206,9 +206,9 @@ $config->pivot->builtins['workload'] = array(
     'fields' => array(
         'user'     => array('type' => 'user',   'object' => 'user', 'field' => 'account'),
         'project'  => array('type' => 'object', 'object' => 'project', 'field' => 'name'),
-        'estimate' => array('type' => 'number'),
-        'consumed' => array('type' => 'number'),
-        'left'     => array('type' => 'number'),
+        'estimate' => array('type' => 'number', 'object' => '', 'field' => ''),
+        'consumed' => array('type' => 'number', 'object' => '', 'field' => ''),
+        'left'     => array('type' => 'number', 'object' => '', 'field' => ''),
     ),
     'langs' => array(
         'user'     => array('zh-cn' => '指派给', 'en' => 'Assigned To'),
