@@ -49,7 +49,7 @@
               <?php if($type == 'custom'):?>
               <div class="text-primary file-info"><?php echo $itemCounts[$lib->id] . $lang->doc->item;?></div>
               <?php else:?>
-              <div class="text-primary file-info"><?php echo count($subLibs[$lib->id]) . $lang->doc->item;?></div>
+              <div class="text-primary file-info"><?php echo count(isset($subLibs[$lib->id]) ? $subLibs[$lib->id] : array()) . $lang->doc->item;?></div>
               <?php endif;?>
             </a>
             <?php if($type == 'custom'):?>
