@@ -1801,6 +1801,10 @@ UPDATE `zt_doc` SET `order` = `id` WHERE `order` = 0;
 | 看板（单项目 ≤ 200 任务） | ≤ 2s |
 | `errorlog|browse`（10 万行内） | ≤ 1s（`createdDate`/`md5` 已有索引） |
 
+**实测（2026-10-16，本地 dev）**：`annualData` 106ms / `project|track` 40ms / `pivot|show` 34ms / 看板 49ms / `errorlog|browse` 59ms（取服务端 TTFB，各 6–15ms），全部远低于预算；矩阵的批量取数**实测 4 条 SQL**（需求列表 3 条另计）。
+
+⚠️ **数 SQL 条数时注意**：`dao::$querys` 对每条语句记 **两次**（`processSQL()` 构建时一次、`query()` 执行时一次），数组长度要除以 2 才是真实条数。第一版按数组长度数出 8 条、误以为超了「≤6」的预算，实际是 4 条。
+
 ### 14.11 🟡 **未定义"完成"标准与提交策略**
 
 **推荐**：统一 DoD（§16）；提交策略：**每功能 1–2 个提交，直接在 `main`**（与仓库现状一致，`git log` 无分支流），提交信息用 `<module>: <imperative>`，引用禅道任务号（如 `task #70`），便于 `zentao_sync_commits` 自动关联。
