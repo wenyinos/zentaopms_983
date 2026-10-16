@@ -370,6 +370,8 @@ $lang->admin->menu->safe      = array('link' => '安全|admin|safe', 'alias' => 
 $lang->admin->menu->cron      = array('link' => '计划任务|cron|index', 'subModule' => 'cron');
 $lang->admin->menu->trashes   = array('link' => '回收站|action|trash', 'subModule' => 'action');
 $lang->admin->menu->dev       = array('link' => '二次开发|dev|api', 'alias' => 'db', 'subModule' => 'dev,editor');
+/* 错误日志（9.10.0）。 */
+$lang->admin->menu->errorlog = array('link' => '错误日志|errorlog|browse', 'subModule' => 'errorlog');
 $lang->admin->menu->sso       = '然之集成|admin|sso';
 
 $lang->convert   = new stdclass();
@@ -381,6 +383,7 @@ $lang->custom    = new stdclass();
 $lang->editor    = new stdclass();
 $lang->mail      = new stdclass();
 $lang->cron      = new stdclass();
+$lang->errorlog  = new stdclass();
 $lang->dev       = new stdclass();
 $lang->entry     = new stdclass();
 $lang->webhook   = new stdclass();
@@ -392,6 +395,7 @@ $lang->upgrade->menu   = $lang->admin->menu;
 $lang->action->menu    = $lang->admin->menu;
 $lang->backup->menu    = $lang->admin->menu;
 $lang->cron->menu      = $lang->admin->menu;
+$lang->errorlog->menu  = $lang->admin->menu;
 $lang->extension->menu = $lang->admin->menu;
 $lang->custom->menu    = $lang->admin->menu;
 $lang->editor->menu    = $lang->admin->menu;
@@ -426,6 +430,7 @@ $lang->menugroup->score       = 'my';
 $lang->menugroup->action      = 'admin';
 $lang->menugroup->backup      = 'admin';
 $lang->menugroup->cron        = 'admin';
+$lang->menugroup->errorlog = 'admin';
 $lang->menugroup->extension   = 'admin';
 $lang->menugroup->custom      = 'admin';
 $lang->menugroup->editor      = 'admin';

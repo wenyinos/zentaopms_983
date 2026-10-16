@@ -57,6 +57,7 @@ $lang->moduleOrder[175] = 'file';
 $lang->moduleOrder[180] = 'misc';
 $lang->moduleOrder[185] = 'backup';
 $lang->moduleOrder[190] = 'cron';
+$lang->moduleOrder[191] = 'errorlog';
 $lang->moduleOrder[195] = 'dev';
 $lang->moduleOrder[200] = 'message';
 
@@ -1072,6 +1073,17 @@ $lang->resource->cron->edit    = 'edit';
 $lang->resource->cron->toggle  = 'toggle';
 $lang->resource->cron->delete  = 'delete';
 $lang->resource->cron->openProcess = 'openProcess';
+$lang->resource->errorlog = new stdclass();
+$lang->resource->errorlog->browse      = 'browse';
+$lang->resource->errorlog->view        = 'view';
+$lang->resource->errorlog->delete      = 'delete';
+$lang->resource->errorlog->batchDelete = 'batchDelete';
+$lang->resource->errorlog->setting     = 'setting';
+$lang->errorlog->methodOrder[5]  = 'browse';
+$lang->errorlog->methodOrder[10] = 'view';
+$lang->errorlog->methodOrder[15] = 'delete';
+$lang->errorlog->methodOrder[20] = 'batchDelete';
+$lang->errorlog->methodOrder[25] = 'setting';
 
 $lang->cron->methodOrder[5]  = 'index';
 $lang->cron->methodOrder[10] = 'turnon';

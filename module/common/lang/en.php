@@ -370,6 +370,8 @@ $lang->admin->menu->safe      = array('link' => 'Security|admin|safe', 'alias' =
 $lang->admin->menu->cron      = array('link' => 'Cron|cron|index', 'subModule' => 'cron');
 $lang->admin->menu->trashes   = array('link' => 'Recycle|action|trash', 'subModule' => 'action');
 $lang->admin->menu->dev       = array('link' => 'Develop|dev|api', 'alias' => 'db', 'subModule' => 'dev,editor');
+/* Error log (9.10.0). */
+$lang->admin->menu->errorlog = array('link' => 'Error Log|errorlog|browse', 'subModule' => 'errorlog');
 $lang->admin->menu->sso       = 'Zdoo|admin|sso';
 
 $lang->convert   = new stdclass();
@@ -381,6 +383,7 @@ $lang->custom    = new stdclass();
 $lang->editor    = new stdclass();
 $lang->mail      = new stdclass();
 $lang->cron      = new stdclass();
+$lang->errorlog  = new stdclass();
 $lang->dev       = new stdclass();
 $lang->entry     = new stdclass();
 $lang->webhook   = new stdclass();
@@ -392,6 +395,7 @@ $lang->upgrade->menu   = $lang->admin->menu;
 $lang->action->menu    = $lang->admin->menu;
 $lang->backup->menu    = $lang->admin->menu;
 $lang->cron->menu      = $lang->admin->menu;
+$lang->errorlog->menu  = $lang->admin->menu;
 $lang->extension->menu = $lang->admin->menu;
 $lang->custom->menu    = $lang->admin->menu;
 $lang->editor->menu    = $lang->admin->menu;
@@ -426,6 +430,7 @@ $lang->menugroup->score       = 'my';
 $lang->menugroup->action      = 'admin';
 $lang->menugroup->backup      = 'admin';
 $lang->menugroup->cron        = 'admin';
+$lang->menugroup->errorlog = 'admin';
 $lang->menugroup->extension   = 'admin';
 $lang->menugroup->custom      = 'admin';
 $lang->menugroup->editor      = 'admin';
