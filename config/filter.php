@@ -25,6 +25,13 @@ $filter->default->get['HTTP_X_REQUESTED_WITH'] = 'equal::XMLHttpRequest';
 $filter->default->cookie['lang']  = 'reg::lang';
 $filter->default->cookie['theme'] = 'reg::word';
 
+/* 以下三个 cookie 一直被代码读取却从未登记规则，filterParam=2 会把它们整条丢掉：
+   za/zp 是「保持登录」的凭据（identifyByCookie 靠它们免登录），丢了就等于该功能从未生效；
+   feedbackView 决定文档页是否走紧凑版面。 */
+$filter->default->cookie['za']           = 'account';
+$filter->default->cookie['zp']           = 'reg::/^[a-z0-9]{40}$/';    // sha1(account . password . 登录时间)
+$filter->default->cookie['feedbackView'] = 'int';
+
 $filter->bug        = new stdclass();
 $filter->doc        = new stdclass();
 $filter->product    = new stdclass();
