@@ -394,3 +394,36 @@ $lang->bug->moreSelects['longlifebugs']  = $lang->bug->longLifeBugs;
 $lang->bug->moreSelects['postponedbugs'] = $lang->bug->postponedBugs;
 $lang->bug->moreSelects['overduebugs']   = $lang->bug->overdueBugs;
 $lang->bug->moreSelects['needconfirm']   = $lang->bug->needConfirm;
+
+/* CSV import. */
+$lang->bug->import        = 'Import Bugs';
+$lang->bug->exportTemplet = 'Download Template';
+$lang->bug->showImport    = 'Import Preview';
+$lang->bug->line          = 'Line';
+$lang->bug->importError   = 'Errors';
+$lang->bug->importStatus  = 'Check';
+$lang->bug->importValid   = 'OK';
+$lang->bug->importInvalid = 'Error';
+$lang->bug->importPreview = '%s row(s) parsed, %s importable.';
+$lang->bug->importResult  = '%s row(s) imported, %s failed.';
+$lang->bug->importFailedLines = 'Failed rows: %s';
+$lang->bug->importTip     = 'Download the template first and keep the column titles unchanged. Available values of list columns are listed on the last row of the template.';
+
+if(!isset($lang->bug->error)) $lang->bug->error = new stdclass();
+$lang->bug->error->importNoColumn         = 'No column recognized. Please use the downloaded template and keep its column titles.';
+$lang->bug->error->importTitleEmpty       = 'The bug title can not be empty.';
+$lang->bug->error->importProductNotMatch  = 'The product does not match the import target.';
+$lang->bug->error->importModuleNotFound   = 'The module does not exist or does not belong to this product.';
+$lang->bug->error->importUserNotFound     = 'The assignee is not a valid account.';
+$lang->bug->error->importEnumInvalid      = '"%s" is not an available value. See the last row of the template.';
+$lang->bug->error->importDateInvalid      = 'The date should be in YYYY-MM-DD format.';
+$lang->bug->importExampleTitle = 'Sample bug (delete this row before importing)';
+$lang->bug->importExampleSteps = '1. Open the page\n2. Click the button\n3. Watch the result';
+$lang->bug->error->importProjectNotFound = 'The project does not exist.';
+$lang->bug->error->importStoryNotFound   = 'The story does not exist or does not belong to this product.';
+$lang->bug->severityValue = 'Available severities';
+$lang->bug->priValue      = 'Available priorities';
+$lang->bug->typeValue     = 'Available types';
+$lang->bug->osValue       = 'Available OS';
+$lang->bug->browserValue  = 'Available browsers';
+$lang->bug->statusValue   = 'Available statuses';

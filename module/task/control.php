@@ -1367,7 +1367,7 @@ class task extends control
                     foreach($relatedFiles[$task->id] as $file)
                     {
                         $fileURL = common::getSysURL() . $this->file->webPath . $this->file->getRealPathName($file->pathname);
-                        $task->files .= html::a($fileURL, $file->title, '_blank') . '<br />';
+                        $task->files .= $this->file->formatExportFile($fileURL, $file->title, $this->post->fileType);
                     }
                 }
             }
@@ -1402,5 +1402,151 @@ class task extends control
             $task->storyStage = zget($this->lang->story->stageList, $stage);
         }
         die(json_encode($task));
+    }
+
+    /**
+     * Download the CSV template for batch import.
+     *
+     * @param  int    $projectID
+     * @access public
+     * @return void
+     */
+    public function exportTemplet($projectID)
+    {
+        if($_POST)
+        {
+            $this->loadModel('file');
+            $project = $this->loadModel('project')->getById($projectID);
+            $fields  = $this->file->importTemplateHeader($this->config->task->importFields, $this->lang->task);
+
+            $modules = $this->loadModel('tree')->getOptionMenu($projectID, 'task');
+            $stories = $this->loadModel('story')->getProjectStoryPairs($projectID);
+            $users   = $this->loadModel('user')->getPairs('noletter');
+
+            $moduleID   = 0;
+            $moduleName = '/';
+            foreach($modules as $id => $name)
+            {
+                if(empty($id)) continue;
+                $moduleID   = $id;
+                $moduleName = $name;
+                break;
+            }
+            $storyID = 0;
+            if(!empty($stories)) $storyID = key($stories);
+
+            $row = new stdclass();
+            $row->project    = $project->name . "(#$projectID)";
+            $row->module     = $moduleID ? $moduleName . "(#$moduleID)" : '/';
+            $row->story      = $storyID ? '#' . $storyID : '';
+            $row->name       = $this->lang->task->importExampleName;
+            $row->desc       = $this->lang->task->importExampleDesc;
+            $row->type       = $this->lang->task->typeList['devel'];
+            $row->pri        = $this->lang->task->priList[3];
+            $row->estimate   = '4';
+            $row->left       = '4';
+            $row->estStarted = helper::today();
+            $row->deadline   = date('Y-m-d', strtotime('+7 days'));
+            $row->assignedTo = '';
+            $row->status     = $this->lang->task->statusList['wait'];
+
+            /* 枚举列的可选值清单放末行（沿用用例模板的 typeValue/stageValue 约定）。 */
+            $fields[''] = '';
+            $fields['typeValue']   = $this->lang->task->typeValue;
+            $fields['priValue']    = $this->lang->task->priValue;
+            $fields['statusValue'] = $this->lang->task->statusValue;
+
+            $row->typeValue   = join("\n", array_filter($this->lang->task->typeList,   'strlen'));
+            $row->priValue    = join("\n", array_filter($this->lang->task->priList,    'strlen'));
+            $row->statusValue = join("\n", array_filter($this->lang->task->statusList, 'strlen'));
+
+            $this->post->set('fields', $fields);
+            $this->post->set('kind', 'task');
+            $this->post->set('rows', array($row));
+            $this->post->set('extraNum', $this->post->num);
+            $this->post->set('fileName', 'taskTemplet');
+            $this->fetch('file', 'export2csv', $_POST);
+        }
+
+        $this->view->projectID = $projectID;
+        $this->display();
+    }
+
+    /**
+     * Import tasks from a CSV file.
+     *
+     * @param  int    $projectID
+     * @access public
+     * @return void
+     */
+    public function import($projectID)
+    {
+        if($_FILES)
+        {
+            $file = $this->loadModel('file')->getUpload('file');
+            $file = $file[0];
+
+            $fileName = $this->file->savePath . $this->file->getSaveName($file['pathname']);
+            move_uploaded_file($file['tmpname'], $fileName);
+
+            $fields = $this->task->getImportFields();
+            $parsed = $this->file->parseImportFile($fileName, $fields, $this->post->encode);
+            if(empty($parsed['columns']))
+            {
+                unlink($fileName);
+                die(js::alert($this->lang->task->error->importNoColumn) . js::locate('back'));
+            }
+
+            $this->session->set('taskImportFile', $fileName);
+            die(js::locate(inlink('showImport', "projectID=$projectID"), 'parent.parent'));
+        }
+
+        $this->view->projectID = $projectID;
+        $this->display();
+    }
+
+    /**
+     * Preview the imported CSV and save the valid rows.
+     *
+     * @param  int    $projectID
+     * @access public
+     * @return void
+     */
+    public function showImport($projectID)
+    {
+        $fileName = $this->session->taskImportFile;
+        if(empty($fileName) or !file_exists($fileName))
+        {
+            die(js::alert($this->lang->error->noData) . js::locate(inlink('import', "projectID=$projectID")));
+        }
+
+        if($_POST)
+        {
+            $result  = $this->task->createFromImport($fileName, $projectID, $this->post->encode);
+            $message = sprintf($this->lang->task->importResult, $result['success'], $result['failed']);
+            if($result['failed']) $message .= sprintf($this->lang->task->importFailedLines, join(', ', $result['failedLines']));
+
+            $this->session->set('taskImportFile', '');
+            if($result['success']) $this->send(array('result' => 'success', 'message' => $message, 'locate' => $this->createLink('project', 'task', "projectID=$projectID")));
+            $this->send(array('result' => 'fail', 'message' => array('import' => array($message))));
+        }
+
+        $parsed  = $this->task->parseImportRows($fileName, $projectID, $this->post->encode);
+        $project = $this->loadModel('project')->getById($projectID);
+        $fields  = $this->task->getImportFields();
+
+        $columns = array();
+        foreach($parsed['columns'] as $field) $columns[$field] = zget($fields, $field, $field);
+
+        $this->project->setMenu($this->projects, $projectID);
+
+        $this->view->title      = $project->name . $this->lang->colon . $this->lang->task->showImport;
+        $this->view->position[] = $this->lang->task->showImport;
+        $this->view->project    = $project;
+        $this->view->columns    = $columns;
+        $this->view->rows       = $parsed['rows'];
+        $this->view->listFields = $this->config->task->import->listFields;
+        $this->view->importTip  = $this->lang->task->importTip;
+        $this->display();
     }
 }

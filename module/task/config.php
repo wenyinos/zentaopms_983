@@ -38,6 +38,18 @@ $config->task->exportFields = '
     ';
 if($config->global->flow == 'onlyTask') $config->task->exportFields = str_replace(array(' story,'), '', $config->task->exportFields);
 
+/* CSV 批量导入：字段口径（列名走 $lang->task-><field>，无需第二套命名）。 */
+$config->task->importFields = '
+    id, project, module, story,
+    name, desc,
+    type, pri, estimate, left, estStarted, deadline,
+    assignedTo, status';
+if($config->global->flow == 'onlyTask') $config->task->importFields = str_replace(array(' story,'), '', $config->task->importFields);
+
+$config->task->import = new stdclass();
+$config->task->import->listFields     = array('type', 'pri', 'status');
+$config->task->import->requiredFields = 'name,project';
+
 $config->task->customCreateFields      = 'story,estStarted,deadline,mailto,pri,estimate'; 
 $config->task->customBatchCreateFields = 'module,story,assignedTo,estimate,estStarted,deadline,desc,pri'; 
 $config->task->customBatchEditFields   = 'module,assignedTo,status,pri,estimate,record,left,estStarted,deadline,finishedBy,canceledBy,closedBy,closedReason';

@@ -394,3 +394,32 @@ $lang->bug->moreSelects['longlifebugs']  = $lang->bug->longLifeBugs;
 $lang->bug->moreSelects['postponedbugs'] = $lang->bug->postponedBugs;
 $lang->bug->moreSelects['overduebugs']   = $lang->bug->overdueBugs;
 $lang->bug->moreSelects['needconfirm']   = $lang->bug->needConfirm;
+
+/* CSV 批次匯入。 */
+$lang->bug->import        = '匯入Bug';
+$lang->bug->exportTemplet = '下載匯入範本';
+$lang->bug->showImport    = '匯入預覽';
+$lang->bug->line          = '行號';
+$lang->bug->importError   = '錯誤原因';
+$lang->bug->importStatus  = '校驗';
+$lang->bug->importValid   = '可匯入';
+$lang->bug->importInvalid = '有錯誤';
+$lang->bug->importPreview = '共解析 %s 行，其中 %s 行可匯入。';
+$lang->bug->importResult  = '成功匯入 %s 筆，失敗 %s 筆。';
+$lang->bug->importFailedLines = '失敗行：%s';
+$lang->bug->importTip     = '請先下載匯入範本，依範本欄名填寫；欄名需與範本一致，列舉欄的可選值見範本末行。';
+
+if(!isset($lang->bug->error)) $lang->bug->error = new stdclass();
+$lang->bug->error->importNoColumn         = '沒能識別任何欄位，請確認使用了下載的範本（欄名需與範本一致）。';
+$lang->bug->error->importTitleEmpty       = 'Bug標題不能為空。';
+$lang->bug->error->importProductNotMatch  = '所屬產品與本次匯入的產品不一致。';
+$lang->bug->error->importModuleNotFound   = '所屬模組不存在或不屬於本產品。';
+$lang->bug->error->importUserNotFound     = '指派對象不是本系統的有效帳號。';
+$lang->bug->error->importEnumInvalid      = '「%s」不是可選值，請參考範本末行的可選值清單。';
+$lang->bug->error->importDateInvalid      = '日期格式應為 YYYY-MM-DD。';
+$lang->bug->severityValue = '嚴重程度可選值';
+$lang->bug->priValue      = '優先級可選值';
+$lang->bug->typeValue     = 'Bug類型可選值';
+$lang->bug->osValue       = '操作系統可選值';
+$lang->bug->browserValue  = '瀏覽器可選值';
+$lang->bug->statusValue   = 'Bug狀態可選值';

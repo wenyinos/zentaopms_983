@@ -2627,4 +2627,208 @@ class storyModel extends model
 
         return array($toList, $ccList);
     }
+
+    /**
+     * Get the import fields of story.
+     *
+     * @access public
+     * @return array  fieldName => 中文列名
+     */
+    public function getImportFields()
+    {
+        $fields = array();
+        foreach(explode(',', $this->config->story->importFields) as $field)
+        {
+            $field = trim($field);
+            if($field === '') continue;
+            $fields[$field] = isset($this->lang->story->$field) ? $this->lang->story->$field : $field;
+        }
+        return $fields;
+    }
+
+    /**
+     * Parse an imported CSV into story rows, translating values and collecting per-row errors.
+     *
+     * @param  string $fileName
+     * @param  int    $productID
+     * @param  string $encode
+     * @access public
+     * @return array
+     */
+    public function parseImportRows($fileName, $productID, $encode = 'utf-8')
+    {
+        $this->app->loadLang('product');
+
+        $fields  = $this->getImportFields();
+        $parsed  = $this->loadModel('file')->parseImportFile($fileName, $fields, $encode);
+        $columns = $parsed['columns'];
+
+        $users   = $this->loadModel('user')->getPairs('noletter');
+        $product = $this->loadModel('product')->getById($productID);
+        $modules = $this->loadModel('tree')->getOptionMenu($productID, 'story');
+        $plans   = $this->loadModel('productplan')->getPairs($productID);
+
+        $rows   = array();
+        $lineNo = 1;
+        foreach($parsed['rows'] as $row)
+        {
+            $lineNo++;
+            $data   = new stdclass();
+            $errors = array();
+
+            foreach($columns as $index => $field)
+            {
+                $value = isset($row[$index]) ? trim((string)$row[$index]) : '';
+
+                if($field == 'id')
+                {
+                    $data->id = (int)$value;
+                }
+                elseif($field == 'product')
+                {
+                    $data->product = $productID;
+                    $cellProduct   = $this->extractImportId($value);
+                    if($cellProduct and $cellProduct != $productID) $errors['product'] = $this->lang->story->error->importProductNotMatch;
+                }
+                elseif($field == 'module')
+                {
+                    if($value == '/' or $value == '-') $value = '';
+                    $moduleID = $this->extractImportId($value);
+                    if($value !== '' and empty($moduleID)) $errors['module'] = $this->lang->story->error->importModuleNotFound;
+                    elseif($moduleID and !isset($modules[$moduleID])) $errors['module'] = $this->lang->story->error->importModuleNotFound;
+                    elseif($moduleID) $data->module = (int)$moduleID;
+                }
+                elseif($field == 'plan')
+                {
+                    if($value == '/' or $value == '-') $value = '';
+                    $planID = $this->extractImportId($value);
+                    if($value !== '' and empty($planID)) $errors['plan'] = $this->lang->story->error->importPlanNotFound;
+                    elseif($planID and !isset($plans[$planID])) $errors['plan'] = $this->lang->story->error->importPlanNotFound;
+                    elseif($planID) $data->plan = (int)$planID;
+                }
+                elseif($field == 'title')
+                {
+                    $data->title = $value;
+                    if($value === '') $errors['title'] = $this->lang->story->error->importTitleEmpty;
+                }
+                elseif($field == 'spec' or $field == 'verify' or $field == 'keywords')
+                {
+                    $data->$field = $value;
+                }
+                elseif($field == 'assignedTo')
+                {
+                    if($value !== '' and !isset($users[$value])) $errors['assignedTo'] = $this->lang->story->error->importUserNotFound;
+                    else $data->assignedTo = $value;
+                }
+                elseif(in_array($field, $this->config->story->import->listFields))
+                {
+                    if($value === '') continue;
+                    $key = array_search($value, $this->lang->story->{$field . 'List'});
+                    if($key === false) $errors[$field] = sprintf($this->lang->story->error->importEnumInvalid, $value);
+                    else $data->$field = $key;
+                }
+                elseif($field == 'estimate')
+                {
+                    if($value === '') continue;
+                    if(!is_numeric($value)) $errors['estimate'] = $this->lang->story->error->importNumberInvalid;
+                    else $data->estimate = (float)$value;
+                }
+            }
+
+            $rows[] = array('line' => $lineNo, 'data' => $data, 'errors' => $errors);
+        }
+
+        return array('columns' => $columns, 'rows' => $rows);
+    }
+
+    /**
+     * Extract the id from a cell value like "名称(#12)" or "#12".
+     *
+     * @param  string $value
+     * @access public
+     * @return int
+     */
+    public function extractImportId($value)
+    {
+        $value = trim((string)$value);
+        if($value === '') return 0;
+        if(strpos($value, '(#') !== false) return (int)rtrim(substr($value, strpos($value, '(#') + 2), ')');
+        if(preg_match('/^#(\d+)$/', $value, $match)) return (int)$match[1];
+        if(ctype_digit($value)) return (int)$value;
+        return 0;
+    }
+
+    /**
+     * Create stories from the imported CSV.
+     *
+     * 状态规则与 storyModel::create 保持一致：按 $config->story->needReview 落 draft 或 active；
+     * spec/verify 写 zt_storyspec（version=1），写库后调 setStage 同步阶段。
+     *
+     * @param  string $fileName
+     * @param  int    $productID
+     * @param  string $encode
+     * @access public
+     * @return array
+     */
+    public function createFromImport($fileName, $productID, $encode = 'utf-8')
+    {
+        $parsed  = $this->parseImportRows($fileName, $productID, $encode);
+        $success = 0;
+        $failed  = 0;
+        $lines   = array();
+
+        foreach($parsed['rows'] as $row)
+        {
+            $data = $row['data'];
+            if(!empty($row['errors']) or empty($data->title))
+            {
+                $failed++;
+                $lines[] = $row['line'];
+                continue;
+            }
+
+            $spec   = isset($data->spec)   ? $data->spec   : '';
+            $verify = isset($data->verify) ? $data->verify : '';
+            $plan   = isset($data->plan) ? $data->plan : 0;
+            /* 新需求的状态由评审配置决定，CSV 不能直接把需求写成「激活」绕过评审。 */
+            $status = $this->config->story->needReview ? 'draft' : 'active';
+
+            $data->product    = $productID;
+            $data->version    = 1;
+            $data->status     = $status;
+            $data->openedBy   = $this->app->user->account;
+            $data->openedDate = helper::now();
+            $data->plan       = $plan;
+            if(!isset($data->stage) or $data->stage === '')
+            {
+                $data->stage = ($status == 'draft') ? ($plan > 0 ? 'planned' : 'wait') : 'wait';
+            }
+            if(isset($data->assignedTo) and $data->assignedTo !== '') $data->assignedDate = helper::now();
+            unset($data->id);
+
+            $this->dao->insert(TABLE_STORY)->data($data, 'spec,verify')->autoCheck()->exec();
+            if(dao::isError())
+            {
+                dao::getError();
+                $failed++;
+                $lines[] = $row['line'];
+                continue;
+            }
+
+            $storyID = $this->dao->lastInsertID();
+            $specData          = new stdclass();
+            $specData->story   = $storyID;
+            $specData->version = 1;
+            $specData->title   = $data->title;
+            $specData->spec    = $spec;
+            $specData->verify  = $verify;
+            $this->dao->insert(TABLE_STORYSPEC)->data($specData)->exec();
+
+            $this->loadModel('action')->create('story', $storyID, 'opened', '');
+            $this->setStage($storyID);
+            $success++;
+        }
+
+        return array('success' => $success, 'failed' => $failed, 'failedLines' => $lines);
+    }
 }

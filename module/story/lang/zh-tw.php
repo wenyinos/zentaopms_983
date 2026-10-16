@@ -304,3 +304,30 @@ $lang->story->chosen->reviewedBy = '選擇評審人...';
 
 $lang->story->notice = new stdClass();
 $lang->story->notice->closed = '您選擇的需求已經被關閉了！';
+
+/* CSV 批次匯入。 */
+$lang->story->import        = '匯入需求';
+$lang->story->exportTemplet = '下載匯入範本';
+$lang->story->showImport    = '匯入預覽';
+$lang->story->line          = '行號';
+$lang->story->importError   = '錯誤原因';
+$lang->story->importStatus  = '校驗';
+$lang->story->importValid   = '可匯入';
+$lang->story->importInvalid = '有錯誤';
+$lang->story->importPreview = '共解析 %s 行，其中 %s 行可匯入。';
+$lang->story->importResult  = '成功匯入 %s 筆，失敗 %s 筆。';
+$lang->story->importFailedLines = '失敗行：%s';
+$lang->story->importTip     = '請先下載匯入範本，依範本欄名填寫；欄名需與範本一致，列舉欄的可選值見範本末行。';
+
+if(!isset($lang->story->error)) $lang->story->error = new stdclass();
+$lang->story->error->importNoColumn         = '沒能識別任何欄位，請確認使用了下載的範本（欄名需與範本一致）。';
+$lang->story->error->importTitleEmpty       = '需求名稱不能為空。';
+$lang->story->error->importProductNotMatch  = '所屬產品與本次匯入的產品不一致。';
+$lang->story->error->importModuleNotFound   = '所屬模組不存在或不屬於本產品。';
+$lang->story->error->importUserNotFound     = '指派對象不是本系統的有效帳號。';
+$lang->story->error->importEnumInvalid      = '「%s」不是可選值，請參考範本末行的可選值清單。';
+$lang->story->error->importDateInvalid      = '日期格式應為 YYYY-MM-DD。';
+$lang->story->sourceValue = '來源可選值';
+$lang->story->priValue    = '優先級可選值';
+$lang->story->statusValue = '狀態可選值';
+$lang->story->stageValue  = '階段可選值';

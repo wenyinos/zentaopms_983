@@ -270,3 +270,34 @@ $lang->task->report->tasksPerClosedReason->graph->xAxisName = 'Close Reason';
 
 $lang->task->report->finishedTasksPerDay->type               = 'bar';
 $lang->task->report->finishedTasksPerDay->graph->xAxisName   = 'Date';
+
+/* CSV import and export. */
+$lang->task->import        = 'Import Tasks';
+$lang->task->exportTemplet = 'Download Template';
+$lang->task->showImport    = 'Import Preview';
+$lang->task->importFile    = 'Import File';
+$lang->task->importEncode  = 'File Encoding';
+$lang->task->importExampleName = 'Sample task (delete this row before importing)';
+$lang->task->importExampleDesc = 'Sample description, can be empty.';
+$lang->task->typeValue     = 'Available types';
+$lang->task->priValue      = 'Available priorities';
+$lang->task->statusValue   = 'Available statuses';
+$lang->task->importResult  = '%s row(s) imported, %s failed.';
+$lang->task->importFailedLines = 'Failed rows: %s';
+$lang->task->importTip     = 'Download the template first and keep the column titles unchanged. Available values of list columns are listed on the last row of the template.';
+
+$lang->task->error->importNoColumn         = 'No column recognized. Please use the downloaded template and keep its column titles.';
+$lang->task->error->importNameEmpty        = 'Task name can not be empty.';
+$lang->task->error->importProjectNotMatch  = 'The project does not match the import target.';
+$lang->task->error->importModuleNotFound   = 'The module does not exist or does not belong to this project.';
+$lang->task->error->importStoryNotFound    = 'The story does not exist or is not linked to this project.';
+$lang->task->error->importUserNotFound     = 'The assignee is not a valid account.';
+$lang->task->error->importEnumInvalid      = '"%s" is not an available value. See the last row of the template.';
+$lang->task->error->importNumberInvalid    = 'A number is required.';
+$lang->task->error->importDateInvalid      = 'The date should be in YYYY-MM-DD format.';
+$lang->task->line          = 'Line';
+$lang->task->importError   = 'Errors';
+$lang->task->importValid   = 'OK';
+$lang->task->importInvalid = 'Error';
+$lang->task->importPreview = '%s row(s) parsed, %s importable.';
+$lang->task->importStatus  = 'Check';

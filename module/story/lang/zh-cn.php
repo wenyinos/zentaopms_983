@@ -304,3 +304,34 @@ $lang->story->chosen->reviewedBy = '选择评审人...';
 
 $lang->story->notice = new stdClass();
 $lang->story->notice->closed = '您选择的需求已经被关闭了！';
+
+/* CSV 批量导入导出。 */
+$lang->story->import        = '导入需求';
+$lang->story->exportTemplet = '下载导入模板';
+$lang->story->showImport    = '导入预览';
+$lang->story->line          = '行号';
+$lang->story->importError   = '错误原因';
+$lang->story->importStatus  = '校验';
+$lang->story->importValid   = '可导入';
+$lang->story->importInvalid = '有错误';
+$lang->story->importPreview = '共解析 %s 行，其中 %s 行可导入。';
+$lang->story->importResult  = '成功导入 %s 条，失败 %s 条。';
+$lang->story->importFailedLines = '失败行：%s';
+$lang->story->importTip     = '请先下载导入模板，按模板列名填写；列名需与模板一致，枚举列的可选值见模板末行。';
+$lang->story->importExampleTitle = '示例需求（导入前请删除本行）';
+$lang->story->importExampleSpec  = '作为用户，我希望……';
+if(!isset($lang->story->error)) $lang->story->error = new stdclass();
+$lang->story->error->importPlanNotFound = '所属计划不存在或不属于本产品。';
+$lang->story->error->importNumberInvalid = '必须填写数字。';
+
+$lang->story->error->importNoColumn         = '没能识别任何列，请确认使用了下载的模板（列名需与模板一致）。';
+$lang->story->error->importTitleEmpty       = '需求名称不能为空。';
+$lang->story->error->importProductNotMatch  = '所属产品与本次导入的产品不一致。';
+$lang->story->error->importModuleNotFound   = '所属模块不存在或不属于本产品。';
+$lang->story->error->importUserNotFound     = '指派人不是本系统的有效账号。';
+$lang->story->error->importEnumInvalid      = '「%s」不是可选值，请参考模板末行的可选值清单。';
+$lang->story->error->importDateInvalid      = '日期格式应为 YYYY-MM-DD。';
+$lang->story->sourceValue = '来源可选值';
+$lang->story->priValue    = '优先级可选值';
+$lang->story->statusValue = '状态可选值';
+$lang->story->stageValue  = '阶段可选值';

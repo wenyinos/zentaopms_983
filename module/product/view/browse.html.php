@@ -102,6 +102,22 @@
         ?>
       </ul>
     </div>
+    <?php if(common::hasPriv('story', 'import') or common::hasPriv('story', 'exportTemplet')):?>
+    <div class='btn-group'>
+      <button class='btn btn-link' data-toggle='dropdown'><i class="icon icon-import muted"></i> <span class="text"><?php echo $lang->import;?></span> <span class="caret"></span></button>
+      <ul class='dropdown-menu' id='importActionMenu'>
+        <?php
+        $misc = common::hasPriv('story', 'exportTemplet') ? "class='iframe' data-width='700'" : "class=disabled";
+        $link = common::hasPriv('story', 'exportTemplet') ? $this->createLink('story', 'exportTemplet', "productID=$productID") : '#';
+        echo "<li>" . html::a($link, $lang->story->exportTemplet, '', $misc) . "</li>";
+
+        $misc = common::hasPriv('story', 'import') ? "class='iframe' data-width='700'" : "class=disabled";
+        $link = common::hasPriv('story', 'import') ? $this->createLink('story', 'import', "productID=$productID&branch=$branch") : '#';
+        echo "<li>" . html::a($link, $lang->story->import, '', $misc) . "</li>";
+        ?>
+      </ul>
+    </div>
+    <?php endif;?>
     <?php if(common::hasPriv('story', 'batchCreate')) echo html::a($this->createLink('story', 'batchCreate', "productID=$productID&branch=$branch&moduleID=$moduleID"), "<i class='icon icon-plus'></i> {$lang->story->batchCreate}", '', "class='btn btn btn-secondary'");?>
     <?php
     if(commonModel::isTutorialMode())

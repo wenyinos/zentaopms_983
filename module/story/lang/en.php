@@ -304,3 +304,34 @@ $lang->story->chosen->reviewedBy = 'Choose Reviewer';
 
 $lang->story->notice = new stdClass();
 $lang->story->notice->closed = 'Stories you selected have already been closed!';
+
+/* CSV import. */
+$lang->story->import        = 'Import Stories';
+$lang->story->exportTemplet = 'Download Template';
+$lang->story->showImport    = 'Import Preview';
+$lang->story->line          = 'Line';
+$lang->story->importError   = 'Errors';
+$lang->story->importStatus  = 'Check';
+$lang->story->importValid   = 'OK';
+$lang->story->importInvalid = 'Error';
+$lang->story->importPreview = '%s row(s) parsed, %s importable.';
+$lang->story->importResult  = '%s row(s) imported, %s failed.';
+$lang->story->importFailedLines = 'Failed rows: %s';
+$lang->story->importTip     = 'Download the template first and keep the column titles unchanged. Available values of list columns are listed on the last row of the template.';
+
+if(!isset($lang->story->error)) $lang->story->error = new stdclass();
+$lang->story->error->importNoColumn         = 'No column recognized. Please use the downloaded template and keep its column titles.';
+$lang->story->error->importTitleEmpty       = 'The Stories title can not be empty.';
+$lang->story->error->importProductNotMatch  = 'The product does not match the import target.';
+$lang->story->error->importModuleNotFound   = 'The module does not exist or does not belong to this product.';
+$lang->story->error->importUserNotFound     = 'The assignee is not a valid account.';
+$lang->story->error->importEnumInvalid      = '"%s" is not an available value. See the last row of the template.';
+$lang->story->error->importDateInvalid      = 'The date should be in YYYY-MM-DD format.';
+$lang->story->importExampleTitle = 'Sample story (delete this row before importing)';
+$lang->story->importExampleSpec  = 'As a user, I want ...';
+$lang->story->error->importPlanNotFound = 'The plan does not exist or does not belong to this product.';
+$lang->story->error->importNumberInvalid = 'A number is required.';
+$lang->story->sourceValue = 'Available sources';
+$lang->story->priValue    = 'Available priorities';
+$lang->story->statusValue = 'Available statuses';
+$lang->story->stageValue  = 'Available stages';

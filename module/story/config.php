@@ -195,3 +195,14 @@ $config->story->datatable->fieldList['actions']['title']    = 'actions';
 $config->story->datatable->fieldList['actions']['fixed']    = 'right';
 $config->story->datatable->fieldList['actions']['width']    = '140';
 $config->story->datatable->fieldList['actions']['required'] = 'yes';
+
+/* CSV 批量导入：字段口径（列名走 $lang->story-><field>，无需第二套命名）。 */
+$config->story->importFields = '
+    id, product, module, plan, source,
+    title, spec, verify, keywords,
+    pri, estimate, stage,
+    assignedTo';
+
+$config->story->import = new stdclass();
+$config->story->import->listFields     = array('pri', 'stage', 'source');
+$config->story->import->requiredFields = 'title';

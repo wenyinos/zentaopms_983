@@ -2534,4 +2534,211 @@ class taskModel extends model
         }
         return $members;
     }
+
+    /**
+     * Get the import fields of task.
+     *
+     * @access public
+     * @return array  fieldName => 中文列名
+     */
+    public function getImportFields()
+    {
+        $fields = array();
+        foreach(explode(',', $this->config->task->importFields) as $field)
+        {
+            $field = trim($field);
+            if($field === '') continue;
+            $fields[$field] = isset($this->lang->task->$field) ? $this->lang->task->$field : $field;
+        }
+        return $fields;
+    }
+
+    /**
+     * Parse an imported CSV into task rows, translating values and collecting per-row errors.
+     *
+     * 只解析与校验，不写库——预览页与真正的导入共用这一份结果，避免两处口径不一致。
+     * 错误行不写库，正确行由 createFromImport 落库。
+     *
+     * @param  string $fileName
+     * @param  int    $projectID
+     * @param  string $encode
+     * @access public
+     * @return array  array('columns' => array(), 'rows' => array(array('line' => n, 'data' => stdclass, 'errors' => array())))
+     */
+    public function parseImportRows($fileName, $projectID, $encode = 'utf-8')
+    {
+        $this->app->loadLang('project');
+
+        $fields  = $this->getImportFields();
+        $parsed  = $this->loadModel('file')->parseImportFile($fileName, $fields, $encode);
+        $columns = $parsed['columns'];
+
+        $users    = $this->loadModel('user')->getPairs('noletter');
+        $project  = $this->loadModel('project')->getById($projectID);
+        $modules  = $this->loadModel('tree')->getOptionMenu($projectID, 'task');
+        $stories  = $this->loadModel('story')->getProjectStoryPairs($projectID);
+
+        $rows   = array();
+        $lineNo = 1;
+        foreach($parsed['rows'] as $row)
+        {
+            $lineNo++;
+            $data   = new stdclass();
+            $errors = array();
+
+            foreach($columns as $index => $field)
+            {
+                $value = isset($row[$index]) ? trim((string)$row[$index]) : '';
+
+                if($field == 'id')
+                {
+                    $data->id = (int)$value;
+                }
+                elseif($field == 'project')
+                {
+                    $data->project = $projectID;
+                    $cellProject   = $this->extractImportId($value);
+                    if($cellProject and $cellProject != $projectID) $errors['project'] = $this->lang->task->error->importProjectNotMatch;
+                }
+                elseif($field == 'module')
+                {
+                    /* 模板里空模块写 '/'（沿用禅道「根目录」写法）。 */
+                    if($value == '/' or $value == '-') $value = '';
+                    $moduleID = $this->extractImportId($value);
+                    if($value !== '' and empty($moduleID))    $errors['module'] = $this->lang->task->error->importModuleNotFound;
+                    elseif($moduleID and !isset($modules[$moduleID])) $errors['module'] = $this->lang->task->error->importModuleNotFound;
+                    else $data->module = (int)$moduleID;
+                }
+                elseif($field == 'story')
+                {
+                    if($value == '/' or $value == '-') $value = '';
+                    $storyID = $this->extractImportId($value);
+                    if($value !== '' and empty($storyID))    $errors['story'] = $this->lang->task->error->importStoryNotFound;
+                    elseif($storyID and !isset($stories[$storyID])) $errors['story'] = $this->lang->task->error->importStoryNotFound;
+                    elseif($storyID)
+                    {
+                        $data->story        = (int)$storyID;
+                        $data->storyVersion = $this->loadModel('story')->getVersion($storyID);
+                    }
+                }
+                elseif($field == 'name')
+                {
+                    $data->name = $value;
+                    if($value === '') $errors['name'] = $this->lang->task->error->importNameEmpty;
+                }
+                elseif($field == 'desc')
+                {
+                    $data->desc = $value;
+                }
+                elseif($field == 'assignedTo')
+                {
+                    if($value !== '' and !isset($users[$value])) $errors['assignedTo'] = $this->lang->task->error->importUserNotFound;
+                    else $data->assignedTo = $value;
+                }
+                elseif(in_array($field, $this->config->task->import->listFields))
+                {
+                    if($value === '') continue;
+                    $key = array_search($value, $this->lang->task->{$field . 'List'});
+                    if($key === false) $errors[$field] = sprintf($this->lang->task->error->importEnumInvalid, $value);
+                    else $data->$field = $key;
+                }
+                elseif($field == 'estimate' or $field == 'left')
+                {
+                    if($value === '') continue;
+                    if(!is_numeric($value)) $errors[$field] = $this->lang->task->error->importNumberInvalid;
+                    else $data->$field = (float)$value;
+                }
+                elseif($field == 'estStarted' or $field == 'deadline')
+                {
+                    if($value === '') continue;
+                    if(!preg_match('/^\d{4}-\d{2}-\d{2}$/', $value)) $errors[$field] = $this->lang->task->error->importDateInvalid;
+                    else $data->$field = $value;
+                }
+            }
+
+            $rows[] = array('line' => $lineNo, 'data' => $data, 'errors' => $errors);
+        }
+
+        return array('columns' => $columns, 'rows' => $rows);
+    }
+
+    /**
+     * Extract the id from a cell value like "名称(#12)" or "#12".
+     *
+     * @param  string $value
+     * @access public
+     * @return int
+     */
+    public function extractImportId($value)
+    {
+        $value = trim((string)$value);
+        if($value === '') return 0;
+        if(strpos($value, '(#') !== false)
+        {
+            $id = substr($value, strpos($value, '(#') + 2);
+            return (int)rtrim($id, ')');
+        }
+        if(preg_match('/^#(\d+)$/', $value, $match)) return (int)$match[1];
+        if(ctype_digit($value)) return (int)$value;
+        return 0;
+    }
+
+    /**
+     * Create tasks from the imported CSV.
+     *
+     * @param  string $fileName
+     * @param  int    $projectID
+     * @param  string $encode
+     * @access public
+     * @return array  array('success' => n, 'failed' => m, 'failedLines' => array())
+     */
+    public function createFromImport($fileName, $projectID, $encode = 'utf-8')
+    {
+        $parsed  = $this->parseImportRows($fileName, $projectID, $encode);
+        $success = 0;
+        $failed  = 0;
+        $lines   = array();
+
+        foreach($parsed['rows'] as $row)
+        {
+            if(!empty($row['errors']))
+            {
+                $failed++;
+                $lines[] = $row['line'];
+                continue;
+            }
+
+            $data = $row['data'];
+            if(empty($data->name))
+            {
+                $failed++;
+                $lines[] = $row['line'];
+                continue;
+            }
+
+            $data->project    = $projectID;
+            $data->openedBy   = $this->app->user->account;
+            $data->openedDate = helper::now();
+            if(!isset($data->status)) $data->status = 'wait';
+            if(!isset($data->left))   $data->left   = isset($data->estimate) ? $data->estimate : 0;
+            if(isset($data->assignedTo) and $data->assignedTo !== '') $data->assignedDate = helper::now();
+            unset($data->id);
+
+            $this->dao->insert(TABLE_TASK)->data($data)->autoCheck()->exec();
+            if(dao::isError())
+            {
+                dao::getError();
+                $failed++;
+                $lines[] = $row['line'];
+                continue;
+            }
+
+            $taskID = $this->dao->lastInsertID();
+            $this->loadModel('action')->create('task', $taskID, 'opened', '');
+            if(!empty($data->story)) $this->loadModel('story')->setStage($data->story);
+            $success++;
+        }
+
+        return array('success' => $success, 'failed' => $failed, 'failedLines' => $lines);
+    }
 }

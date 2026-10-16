@@ -1574,7 +1574,7 @@ class story extends control
                     foreach($relatedFiles[$story->id] as $file)
                     {
                         $fileURL = common::getSysURL() . $this->file->webPath . $this->file->getRealPathName($file->pathname);
-                        $story->files .= html::a($fileURL, $file->title, '_blank') . '<br />';
+                        $story->files .= $this->file->formatExportFile($fileURL, $file->title, $this->post->fileType);
                     }
                 }
 
@@ -1626,5 +1626,151 @@ class story extends control
 
         if($id) die(html::select("storys[$id]", $storys, '', 'class="form-control"'));
         die(html::select('story', $storys, '', 'class=form-control'));
+    }
+
+    /**
+     * Download the CSV template for batch import.
+     *
+     * @param  int    $productID
+     * @access public
+     * @return void
+     */
+    public function exportTemplet($productID)
+    {
+        if($_POST)
+        {
+            $this->loadModel('file');
+            $product = $this->loadModel('product')->getById($productID);
+            $fields  = $this->file->importTemplateHeader($this->config->story->importFields, $this->lang->story);
+
+            $modules = $this->loadModel('tree')->getOptionMenu($productID, 'story');
+            $plans   = $this->loadModel('productplan')->getPairs($productID);
+
+            $moduleID   = 0;
+            $moduleName = '/';
+            foreach($modules as $id => $name)
+            {
+                if(empty($id)) continue;
+                $moduleID   = $id;
+                $moduleName = $name;
+                break;
+            }
+            $planID = 0;
+            if(!empty($plans)) $planID = key($plans);
+
+            $row = new stdclass();
+            $row->product    = $product->name . "(#$productID)";
+            $row->module     = $moduleID ? $moduleName . "(#$moduleID)" : '/';
+            $row->plan       = $planID ? $plans[$planID] . "(#$planID)" : '';
+            $row->source     = $this->lang->story->sourceList['po'];
+            $row->title      = $this->lang->story->importExampleTitle;
+            $row->spec       = $this->lang->story->importExampleSpec;
+            $row->verify     = '';
+            $row->keywords   = '';
+            $row->pri        = $this->lang->story->priList[3];
+            $row->estimate   = '4';
+            $row->stage      = $this->lang->story->stageList['wait'];
+            $row->assignedTo = '';
+
+            $fields[''] = '';
+            $fields['sourceValue'] = $this->lang->story->sourceValue;
+            $fields['priValue']    = $this->lang->story->priValue;
+            $fields['stageValue']  = $this->lang->story->stageValue;
+
+            $row->sourceValue = join("\n", array_filter($this->lang->story->sourceList, 'strlen'));
+            $row->priValue    = join("\n", array_filter($this->lang->story->priList,    'strlen'));
+            $row->stageValue  = join("\n", array_filter($this->lang->story->stageList,  'strlen'));
+
+            $this->post->set('fields', $fields);
+            $this->post->set('kind', 'story');
+            $this->post->set('rows', array($row));
+            $this->post->set('extraNum', $this->post->num);
+            $this->post->set('fileName', 'storyTemplet');
+            $this->fetch('file', 'export2csv', $_POST);
+        }
+
+        $this->view->productID = $productID;
+        $this->display();
+    }
+
+    /**
+     * Import stories from a CSV file.
+     *
+     * @param  int    $productID
+     * @param  int    $branch
+     * @access public
+     * @return void
+     */
+    public function import($productID, $branch = 0)
+    {
+        if($_FILES)
+        {
+            $file = $this->loadModel('file')->getUpload('file');
+            $file = $file[0];
+
+            $fileName = $this->file->savePath . $this->file->getSaveName($file['pathname']);
+            move_uploaded_file($file['tmpname'], $fileName);
+
+            $fields = $this->story->getImportFields();
+            $parsed = $this->file->parseImportFile($fileName, $fields, $this->post->encode);
+            if(empty($parsed['columns']))
+            {
+                unlink($fileName);
+                die(js::alert($this->lang->story->error->importNoColumn) . js::locate('back'));
+            }
+
+            $this->session->set('storyImportFile', $fileName);
+            die(js::locate(inlink('showImport', "productID=$productID&branch=$branch"), 'parent.parent'));
+        }
+
+        $this->view->productID = $productID;
+        $this->view->branch    = $branch;
+        $this->display();
+    }
+
+    /**
+     * Preview the imported CSV and save the valid rows.
+     *
+     * @param  int    $productID
+     * @param  int    $branch
+     * @access public
+     * @return void
+     */
+    public function showImport($productID, $branch = 0)
+    {
+        $fileName = $this->session->storyImportFile;
+        if(empty($fileName) or !file_exists($fileName))
+        {
+            die(js::alert($this->lang->error->noData) . js::locate(inlink('import', "productID=$productID")));
+        }
+
+        if($_POST)
+        {
+            $result  = $this->story->createFromImport($fileName, $productID, $this->post->encode);
+            $message = sprintf($this->lang->story->importResult, $result['success'], $result['failed']);
+            if($result['failed']) $message .= sprintf($this->lang->story->importFailedLines, join(', ', $result['failedLines']));
+
+            $this->session->set('storyImportFile', '');
+            if($result['success']) $this->send(array('result' => 'success', 'message' => $message, 'locate' => $this->createLink('product', 'browse', "productID=$productID&branch=$branch")));
+            $this->send(array('result' => 'fail', 'message' => array('import' => array($message))));
+        }
+
+        $parsed  = $this->story->parseImportRows($fileName, $productID, $this->post->encode);
+        $product = $this->loadModel('product')->getById($productID);
+        $fields  = $this->story->getImportFields();
+
+        $columns = array();
+        foreach($parsed['columns'] as $field) $columns[$field] = zget($fields, $field, $field);
+
+        $this->product->setMenu($this->products, $productID, $branch);
+
+        $this->view->title      = $product->name . $this->lang->colon . $this->lang->story->showImport;
+        $this->view->position[] = $this->lang->story->showImport;
+        $this->view->product    = $product;
+        $this->view->columns    = $columns;
+        $this->view->rows       = $parsed['rows'];
+        $this->view->listFields = $this->config->story->import->listFields;
+        $this->view->importTip  = $this->lang->story->importTip;
+        $this->display();
     }
 }

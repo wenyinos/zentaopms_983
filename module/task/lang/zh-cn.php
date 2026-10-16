@@ -270,3 +270,34 @@ $lang->task->report->tasksPerClosedReason->graph->xAxisName = '关闭原因';
 
 $lang->task->report->finishedTasksPerDay->type             = 'bar';
 $lang->task->report->finishedTasksPerDay->graph->xAxisName = '日期';
+
+/* CSV 批量导入导出。 */
+$lang->task->import        = '导入任务';
+$lang->task->exportTemplet = '下载导入模板';
+$lang->task->showImport    = '导入预览';
+$lang->task->importFile    = '导入文件';
+$lang->task->importEncode  = '文件编码';
+$lang->task->importExampleName = '示例任务（导入前请删除本行）';
+$lang->task->importExampleDesc = '任务描述示例，可留空。';
+$lang->task->typeValue     = '任务类型可选值';
+$lang->task->priValue      = '优先级可选值';
+$lang->task->statusValue   = '状态可选值';
+$lang->task->importResult  = '成功导入 %s 条，失败 %s 条。';
+$lang->task->importFailedLines = '失败行：%s';
+$lang->task->importTip     = '请先下载导入模板，按模板列名填写；列名需与模板一致，枚举列的可选值见模板末行。';
+
+$lang->task->error->importNoColumn         = '没能识别任何列，请确认使用了下载的模板（列名需与模板一致）。';
+$lang->task->error->importNameEmpty        = '任务名称不能为空。';
+$lang->task->error->importProjectNotMatch  = '所属项目与本次导入的项目不一致。';
+$lang->task->error->importModuleNotFound   = '所属模块不存在或不属于本项目。';
+$lang->task->error->importStoryNotFound    = '相关需求不存在或未关联到本项目。';
+$lang->task->error->importUserNotFound     = '指派人不是本系统的有效账号。';
+$lang->task->error->importEnumInvalid      = '「%s」不是可选值，请参考模板末行的可选值清单。';
+$lang->task->error->importNumberInvalid    = '必须填写数字。';
+$lang->task->error->importDateInvalid      = '日期格式应为 YYYY-MM-DD。';
+$lang->task->line          = '行号';
+$lang->task->importError   = '错误原因';
+$lang->task->importValid   = '可导入';
+$lang->task->importInvalid = '有错误';
+$lang->task->importPreview = '共解析 %s 行，其中 %s 行可导入。';
+$lang->task->importStatus  = '校验';

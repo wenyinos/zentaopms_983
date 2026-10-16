@@ -128,6 +128,23 @@ $currentBrowseType = isset($lang->bug->mySelects[$browseType]) && in_array($brow
       </ul>
     </div>
     <?php endif;?>
+    <?php if(common::hasPriv('bug', 'import') or common::hasPriv('bug', 'exportTemplet')):?>
+    <div class='btn-group'>
+      <button type='button' class='btn btn-link dropdown-toggle' data-toggle='dropdown'>
+        <i class="icon icon-import muted"></i> <span class="text"><?php echo $lang->import;?></span> <span class="caret"></span></button>
+      <ul class='dropdown-menu' id='importActionMenu'>
+        <?php
+        $misc = common::hasPriv('bug', 'exportTemplet') ? "class='iframe' data-width='700'" : "class=disabled";
+        $link = common::hasPriv('bug', 'exportTemplet') ? $this->createLink('bug', 'exportTemplet', "productID=$productID") : '#';
+        echo "<li>" . html::a($link, $lang->bug->exportTemplet, '', $misc) . "</li>";
+
+        $misc = common::hasPriv('bug', 'import') ? "class='iframe' data-width='700'" : "class=disabled";
+        $link = common::hasPriv('bug', 'import') ? $this->createLink('bug', 'import', "productID=$productID&branch=$branch") : '#';
+        echo "<li>" . html::a($link, $lang->bug->import, '', $misc) . "</li>";
+        ?>
+      </ul>
+    </div>
+    <?php endif;?>
     <?php
     common::printLink('bug', 'batchCreate', "productID=$productID&branch=$branch&projectID=0&moduleID=$moduleID", "<i class='icon icon-plus'></i>" . $lang->bug->batchCreate, '', "class='btn btn-secondary'");
     if(commonModel::isTutorialMode())

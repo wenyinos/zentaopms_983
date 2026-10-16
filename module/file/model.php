@@ -605,6 +605,205 @@ class fileModel extends model
     }
 
     /**
+     * Parse an uploaded CSV for batch import.
+     *
+     * 在 parseCSV 之上做四件事：剥 UTF-8 BOM、按选择/探测的编码转成 UTF-8、
+     * 把首行表头映射成字段名、去掉表头行。parseCSV 本身不改（它的 &comma;、
+     * 多行引号等土办法被用例库既有导入依赖）。
+     *
+     * @param  string $fileName
+     * @param  array  $fields    fieldName => 中文列名
+     * @param  string $encode    用户在导入表单选择的编码
+     * @access public
+     * @return array             array('columns' => array(列序号 => 字段名), 'rows' => array(), 'header' => array())
+     */
+    public function parseImportFile($fileName, $fields, $encode = 'utf-8')
+    {
+        $encode = strtolower(trim((string)$encode));
+        if($encode === '') $encode = 'utf-8';
+
+        $content = file_get_contents($fileName);
+        if(substr($content, 0, 3) === "\xEF\xBB\xBF") $content = substr($content, 3);
+        if($encode != 'utf-8') $content = helper::convertEncoding($content, $encode, 'utf-8');
+        $content = $this->normalizeImportCSV($content);
+        file_put_contents($fileName, $content);
+
+        $rows    = $this->parseCSV($fileName);
+        $header  = $this->getImportHeader($rows);
+        $columns = $this->matchImportColumns($header, $fields);
+
+        /* 选了 utf-8 却一列都没对上：文件大概率其实是 GBK，按 gbk 再试一次。 */
+        if(empty($columns) and $encode == 'utf-8')
+        {
+            $content = helper::convertEncoding(file_get_contents($fileName), 'gbk', 'utf-8');
+            file_put_contents($fileName, $this->normalizeImportCSV($content));
+
+            $rows    = $this->parseCSV($fileName);
+            $header  = $this->getImportHeader($rows);
+            $columns = $this->matchImportColumns($header, $fields);
+        }
+
+        unset($rows[0]);
+        return array('columns' => $columns, 'rows' => $this->trimImportRows($rows), 'header' => $header);
+    }
+
+    /**
+     * Normalize a CSV before handing it to parseCSV.
+     *
+     * parseCSV 是靠 `,"",` 这类字面替换认空单元格的，行首的空引号单元格（模板里空着的
+     * 「编号」列就是这种）会让它把前两个单元格粘成一个，整行右移。这里只做这一处规整，
+     * 不动 parseCSV 本身。
+     *
+     * @param  string $content
+     * @access public
+     * @return string
+     */
+    public function normalizeImportCSV($content)
+    {
+        return preg_replace('/^"",/m', ',', (string)$content);
+    }
+
+    /**
+     * Drop the blank rows parseCSV produces for trailing newlines.
+     *
+     * @param  array  $rows
+     * @access public
+     * @return array
+     */
+    public function trimImportRows($rows)
+    {
+        $result = array();
+        foreach($rows as $row)
+        {
+            if(!is_array($row)) continue;
+            $hasValue = false;
+            foreach($row as $cell)
+            {
+                if(trim((string)$cell) !== ''){ $hasValue = true; break; }
+            }
+            if($hasValue) $result[] = $row;
+        }
+        return $result;
+    }
+
+    /**
+     * Format a related file for export.
+     *
+     * HTML 导出给可点的链接，CSV 导出给「标题: URL」纯文本（strip_tags 会把 <a> 的
+     * href 一起吃掉，只留标题，用户就拿不到地址了）。
+     *
+     * @param  string $url
+     * @param  string $title
+     * @param  string $fileType
+     * @access public
+     * @return string
+     */
+    public function formatExportFile($url, $title, $fileType = 'html')
+    {
+        if($fileType == 'csv') return $title . ': ' . $url . "\n";
+        return html::a($url, $title, '_blank') . '<br />';
+    }
+
+    /**
+     * Build the CSV template header from an import field list.
+     *
+     * 四对象的模板下载共用：把 config 里的 importFields 清单翻译成 field => 中文列名。
+     *
+     * @param  string $fields   逗号分隔的字段清单
+     * @param  object $lang     该模块的语言对象（$this->lang-><module>）
+     * @access public
+     * @return array
+     */
+    public function importTemplateHeader($fields, $lang)
+    {
+        $header = array();
+        foreach(explode(',', (string)$fields) as $field)
+        {
+            $field = trim($field);
+            if($field === '') continue;
+            $header[$field] = isset($lang->$field) ? $lang->$field : $field;
+        }
+        return $header;
+    }
+
+    /**
+     * Get the header row of a parsed CSV.
+     *
+     * @param  array  $rows
+     * @access public
+     * @return array
+     */
+    public function getImportHeader($rows)
+    {
+        $header = array();
+        if(!isset($rows[0])) return $header;
+        foreach($rows[0] as $index => $value)
+        {
+            if($value === '' or $value === null) break;
+            $header[$index] = $value;
+        }
+        return $header;
+    }
+
+    /**
+     * Normalize a CSV column title.
+     *
+     * @param  string $title
+     * @access public
+     * @return string
+     */
+    public function normalizeImportTitle($title)
+    {
+        $title = str_replace(array("\xEF\xBB\xBF", '　', "\xC2\xA0"), ' ', (string)$title);
+        $title = trim($title);
+        return trim($title, '*');
+    }
+
+    /**
+     * Map CSV column titles to field names.
+     *
+     * 两级匹配：先规范化后精确相等；再忽略空格与大小写的双向包含，多个候选取列名最长者
+     * （避免「开始」同时命中「预计开始/实际开始」时选错）。
+     *
+     * @param  array  $header
+     * @param  array  $fields    fieldName => 中文列名
+     * @access public
+     * @return array             array(列序号 => 字段名)
+     */
+    public function matchImportColumns($header, $fields)
+    {
+        $labels = array();
+        $exact  = array();
+        foreach($fields as $field => $label)
+        {
+            $label = str_replace(' ', '', $this->normalizeImportTitle($label));
+            if($label === '') continue;
+            $labels[$field] = $label;
+            if(!isset($exact[$label])) $exact[$label] = $field;
+        }
+
+        $columns = array();
+        foreach($header as $index => $title)
+        {
+            $key = str_replace(' ', '', $this->normalizeImportTitle($title));
+            if($key === '') continue;
+
+            if(isset($exact[$key])){ $columns[$index] = $exact[$key]; continue; }
+
+            $matched = '';
+            foreach($labels as $field => $label)
+            {
+                if(strcasecmp($label, $key) === 0 or strpos($label, $key) !== false or strpos($key, $label) !== false)
+                {
+                    if($matched === '' or strlen($label) > strlen($labels[$matched])) $matched = $field;
+                }
+            }
+            if($matched !== '') $columns[$index] = $matched;
+        }
+        return $columns;
+    }
+
+    /**
      * Remove interference for parse csv.
      * 
      * @param  array    $matchs 

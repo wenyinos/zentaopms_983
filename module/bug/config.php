@@ -326,3 +326,16 @@ $config->bug->datatable->fieldList['actions']['title']    = 'actions';
 $config->bug->datatable->fieldList['actions']['fixed']    = 'right';
 $config->bug->datatable->fieldList['actions']['width']    = '140';
 $config->bug->datatable->fieldList['actions']['required'] = 'yes';
+
+/* CSV 批量导入：字段口径（列名走 $lang->bug-><field>，无需第二套命名）。 */
+$config->bug->importFields = '
+    id, product, module, project, story,
+    title, keywords,
+    severity, pri, type, os, browser,
+    steps, status, deadline, openedBuild,
+    assignedTo';
+if($config->global->flow == 'onlyTest') $config->bug->importFields = str_replace(array(' project,', ' story,'), '', $config->bug->importFields);
+
+$config->bug->import = new stdclass();
+$config->bug->import->listFields     = array('severity', 'pri', 'type', 'os', 'browser', 'status');
+$config->bug->import->requiredFields = 'title';

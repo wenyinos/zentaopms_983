@@ -200,6 +200,9 @@ $lang->resource->story->edit        = 'edit';
 $lang->resource->story->linkStory   = 'linkStory';
 $lang->resource->story->batchEdit   = 'batchEdit';
 $lang->resource->story->export      = 'export';
+$lang->resource->story->exportTemplet = 'exportTemplet';
+$lang->resource->story->import        = 'import';
+$lang->resource->story->showImport    = 'showImport';
 $lang->resource->story->delete      = 'delete';
 $lang->resource->story->view        = 'view';
 $lang->resource->story->change      = 'lblChange';
@@ -242,6 +245,9 @@ $lang->story->methodOrder[100] = 'report';
 $lang->story->methodOrder[105] = 'linkStory';
 $lang->story->methodOrder[115] = 'batchChangeBranch';
 $lang->story->methodOrder[120] = 'batchChangeModule';
+$lang->story->methodOrder[125] = 'exportTemplet';
+$lang->story->methodOrder[130] = 'import';
+$lang->story->methodOrder[135] = 'showImport';
 
 /* Product plan. */
 $lang->resource->productplan = new stdclass();
@@ -421,6 +427,9 @@ $lang->resource->task->activate           = 'activate';
 $lang->resource->task->delete             = 'delete';
 $lang->resource->task->view               = 'view';
 $lang->resource->task->export             = 'export';
+$lang->resource->task->exportTemplet      = 'exportTemplet';
+$lang->resource->task->import             = 'import';
+$lang->resource->task->showImport         = 'showImport';
 $lang->resource->task->confirmStoryChange = 'confirmStoryChange';
 $lang->resource->task->recordEstimate     = 'recordEstimate';
 $lang->resource->task->editEstimate       = 'editEstimate';
@@ -450,6 +459,9 @@ $lang->task->methodOrder[100] = 'editEstimate';
 $lang->task->methodOrder[105] = 'deleteEstimate';
 $lang->task->methodOrder[110] = 'report';
 $lang->task->methodOrder[115] = 'batchChangeModule';
+$lang->task->methodOrder[120] = 'exportTemplet';
+$lang->task->methodOrder[125] = 'import';
+$lang->task->methodOrder[130] = 'showImport';
 
 /* Build. */
 $lang->resource->build = new stdclass();
@@ -503,6 +515,9 @@ $lang->resource->bug->batchActivate      = 'batchActivate';
 $lang->resource->bug->close              = 'close';
 $lang->resource->bug->report             = 'reportChart';
 $lang->resource->bug->export             = 'export';
+$lang->resource->bug->exportTemplet      = 'exportTemplet';
+$lang->resource->bug->import             = 'import';
+$lang->resource->bug->showImport         = 'showImport';
 $lang->resource->bug->confirmStoryChange = 'confirmStoryChange';
 $lang->resource->bug->delete             = 'delete';
 $lang->resource->bug->saveTemplate       = 'saveTemplate';
@@ -538,6 +553,9 @@ $lang->bug->methodOrder[110] = 'setPublic';
 $lang->bug->methodOrder[115] = 'linkBugs';
 $lang->bug->methodOrder[125] = 'batchChangeModule';
 $lang->bug->methodOrder[130] = 'batchChangeBranch';
+$lang->bug->methodOrder[135] = 'exportTemplet';
+$lang->bug->methodOrder[140] = 'import';
+$lang->bug->methodOrder[145] = 'showImport';
 
 /* Test case. */
 $lang->resource->testcase = new stdclass();

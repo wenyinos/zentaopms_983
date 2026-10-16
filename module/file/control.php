@@ -186,7 +186,15 @@ class file extends control
         $this->view->fields = $this->post->fields;
         $this->view->rows   = $this->post->rows;
         $output = $this->parse('file', 'export2csv');
-        if($this->post->encode != "utf-8") $output = helper::convertEncoding($output, 'utf-8', $this->post->encode . '//TRANSLIT');
+        if($this->post->encode != "utf-8")
+        {
+            $output = helper::convertEncoding($output, 'utf-8', $this->post->encode . '//TRANSLIT');
+        }
+        else
+        {
+            /* UTF-8 BOM：不加的话 Excel 会按本地编码打开，中文全乱码。 */
+            $output = "\xEF\xBB\xBF" . $output;
+        }
 
         $this->sendDownHeader($this->post->fileName, 'csv', $output);
     }

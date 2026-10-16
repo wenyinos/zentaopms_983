@@ -1585,7 +1585,7 @@ class bug extends control
                     foreach($relatedFiles[$bug->id] as $file)
                     {
                         $fileURL = common::getSysURL() . $this->file->webPath . $this->file->getRealPathName($file->pathname);
-                        $bug->files .= html::a($fileURL, $file->title, '_blank') . '<br />';
+                        $bug->files .= $this->file->formatExportFile($fileURL, $file->title, $this->post->fileType);
                     }
                 }
 
@@ -1629,5 +1629,160 @@ class bug extends control
         $realname = $this->dao->select('*')->from(TABLE_USER)->where('account')->eq($bug->assignedTo)->fetch('realname');
         $bug->assignedTo = $realname ? $realname : ($bug->assignedTo == 'closed' ? 'Closed' : $bug->assignedTo);
         die(json_encode($bug));
+    }
+
+    /**
+     * Download the CSV template for batch import.
+     *
+     * @param  int    $productID
+     * @access public
+     * @return void
+     */
+    public function exportTemplet($productID)
+    {
+        if($_POST)
+        {
+            $this->loadModel('file');
+            $product = $this->loadModel('product')->getById($productID);
+            $fields  = $this->file->importTemplateHeader($this->config->bug->importFields, $this->lang->bug);
+
+            $modules = $this->loadModel('tree')->getOptionMenu($productID, 'bug');
+            $stories = $this->loadModel('story')->getProductStoryPairs($productID);
+            $project = $this->loadModel('project')->getPairs();
+
+            $moduleID   = 0;
+            $moduleName = '/';
+            foreach($modules as $id => $name)
+            {
+                if(empty($id)) continue;
+                $moduleID   = $id;
+                $moduleName = $name;
+                break;
+            }
+
+            $row = new stdclass();
+            $row->product    = $product->name . "(#$productID)";
+            $row->module     = $moduleID ? $moduleName . "(#$moduleID)" : '/';
+            $row->project    = '';
+            $row->story      = '';
+            $row->title      = $this->lang->bug->importExampleTitle;
+            $row->keywords   = '';
+            $row->severity   = $this->lang->bug->severityList[3];
+            $row->pri        = $this->lang->bug->priList[3];
+            $row->type       = $this->lang->bug->typeList['codeerror'];
+            $row->os         = $this->lang->bug->osList['all'];
+            $row->browser    = $this->lang->bug->browserList['all'];
+            $row->steps      = $this->lang->bug->importExampleSteps;
+            $row->status     = $this->lang->bug->statusList['active'];
+            $row->deadline   = date('Y-m-d', strtotime('+7 days'));
+            $row->openedBuild = 'trunk';
+            $row->assignedTo = '';
+
+            $fields[''] = '';
+            $fields['severityValue'] = $this->lang->bug->severityValue;
+            $fields['priValue']      = $this->lang->bug->priValue;
+            $fields['typeValue']     = $this->lang->bug->typeValue;
+            $fields['osValue']       = $this->lang->bug->osValue;
+            $fields['browserValue']  = $this->lang->bug->browserValue;
+            $fields['statusValue']   = $this->lang->bug->statusValue;
+
+            $row->severityValue = join("\n", array_filter($this->lang->bug->severityList, 'strlen'));
+            $row->priValue      = join("\n", array_filter($this->lang->bug->priList,      'strlen'));
+            $row->typeValue     = join("\n", array_filter($this->lang->bug->typeList,     'strlen'));
+            $row->osValue       = join("\n", array_filter($this->lang->bug->osList,       'strlen'));
+            $row->browserValue  = join("\n", array_filter($this->lang->bug->browserList,  'strlen'));
+            $row->statusValue   = join("\n", array_filter($this->lang->bug->statusList,   'strlen'));
+
+            $this->post->set('fields', $fields);
+            $this->post->set('kind', 'bug');
+            $this->post->set('rows', array($row));
+            $this->post->set('extraNum', $this->post->num);
+            $this->post->set('fileName', 'bugTemplet');
+            $this->fetch('file', 'export2csv', $_POST);
+        }
+
+        $this->view->productID = $productID;
+        $this->display();
+    }
+
+    /**
+     * Import bugs from a CSV file.
+     *
+     * @param  int    $productID
+     * @param  int    $branch
+     * @access public
+     * @return void
+     */
+    public function import($productID, $branch = 0)
+    {
+        if($_FILES)
+        {
+            $file = $this->loadModel('file')->getUpload('file');
+            $file = $file[0];
+
+            $fileName = $this->file->savePath . $this->file->getSaveName($file['pathname']);
+            move_uploaded_file($file['tmpname'], $fileName);
+
+            $fields = $this->bug->getImportFields();
+            $parsed = $this->file->parseImportFile($fileName, $fields, $this->post->encode);
+            if(empty($parsed['columns']))
+            {
+                unlink($fileName);
+                die(js::alert($this->lang->bug->error->importNoColumn) . js::locate('back'));
+            }
+
+            $this->session->set('bugImportFile', $fileName);
+            die(js::locate(inlink('showImport', "productID=$productID&branch=$branch"), 'parent.parent'));
+        }
+
+        $this->view->productID = $productID;
+        $this->view->branch    = $branch;
+        $this->display();
+    }
+
+    /**
+     * Preview the imported CSV and save the valid rows.
+     *
+     * @param  int    $productID
+     * @param  int    $branch
+     * @access public
+     * @return void
+     */
+    public function showImport($productID, $branch = 0)
+    {
+        $fileName = $this->session->bugImportFile;
+        if(empty($fileName) or !file_exists($fileName))
+        {
+            die(js::alert($this->lang->error->noData) . js::locate(inlink('import', "productID=$productID")));
+        }
+
+        if($_POST)
+        {
+            $result  = $this->bug->createFromImport($fileName, $productID, $this->post->encode);
+            $message = sprintf($this->lang->bug->importResult, $result['success'], $result['failed']);
+            if($result['failed']) $message .= sprintf($this->lang->bug->importFailedLines, join(', ', $result['failedLines']));
+
+            $this->session->set('bugImportFile', '');
+            if($result['success']) $this->send(array('result' => 'success', 'message' => $message, 'locate' => $this->createLink('bug', 'browse', "productID=$productID&branch=$branch")));
+            $this->send(array('result' => 'fail', 'message' => array('import' => array($message))));
+        }
+
+        $parsed  = $this->bug->parseImportRows($fileName, $productID, $this->post->encode);
+        $product = $this->loadModel('product')->getById($productID);
+        $fields  = $this->bug->getImportFields();
+
+        $columns = array();
+        foreach($parsed['columns'] as $field) $columns[$field] = zget($fields, $field, $field);
+
+        $this->product->setMenu($this->products, $productID, $branch);
+
+        $this->view->title      = $product->name . $this->lang->colon . $this->lang->bug->showImport;
+        $this->view->position[] = $this->lang->bug->showImport;
+        $this->view->product    = $product;
+        $this->view->columns    = $columns;
+        $this->view->rows       = $parsed['rows'];
+        $this->view->listFields = $this->config->bug->import->listFields;
+        $this->view->importTip  = $this->lang->bug->importTip;
+        $this->display();
     }
 }

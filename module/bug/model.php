@@ -2651,4 +2651,202 @@ class bugModel extends model
 
         return array($toList, $ccList);
     }
+
+    /**
+     * Get the import fields of bug.
+     *
+     * @access public
+     * @return array  fieldName => 中文列名
+     */
+    public function getImportFields()
+    {
+        $fields = array();
+        foreach(explode(',', $this->config->bug->importFields) as $field)
+        {
+            $field = trim($field);
+            if($field === '') continue;
+            $fields[$field] = isset($this->lang->bug->$field) ? $this->lang->bug->$field : $field;
+        }
+        return $fields;
+    }
+
+    /**
+     * Parse an imported CSV into bug rows, translating values and collecting per-row errors.
+     *
+     * @param  string $fileName
+     * @param  int    $productID
+     * @param  string $encode
+     * @access public
+     * @return array
+     */
+    public function parseImportRows($fileName, $productID, $encode = 'utf-8')
+    {
+        $this->app->loadLang('product');
+
+        $fields  = $this->getImportFields();
+        $parsed  = $this->loadModel('file')->parseImportFile($fileName, $fields, $encode);
+        $columns = $parsed['columns'];
+
+        $users    = $this->loadModel('user')->getPairs('noletter');
+        $product  = $this->loadModel('product')->getById($productID);
+        $modules  = $this->loadModel('tree')->getOptionMenu($productID, 'bug');
+        $projects = $this->loadModel('project')->getPairs();
+
+        $rows   = array();
+        $lineNo = 1;
+        foreach($parsed['rows'] as $row)
+        {
+            $lineNo++;
+            $data   = new stdclass();
+            $errors = array();
+
+            foreach($columns as $index => $field)
+            {
+                $value = isset($row[$index]) ? trim((string)$row[$index]) : '';
+
+                if($field == 'id')
+                {
+                    $data->id = (int)$value;
+                }
+                elseif($field == 'product')
+                {
+                    $data->product = $productID;
+                    $cellProduct   = $this->extractImportId($value);
+                    if($cellProduct and $cellProduct != $productID) $errors['product'] = $this->lang->bug->error->importProductNotMatch;
+                }
+                elseif($field == 'module')
+                {
+                    if($value == '/' or $value == '-') $value = '';
+                    $moduleID = $this->extractImportId($value);
+                    if($value !== '' and empty($moduleID)) $errors['module'] = $this->lang->bug->error->importModuleNotFound;
+                    elseif($moduleID and !isset($modules[$moduleID])) $errors['module'] = $this->lang->bug->error->importModuleNotFound;
+                    elseif($moduleID) $data->module = (int)$moduleID;
+                }
+                elseif($field == 'project')
+                {
+                    if($value == '/' or $value == '-') $value = '';
+                    $projectID2 = $this->extractImportId($value);
+                    if($value !== '' and empty($projectID2)) $errors['project'] = $this->lang->bug->error->importProjectNotFound;
+                    elseif($projectID2 and !isset($projects[$projectID2])) $errors['project'] = $this->lang->bug->error->importProjectNotFound;
+                    elseif($projectID2) $data->project = (int)$projectID2;
+                }
+                elseif($field == 'story')
+                {
+                    if($value == '/' or $value == '-') $value = '';
+                    $storyID = $this->extractImportId($value);
+                    if($value !== '' and empty($storyID)) $errors['story'] = $this->lang->bug->error->importStoryNotFound;
+                    elseif($storyID)
+                    {
+                        $story = $this->loadModel('story')->getById($storyID);
+                        if(!$story or $story->product != $productID) $errors['story'] = $this->lang->bug->error->importStoryNotFound;
+                        else
+                        {
+                            $data->story        = (int)$storyID;
+                            $data->storyVersion = $story->version;
+                        }
+                    }
+                }
+                elseif($field == 'title')
+                {
+                    $data->title = $value;
+                    if($value === '') $errors['title'] = $this->lang->bug->error->importTitleEmpty;
+                }
+                elseif($field == 'keywords' or $field == 'steps' or $field == 'openedBuild')
+                {
+                    $data->$field = $value;
+                }
+                elseif($field == 'assignedTo')
+                {
+                    if($value !== '' and !isset($users[$value])) $errors['assignedTo'] = $this->lang->bug->error->importUserNotFound;
+                    else $data->assignedTo = $value;
+                }
+                elseif(in_array($field, $this->config->bug->import->listFields))
+                {
+                    if($value === '') continue;
+                    $key = array_search($value, $this->lang->bug->{$field . 'List'});
+                    if($key === false) $errors[$field] = sprintf($this->lang->bug->error->importEnumInvalid, $value);
+                    else $data->$field = $key;
+                }
+                elseif($field == 'deadline')
+                {
+                    if($value === '') continue;
+                    if(!preg_match('/^\d{4}-\d{2}-\d{2}$/', $value)) $errors['deadline'] = $this->lang->bug->error->importDateInvalid;
+                    else $data->deadline = $value;
+                }
+            }
+
+            $rows[] = array('line' => $lineNo, 'data' => $data, 'errors' => $errors);
+        }
+
+        return array('columns' => $columns, 'rows' => $rows);
+    }
+
+    /**
+     * Extract the id from a cell value like "名称(#12)" or "#12".
+     *
+     * @param  string $value
+     * @access public
+     * @return int
+     */
+    public function extractImportId($value)
+    {
+        $value = trim((string)$value);
+        if($value === '') return 0;
+        if(strpos($value, '(#') !== false) return (int)rtrim(substr($value, strpos($value, '(#') + 2), ')');
+        if(preg_match('/^#(\d+)$/', $value, $match)) return (int)$match[1];
+        if(ctype_digit($value)) return (int)$value;
+        return 0;
+    }
+
+    /**
+     * Create bugs from the imported CSV.
+     *
+     * @param  string $fileName
+     * @param  int    $productID
+     * @param  string $encode
+     * @access public
+     * @return array
+     */
+    public function createFromImport($fileName, $productID, $encode = 'utf-8')
+    {
+        $parsed  = $this->parseImportRows($fileName, $productID, $encode);
+        $success = 0;
+        $failed  = 0;
+        $lines   = array();
+
+        foreach($parsed['rows'] as $row)
+        {
+            $data = $row['data'];
+            if(!empty($row['errors']) or empty($data->title))
+            {
+                $failed++;
+                $lines[] = $row['line'];
+                continue;
+            }
+
+            $data->product    = $productID;
+            $data->openedBy   = $this->app->user->account;
+            $data->openedDate = helper::now();
+            if(!isset($data->status)) $data->status = 'active';
+            if(!isset($data->openedBuild) or $data->openedBuild === '') $data->openedBuild = 'trunk';
+            if(isset($data->assignedTo) and $data->assignedTo !== '') $data->assignedDate = helper::now();
+            unset($data->id);
+
+            $this->dao->insert(TABLE_BUG)->data($data)->autoCheck()->exec();
+            if(dao::isError())
+            {
+                dao::getError();
+                $failed++;
+                $lines[] = $row['line'];
+                continue;
+            }
+
+            $bugID = $this->dao->lastInsertID();
+            $this->loadModel('action')->create('bug', $bugID, 'opened', '');
+            if(!empty($data->story)) $this->loadModel('story')->setStage($data->story);
+            $success++;
+        }
+
+        return array('success' => $success, 'failed' => $failed, 'failedLines' => $lines);
+    }
 }

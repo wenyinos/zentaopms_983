@@ -140,6 +140,14 @@ js::set('browseType', $browseType);
         $misc = common::hasPriv('project', 'importBug') ? "class='import'" : "class=disabled";
         $link = common::hasPriv('project', 'importBug') ? $this->createLink('project', 'importBug', "project=$project->id") : '#';
         echo "<li>" . html::a($link, $lang->project->importBug, '', $misc) . "</li>";
+
+        $misc = common::hasPriv('task', 'exportTemplet') ? "class='iframe' data-width='700'" : "class=disabled";
+        $link = common::hasPriv('task', 'exportTemplet') ? $this->createLink('task', 'exportTemplet', "projectID=$projectID") : '#';
+        echo "<li>" . html::a($link, $lang->task->exportTemplet, '', $misc) . "</li>";
+
+        $misc = common::hasPriv('task', 'import') ? "class='iframe' data-width='700'" : "class=disabled";
+        $link = common::hasPriv('task', 'import') ? $this->createLink('task', 'import', "projectID=$projectID") : '#';
+        echo "<li>" . html::a($link, $lang->task->import, '', $misc) . "</li>";
         ?>
       </ul>
     </div>

@@ -394,3 +394,36 @@ $lang->bug->moreSelects['longlifebugs']  = $lang->bug->longLifeBugs;
 $lang->bug->moreSelects['postponedbugs'] = $lang->bug->postponedBugs;
 $lang->bug->moreSelects['overduebugs']   = $lang->bug->overdueBugs;
 $lang->bug->moreSelects['needconfirm']   = $lang->bug->needConfirm;
+
+/* CSV 批量导入导出。 */
+$lang->bug->import        = '导入Bug';
+$lang->bug->exportTemplet = '下载导入模板';
+$lang->bug->showImport    = '导入预览';
+$lang->bug->line          = '行号';
+$lang->bug->importError   = '错误原因';
+$lang->bug->importStatus  = '校验';
+$lang->bug->importValid   = '可导入';
+$lang->bug->importInvalid = '有错误';
+$lang->bug->importPreview = '共解析 %s 行，其中 %s 行可导入。';
+$lang->bug->importResult  = '成功导入 %s 条，失败 %s 条。';
+$lang->bug->importFailedLines = '失败行：%s';
+$lang->bug->importTip     = '请先下载导入模板，按模板列名填写；列名需与模板一致，枚举列的可选值见模板末行。';
+$lang->bug->importExampleTitle = '示例Bug（导入前请删除本行）';
+$lang->bug->importExampleSteps = '1. 打开页面\n2. 点击按钮\n3. 观察结果';
+if(!isset($lang->bug->error)) $lang->bug->error = new stdclass();
+$lang->bug->error->importProjectNotFound = '所属项目不存在。';
+$lang->bug->error->importStoryNotFound   = '相关需求不存在或不属于本产品。';
+
+$lang->bug->error->importNoColumn         = '没能识别任何列，请确认使用了下载的模板（列名需与模板一致）。';
+$lang->bug->error->importTitleEmpty       = 'Bug标题不能为空。';
+$lang->bug->error->importProductNotMatch  = '所属产品与本次导入的产品不一致。';
+$lang->bug->error->importModuleNotFound   = '所属模块不存在或不属于本产品。';
+$lang->bug->error->importUserNotFound     = '指派人不是本系统的有效账号。';
+$lang->bug->error->importEnumInvalid      = '「%s」不是可选值，请参考模板末行的可选值清单。';
+$lang->bug->error->importDateInvalid      = '日期格式应为 YYYY-MM-DD。';
+$lang->bug->severityValue = '严重程度可选值';
+$lang->bug->priValue      = '优先级可选值';
+$lang->bug->typeValue     = 'Bug类型可选值';
+$lang->bug->osValue       = '操作系统可选值';
+$lang->bug->browserValue  = '浏览器可选值';
+$lang->bug->statusValue   = 'Bug状态可选值';
