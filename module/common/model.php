@@ -156,6 +156,11 @@ class commonModel extends model
         if($module == 'sso' and $method == 'gettodolist') return true;
         if($module == 'block' and $method == 'main') return true;
         if($module == 'file' and $method == 'read') return true;
+        /* 命令行升级通道：CLI 下没有登录态（框架把用户置为 guest），若不放行，
+           README 里 `php bin/ztcli 'http://host/upgrade-execute.html'` 会被权限守卫拒绝、
+           静默失败。仅放行 CLI 下的 upgrade 两个方法，Web 路径不受影响
+           （upgrade.php 仍由 web server 的 404 规则封禁）。 */
+        if(PHP_SAPI == 'cli' and $module == 'upgrade' and ($method == 'execute' or $method == 'afterExec')) return true;
 
         if($this->loadModel('user')->isLogon() or ($this->app->company->guest and $this->app->user->account == 'guest'))
         {
