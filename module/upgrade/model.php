@@ -32,6 +32,12 @@ class upgradeModel extends model
         $this->addErrorLogTables();
         $this->addErrorLogCron();
 
+        /* 9.10.0 新增：文档增强（文档排序列、文档库类型列、浏览动作表、模板库种子）。 */
+        $this->addDocOrderColumn();
+        $this->addDoclibTypeColumn();
+        $this->createDocActionTable();
+        $this->seedTemplateLib();
+
         switch($fromVersion)
         {
             case '9_8_3_1':
@@ -102,6 +108,142 @@ class upgradeModel extends model
             {
                 self::$errors[] = $e->getMessage() . "<p>The sql is: CREATE TABLE {$tableName}</p>";
             }
+        }
+    }
+
+    /**
+     * Add the doc order column (idempotent).
+     *
+     * 9.10.0 文档增强：zt_doc.order 用于文档列表拖拽排序。`order` 是 MySQL 保留字，
+     * SQL 里一律加反引号。可重复执行。
+     *
+     * @access public
+     * @return void
+     */
+    public function addDocOrderColumn()
+    {
+        $tableName = trim(TABLE_DOC, '`');
+        $exists = $this->dao->select('COUNT(*) AS count')->from('information_schema.columns')
+            ->where('table_schema')->eq($this->config->db->name)
+            ->andWhere('table_name')->eq($tableName)
+            ->andWhere('column_name')->eq('order')
+            ->fetch('count');
+        if($exists) return;
+
+        try
+        {
+            $this->dbh->exec("ALTER TABLE `{$tableName}` ADD COLUMN `order` int unsigned NOT NULL DEFAULT 0");
+            $this->dbh->exec("UPDATE `{$tableName}` SET `order` = `id` WHERE `order` = 0");
+        }
+        catch (PDOException $e)
+        {
+            self::$errors[] = $e->getMessage() . '<p>The sql is: ALTER TABLE zt_doc ADD order</p>';
+        }
+    }
+
+    /**
+     * Add the doclib type column (idempotent).
+     *
+     * 9.10.0 文档增强：zt_doclib.type 区分普通库与「文档模板」范围库。
+     * 默认空串，既有库行为不变。可重复执行。
+     *
+     * @access public
+     * @return void
+     */
+    public function addDoclibTypeColumn()
+    {
+        $tableName = trim(TABLE_DOCLIB, '`');
+        $exists = $this->dao->select('COUNT(*) AS count')->from('information_schema.columns')
+            ->where('table_schema')->eq($this->config->db->name)
+            ->andWhere('table_name')->eq($tableName)
+            ->andWhere('column_name')->eq('type')
+            ->fetch('count');
+        if($exists) return;
+
+        try
+        {
+            $this->dbh->exec("ALTER TABLE `{$tableName}` ADD COLUMN `type` varchar(30) NOT NULL DEFAULT ''");
+        }
+        catch (PDOException $e)
+        {
+            self::$errors[] = $e->getMessage() . '<p>The sql is: ALTER TABLE zt_doclib ADD type</p>';
+        }
+    }
+
+    /**
+     * Create the doc action table (idempotent).
+     *
+     * 9.10.0 文档增强：zt_docaction 记录浏览/收藏动作，供「最近浏览」取数。
+     *
+     * @access public
+     * @return void
+     */
+    public function createDocActionTable()
+    {
+        $tableName = $this->config->db->prefix . 'docaction';
+        $exists = $this->dao->select('COUNT(*) AS count')->from('information_schema.tables')
+            ->where('table_schema')->eq($this->config->db->name)
+            ->andWhere('table_name')->eq($tableName)
+            ->fetch('count');
+        if($exists) return;
+
+        $sql = "CREATE TABLE IF NOT EXISTS `{$tableName}` (
+  `id` int unsigned NOT NULL AUTO_INCREMENT,
+  `doc` int unsigned NOT NULL DEFAULT 0,
+  `action` varchar(80) NOT NULL DEFAULT '',
+  `actor` varchar(30) NOT NULL DEFAULT '',
+  `date` datetime DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `doc` (`doc`),
+  KEY `actor` (`actor`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8";
+
+        try
+        {
+            $this->dbh->exec($sql);
+        }
+        catch (PDOException $e)
+        {
+            self::$errors[] = $e->getMessage() . '<p>The sql is: CREATE TABLE ' . $tableName . '</p>';
+        }
+    }
+
+    /**
+     * Seed the doc template lib (idempotent).
+     *
+     * 9.10.0 文档增强：模板必须挂在 doclib 上，故建一个 type='template' 的范围库。
+     * 已有同类库时跳过，保证重复升级不产生第二行。
+     *
+     * @access public
+     * @return void
+     */
+    public function seedTemplateLib()
+    {
+        $exists = $this->dao->select('COUNT(*) AS count')->from(TABLE_DOCLIB)
+            ->where('type')->eq('template')
+            ->fetch('count');
+        if($exists) return;
+
+        $lib = new stdclass();
+        $lib->product   = 0;
+        $lib->project   = 0;
+        $lib->name      = '文档模板';
+        $lib->acl       = 'open';
+        $lib->groups    = '';
+        $lib->users     = '';
+        $lib->main      = '1';
+        $lib->collector = '';
+        $lib->order     = 0;
+        $lib->deleted   = '0';
+        $lib->type      = 'template';
+
+        try
+        {
+            $this->dao->insert(TABLE_DOCLIB)->data($lib)->exec();
+        }
+        catch (PDOException $e)
+        {
+            self::$errors[] = $e->getMessage() . '<p>The sql is: insert template doclib</p>';
         }
     }
 

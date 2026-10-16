@@ -26,6 +26,7 @@
   <ul class='nav'>
     <li <?php if($orderBy == 'addedDate_desc') echo "class='active'";?>><?php echo html::a(inlink('browse', "libID=$libID&browseType=$browseType&param=$param&orderBy=addedDate_desc&from=$from"), $lang->doc->orderByOpen)?></li>
     <li <?php if($orderBy == 'editedDate_desc') echo "class='active'";?>><?php echo html::a(inlink('browse', "libID=$libID&browseType=$browseType&param=$param&orderBy=editedDate_desc&from=$from"), $lang->doc->orderByEdit)?></li>
+    <li <?php if($browseType == 'visitedbyme') echo "class='active'";?>><?php echo html::a(inlink('browse', "libID=0&browseType=visitedbyme&param=0&orderBy=$orderBy&from=$from"), $lang->doc->visitedbyme);?></li>
     <li id='bysearchTab'><a href='#'><i class='icon-search icon'></i>&nbsp;<?php echo $lang->doc->searchDoc;?></a></li>
   </ul>
   <div class='actions'>
@@ -45,6 +46,8 @@
         <?php
         if(common::hasPriv('doc', 'editLib')) echo '<li>' . html::a(inlink('editLib', "rootID=$libID"), $lang->doc->editLib, '', "data-toggle='modal' data-type='iframe' data-width='800px'") . '</li>';
         if(common::hasPriv('doc', 'deleteLib')) echo '<li>' . html::a(inlink('deleteLib', "rootID=$libID"), $lang->doc->deleteLib, 'hiddenwin') . '</li>';
+        if(common::hasPriv('doc', 'sortCatalog')) echo '<li>' . html::a('javascript:setSortMode("catalog")', $lang->doc->sortCatalog) . '</li>';
+        if(common::hasPriv('doc', 'sortDoc'))     echo '<li>' . html::a('javascript:setSortMode("doc")', $lang->doc->sortDoc) . '</li>';
         ?>
         <?php else:?>
         <?php

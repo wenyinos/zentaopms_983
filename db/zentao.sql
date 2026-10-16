@@ -256,6 +256,7 @@ CREATE TABLE IF NOT EXISTS `zt_doc` (
   `type` varchar(30) NOT NULL,
   `views` smallint(5) unsigned NOT NULL,
   `collector` text NOT NULL,
+  `order` int unsigned NOT NULL DEFAULT 0,
   `addedBy` varchar(30) NOT NULL,
   `addedDate` datetime NOT NULL,
   `editedBy` varchar(30) NOT NULL,
@@ -294,6 +295,7 @@ CREATE TABLE IF NOT EXISTS `zt_doclib` (
   `collector` text NOT NULL,
   `order` tinyint(5) unsigned NOT NULL,
   `deleted` enum('0','1') NOT NULL default '0',
+  `type` varchar(30) NOT NULL DEFAULT '',
   PRIMARY KEY  (`id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 -- DROP TABLE IF EXISTS `zt_effort`;
@@ -3394,3 +3396,15 @@ INSERT INTO `zt_grouppriv` (`group`, `module`, `method`) VALUES
 (11, 'user', 'todo'),
 (11, 'user', 'view'),
 (12, 'my', 'limited');
+
+-- DROP TABLE IF EXISTS `zt_docaction`;
+CREATE TABLE IF NOT EXISTS `zt_docaction` (
+  `id` int unsigned NOT NULL AUTO_INCREMENT,
+  `doc` int unsigned NOT NULL DEFAULT 0,
+  `action` varchar(80) NOT NULL DEFAULT '',
+  `actor` varchar(30) NOT NULL DEFAULT '',
+  `date` datetime DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `doc` (`doc`),
+  KEY `actor` (`actor`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;

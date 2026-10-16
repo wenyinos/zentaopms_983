@@ -206,3 +206,75 @@ $(document).ready(function()
         return false;
     });
 });
+
+/* 目录/文档排序模式：拖动后顺序自动保存（目录走 tree::updateOrder，文档走 doc::updateDocOrder）。 */
+function setSortMode(mode)
+{
+    if(mode == 'catalog') $('#docMenu').addClass('sortable-active');
+    if(mode == 'doc')     $('#filesPanel tbody').addClass('sortable-active');
+    sortMode = mode;
+}
+
+var sortMode = '';
+
+$(document).ready(function()
+{
+    if(typeof config === 'undefined') return;
+
+    /* 目录排序 */
+    if($('#docMenu').length)
+    {
+        $('#docMenu').sortable(
+        {
+            trigger: '.sortable-active .tree-item, .sortable-active > li',
+            selector: '.tree-item, li',
+            finish: function()
+            {
+                var orders = {};
+                var orderNext = 1;
+                $('#docMenu .tree-item, #docMenu > li').each(function()
+                {
+                    var id = $(this).data('id');
+                    if(id) orders[id] = orderNext ++;
+                });
+                if(!$.isEmptyObject(orders))
+                {
+                    $.post(createLink('doc', 'sortCatalog'), {orders: JSON.stringify(orders)}, function(data)
+                    {
+                        if(data.result == 'success') return location.reload();
+                        alert(data.message);
+                        return location.reload();
+                    }, 'json');
+                }
+            }
+        });
+    }
+
+    /* 文档排序 */
+    if($('#filesPanel tbody').length)
+    {
+        $('#filesPanel tbody').sortable(
+        {
+            trigger: '.sortable-active tr',
+            selector: 'tr',
+            finish: function()
+            {
+                var orders = [];
+                $('#filesPanel tbody tr').each(function()
+                {
+                    var id = $(this).data('id');
+                    if(id) orders.push(id);
+                });
+                if(orders.length)
+                {
+                    $.post(createLink('doc', 'sortDoc'), {orders: JSON.stringify(orders)}, function(data)
+                    {
+                        if(data.result == 'success') return location.reload();
+                        alert(data.message);
+                        return location.reload();
+                    }, 'json');
+                }
+            }
+        });
+    }
+});

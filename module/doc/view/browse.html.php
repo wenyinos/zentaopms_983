@@ -75,7 +75,7 @@ var browseType = '<?php echo $browseType;?>';
               <th class="c-user"><?php echo $lang->doc->addedBy;?></th>
               <th class="c-datetime"><?php echo $lang->doc->addedDate;?></th>
               <th class="c-datetime"><?php echo $lang->doc->editedDate;?></th>
-              <th class="c-actions-4"><?php echo $lang->actions;?></th>
+              <th class="c-actions-5"><?php echo $lang->actions;?></th>
             </tr>
           </thead>
           <tbody>
@@ -101,7 +101,7 @@ var browseType = '<?php echo $browseType;?>';
             <?php foreach($modules as $module):?>
             <?php $star = strpos($module->collector, ',' . $this->app->user->account . ',') !== false ? 'icon-star text-yellow' : 'icon-star-empty';?>
             <?php $collectTitle = strpos($module->collector, ',' . $this->app->user->account . ',') !== false ? $lang->doc->cancelCollection : $lang->doc->collect;?>
-            <tr>
+            <tr data-id='<?php echo $module->id;?>'>
               <td class="c-name"><?php echo html::a(inlink('browse', "libID=$libID&browseType=bymodule&param=$module->id&orderBy=$orderBy&from=$from"), "<i class='icon icon-folder text-yellow'></i> &nbsp;" . $module->name);?></td>
               <td class="c-num"></td>
               <td class="c-user"></td>
@@ -117,7 +117,7 @@ var browseType = '<?php echo $browseType;?>';
             <?php foreach($docs as $doc):?>
             <?php $star = strpos($doc->collector, ',' . $this->app->user->account . ',') !== false ? 'icon-star text-yellow' : 'icon-star-empty';?>
             <?php $collectTitle = strpos($doc->collector, ',' . $this->app->user->account . ',') !== false ? $lang->doc->cancelCollection : $lang->doc->collect;?>
-            <tr>
+            <tr data-id='<?php echo $doc->id;?>'>
               <td class="c-name"><?php echo html::a(inlink('view', "docID=$doc->id"), "<i class='icon icon-file-text text-muted'></i> &nbsp;" . $doc->title);?></td>
               <td class="c-num"><?php echo $doc->fileSize ? $doc->fileSize : '-';?></td>
               <td class="c-user"><?php echo zget($users, $doc->addedBy);?></td>
@@ -126,6 +126,8 @@ var browseType = '<?php echo $browseType;?>';
               <td class="c-actions">
                 <a data-url="<?php echo $this->createLink('doc', 'collect', "objectID=$doc->id&objectType=doc");?>" title="<?php echo $collectTitle;?>" class='btn btn-link ajaxCollect'><i class='icon <?php echo $star;?>'></i></a>
                 <?php common::printLink('doc', 'edit', "docID=$doc->id", "<i class='icon icon-edit'></i>", '', "title='{$lang->edit}' class='btn btn-link'")?>
+                <?php if(common::hasPriv('doc', 'moveDoc')) echo html::a($this->createLink('doc', 'moveDoc', "docID=$doc->id&libID=$doc->lib"), "<i class='icon icon-move'></i>", '', "title='{$lang->doc->moveDoc}' class='btn btn-link iframe' data-width='600'");?>
+                <?php if(common::hasPriv('doc', 'copyDoc')) echo html::a($this->createLink('doc', 'copyDoc', "docID=$doc->id&libID=$doc->lib"), "<i class='icon icon-copy'></i>", '', "title='{$lang->doc->copyDoc}' class='btn btn-link iframe' data-width='600'");?>
                 <?php common::printLink('doc', 'delete', "docID=$doc->id", "<i class='icon icon-trash'></i>", 'hiddenwin', "title='{$lang->delete}' class='btn btn-link'")?>
               </td>
             </tr>

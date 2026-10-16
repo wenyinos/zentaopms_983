@@ -165,3 +165,15 @@ $lang->doclib->product = $lang->productCommon . ' Library';
 
 $lang->doclib->main['product'] =  'Main Library';
 $lang->doclib->main['project'] =  'Main Library';
+/* Doc enhancement: sort / move / copy / visited. */
+$lang->doc->moveDoc         = 'Move Doc';
+$lang->doc->copyDoc         = 'Copy Doc';
+$lang->doc->batchMoveDoc    = 'Batch Move';
+$lang->doc->copySuffix      = '(Copy)';
+$lang->doc->copyTip         = 'The copy keeps the latest content of the source. Views and collectors are not inherited, attachments are not copied yet.';
+$lang->doc->batchMoveResult = '%s doc(s) moved.';
+$lang->doc->batchMoveFailed = 'No doc to move.';
+$lang->doc->sortCatalog     = 'Sort Categories';
+$lang->doc->sortDoc         = 'Sort Docs';
+$lang->doc->sortTip         = 'The order is saved automatically after dragging.';
+$lang->doc->visitedbyme     = 'Recently Visited';

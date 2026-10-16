@@ -728,6 +728,11 @@ $lang->resource->doc->allLibs    = 'allLibs';
 $lang->resource->doc->objectLibs = 'objectLibs';
 $lang->resource->doc->showFiles  = 'showFiles';
 $lang->resource->doc->sort       = 'sort';
+$lang->resource->doc->sortCatalog = 'sortCatalog';
+$lang->resource->doc->sortDoc = 'sortDoc';
+$lang->resource->doc->moveDoc = 'moveDoc';
+$lang->resource->doc->copyDoc = 'copyDoc';
+$lang->resource->doc->batchMoveDoc = 'batchMoveDoc';
 $lang->resource->doc->collect    = 'collect';
 //$lang->resource->doc->diff       = 'diff';
 
@@ -745,6 +750,11 @@ $lang->doc->methodOrder[50] = 'showFiles';
 $lang->doc->methodOrder[55] = 'objectLibs';
 $lang->doc->methodOrder[60] = 'sort';
 $lang->doc->methodOrder[65] = 'collect';
+$lang->doc->methodOrder[70] = 'sortCatalog';
+$lang->doc->methodOrder[75] = 'sortDoc';
+$lang->doc->methodOrder[80] = 'moveDoc';
+$lang->doc->methodOrder[85] = 'copyDoc';
+$lang->doc->methodOrder[90] = 'batchMoveDoc';
 //$lang->doc->methodOrder[55] = 'diff';
 
 /* mail. */

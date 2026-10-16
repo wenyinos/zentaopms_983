@@ -204,17 +204,17 @@ class docModel extends model
             $stmt  = $this->dao->select('t1.*')->from(TABLE_DOCLIB)->alias('t1')
                 ->leftJoin($table)->alias('t2')->on("t1.$type=t2.id")
                 ->where("t1.$type")->ne(0)
-                ->andWhere('t1.deleted')->eq(0)
+                ->andWhere('t1.deleted')->eq(0)->andWhere('t1.type')->ne('template')
                 ->orderBy("t2.order desc, t1.order, t1.id")
                 ->query();
         }
         elseif($type == 'all')
         {
-            $stmt = $this->dao->select('*')->from(TABLE_DOCLIB)->where('deleted')->eq(0)->orderBy('`order`, id desc')->query();
+            $stmt = $this->dao->select('*')->from(TABLE_DOCLIB)->where('deleted')->eq(0)->andWhere('type')->ne('template')->orderBy('`order`, id desc')->query();
         }
         else
         {
-            $stmt = $this->dao->select('*')->from(TABLE_DOCLIB)->where('deleted')->eq(0)->andWhere('product')->eq('0')->andWhere('project')->eq(0)->orderBy('`order`, id desc')->query();
+            $stmt = $this->dao->select('*')->from(TABLE_DOCLIB)->where('deleted')->eq(0)->andWhere('type')->ne('template')->andWhere('product')->eq('0')->andWhere('project')->eq(0)->orderBy('`order`, id desc')->query();
         }
 
         $libPairs = array();
@@ -338,6 +338,32 @@ class docModel extends model
         if($browseType == "all")
         {
             $docs = $this->getDocs($libID, 0, $sort, $pager);
+        }
+        elseif($browseType == "visitedbyme")
+        {
+            /* 最近浏览：按 zt_docaction 里该人最后一次浏览动作的 id 倒序。 */
+            $actions = $this->dao->select('doc, MAX(id) AS lastID')->from(TABLE_DOCACTION)
+                ->where('actor')->eq($this->app->user->account)
+                ->andWhere('action')->eq('view')
+                ->groupBy('doc')
+                ->orderBy('lastID_desc')
+                ->fetchPairs('doc', 'lastID');
+
+            $docIDs = array_keys($actions);
+            if($pager)
+            {
+                $pager->recTotal = count($docIDs);
+                $docIDs = array_slice($docIDs, ($pager->pageID - 1) * $pager->recPerPage, $pager->recPerPage);
+            }
+
+            $visitedDocs = $this->dao->select('*')->from(TABLE_DOC)
+                ->where('deleted')->eq(0)
+                ->andWhere('id')->in($docIDs ? $docIDs : array(0))
+                ->andWhere('lib')->in($allLibs)
+                ->fetchAll('id');
+
+            $docs = array();
+            foreach($docIDs as $docID) if(isset($visitedDocs[$docID])) $docs[$docID] = $visitedDocs[$docID];
         }
         elseif($browseType == "openedbyme")
         {
@@ -648,6 +674,8 @@ class docModel extends model
         if(!dao::isError())
         {
             $docID = $this->dao->lastInsertID();
+            /* 新增的文档排序列初始化为自身 id（照 22.6 的写法）。 */
+            $this->dao->update(TABLE_DOC)->set('`order`')->eq($docID)->where('id')->eq($docID)->exec();
             $this->file->updateObjectID($this->post->uid, $docID, 'doc');
             $files = $this->file->saveUpload('doc', $docID);
 
@@ -959,7 +987,7 @@ class docModel extends model
 
         $libs = $this->getLibs($type == 'collector' ? 'all' : $type);
         $key  = ($type == 'product' or $type == 'project') ? $type : 'id';
-        $stmt = $this->dao->select("DISTINCT $key")->from(TABLE_DOCLIB)->where('deleted')->eq(0);
+        $stmt = $this->dao->select("DISTINCT $key")->from(TABLE_DOCLIB)->where('deleted')->eq(0)->andWhere('type')->ne('template');
         if($type == 'product' or $type == 'project')
         {
             $stmt = $stmt->andWhere($type)->ne(0);
@@ -1000,7 +1028,7 @@ class docModel extends model
     {
         $libs = $this->getLibs('all');
         $stmt = $this->dao->select("id,product,project,name")->from(TABLE_DOCLIB)
-            ->where('deleted')->eq(0)
+            ->where('deleted')->eq(0)->andWhere('type')->ne('template')
             ->andWhere("id")->in(array_keys($libs))
             ->orderBy("product desc,project desc, `order` asc, id asc")
             ->query();
@@ -1092,13 +1120,13 @@ class docModel extends model
             $table = $type == 'product' ? TABLE_PRODUCT : TABLE_PROJECT;
             $stmt  = $this->dao->select('t1.*')->from(TABLE_DOCLIB)->alias('t1')
                 ->leftJoin($table)->alias('t2')->on("t1.$type=t2.id")
-                ->where('t1.deleted')->eq(0)->andWhere("t1.$type")->ne(0)
+                ->where('t1.deleted')->eq(0)->andWhere('t1.type')->ne('template')->andWhere("t1.$type")->ne(0)
                 ->orderBy("t2.`order` desc, t1.`order` asc, id desc")
                 ->query();
         }
         else
         {
-            $stmt = $this->dao->select('*')->from(TABLE_DOCLIB)->where('deleted')->eq(0)->andWhere('project')->eq(0)->andWhere('product')->eq(0)->orderBy('`order`, id desc')->query();
+            $stmt = $this->dao->select('*')->from(TABLE_DOCLIB)->where('deleted')->eq(0)->andWhere('type')->ne('template')->andWhere('project')->eq(0)->andWhere('product')->eq(0)->orderBy('`order`, id desc')->query();
         }
 
         $i    = 1;
@@ -1131,7 +1159,7 @@ class docModel extends model
     public function getSubLibGroups($type, $idList)
     {
         if($type != 'product' and $type != 'project') return false;
-        $libGroups   = $this->dao->select('*')->from(TABLE_DOCLIB)->where('deleted')->eq(0)->andWhere($type)->in($idList)->orderBy('`order`, id')->fetchGroup($type, 'id');
+        $libGroups   = $this->dao->select('*')->from(TABLE_DOCLIB)->where('deleted')->eq(0)->andWhere('type')->ne('template')->andWhere($type)->in($idList)->orderBy('`order`, id')->fetchGroup($type, 'id');
         if($type == 'product')
         {
             if($this->config->global->flow == 'onlyStory' or $this->config->global->flow == 'onlyTest')
@@ -1173,7 +1201,7 @@ class docModel extends model
     public function getLibsByObject($type, $objectID, $mode = '')
     {
         if($type != 'product' and $type != 'project') return false;
-        $objectLibs = $this->dao->select('*')->from(TABLE_DOCLIB)->where('deleted')->eq(0)->andWhere($type)->eq($objectID)->orderBy('`order`, id')->fetchAll('id');
+        $objectLibs = $this->dao->select('*')->from(TABLE_DOCLIB)->where('deleted')->eq(0)->andWhere('type')->ne('template')->andWhere($type)->eq($objectID)->orderBy('`order`, id')->fetchAll('id');
         if($type == 'product')
         {
             if($this->config->global->flow == 'onlyStory' or $this->config->global->flow == 'onlyTest')
@@ -1526,11 +1554,15 @@ class docModel extends model
 
         $today  = date('Y-m-d');
         $lately = date('Y-m-d', strtotime('-3 day'));
+        /* 模板库里的文档不是「知识库内容」，统计时排除。 */
+        $templateLib = $this->getTemplateLibID();
+
         $statisticInfo = $this->dao->select("count(id) as totalDocs, count(editedDate like '{$today}%' or null) as todayEditedDocs,
             count(editedDate > '{$lately}' or null) as lastEditedDocs, count(addedDate > '{$lately}' or null) as lastAddedDocs, 
             count(collector like '%,{$this->app->user->account},%' or null) as myCollection, count(addedBy = '{$this->app->user->account}' or null) as myDocs")->from(TABLE_DOC)
             ->where('deleted')->eq(0)
             ->andWhere('id')->in($docIdList)
+            ->beginIF($templateLib)->andWhere('lib')->ne($templateLib)->fi()
             ->fetch();
 
         $statisticInfo->pastEditedDocs       = $statisticInfo->totalDocs - $statisticInfo->todayEditedDocs;
@@ -1540,5 +1572,373 @@ class docModel extends model
         $statisticInfo->myDocsProgress       = $statisticInfo->totalDocs ? round($statisticInfo->myDocs / $statisticInfo->totalDocs, 2) * 100 : 0;
 
         return $statisticInfo;
+    }
+
+    /**
+     * Get the ID of the doc template lib.
+     *
+     * 文档模板挂在 doclib 上（type='template'），升级时种下一行；取不到说明还没升级。
+     *
+     * @access public
+     * @return int
+     */
+    public function getTemplateLibID()
+    {
+        $libID = $this->dao->select('id')->from(TABLE_DOCLIB)
+            ->where('type')->eq('template')
+            ->andWhere('deleted')->eq(0)
+            ->orderBy('id_asc')
+            ->fetch('id');
+        return (int)$libID;
+    }
+
+    /**
+     * Get the template categories.
+     *
+     * 目录复用 zt_module（root=模板库 ID、type='docTemplate'），与文档目录同构。
+     *
+     * @param  int    $parent
+     * @access public
+     * @return array
+     */
+    public function getTemplateModules($parent = 0)
+    {
+        $libID = $this->getTemplateLibID();
+        if(!$libID) return array();
+
+        return $this->dao->select('*')->from(TABLE_MODULE)
+            ->where('root')->eq($libID)
+            ->andWhere('type')->eq('docTemplate')
+            ->andWhere('parent')->eq((int)$parent)
+            ->andWhere('deleted')->eq(0)
+            ->orderBy('`order`, id')
+            ->fetchAll('id');
+    }
+
+    /**
+     * Add a template category.
+     *
+     * @param  object $data
+     * @access public
+     * @return int|bool
+     */
+    public function addTemplateType($data)
+    {
+        $libID = $this->getTemplateLibID();
+        if(!$libID) return false;
+
+        $data->root  = $libID;
+        $data->type  = 'docTemplate';
+        $data->grade = empty($data->parent) ? 1 : 2;
+        $data->path  = ',';
+
+        $this->dao->insert(TABLE_MODULE)->data($data)->autoCheck()->exec();
+        if(dao::isError()) return false;
+
+        $moduleID = $this->dao->lastInsertID();
+        $path = ',';
+        if(!empty($data->parent))
+        {
+            $parentPath = $this->dao->select('path')->from(TABLE_MODULE)->where('id')->eq((int)$data->parent)->fetch('path');
+            $path = $parentPath . $moduleID . ',';
+        }
+        else
+        {
+            $path = ',' . $moduleID . ',';
+        }
+        $this->dao->update(TABLE_MODULE)->set('path')->eq($path)->where('id')->eq($moduleID)->exec();
+
+        return $moduleID;
+    }
+
+    /**
+     * Get the template scopes (template libs).
+     *
+     * @access public
+     * @return array
+     */
+    public function getTemplateScopes()
+    {
+        return $this->dao->select('id,name')->from(TABLE_DOCLIB)
+            ->where('type')->eq('template')
+            ->andWhere('deleted')->eq(0)
+            ->orderBy('id_asc')
+            ->fetchPairs('id', 'name');
+    }
+
+    /**
+     * Get the template list of a scope.
+     *
+     * @param  int    $scope
+     * @param  string $orderBy
+     * @param  object $pager
+     * @access public
+     * @return array
+     */
+    public function getDocTemplateList($scope, $orderBy = 'id_desc', $pager = null)
+    {
+        return $this->dao->select('t1.*, t2.name AS libName, t3.name AS moduleName')->from(TABLE_DOC)->alias('t1')
+            ->leftJoin(TABLE_DOCLIB)->alias('t2')->on('t1.lib = t2.id')
+            ->leftJoin(TABLE_MODULE)->alias('t3')->on('t1.module = t3.id')
+            ->where('t1.deleted')->eq(0)
+            ->andWhere('t1.lib')->eq((int)$scope)
+            ->orderBy($orderBy)
+            ->page($pager)
+            ->fetchAll('id');
+    }
+
+    /**
+     * Get the templates of one category.
+     *
+     * @param  int    $moduleID
+     * @access public
+     * @return array
+     */
+    public function getTemplatesByType($moduleID)
+    {
+        $libID = $this->getTemplateLibID();
+        if(!$libID) return array();
+
+        return $this->dao->select('*')->from(TABLE_DOC)
+            ->where('lib')->eq($libID)
+            ->andWhere('module')->eq((int)$moduleID)
+            ->andWhere('deleted')->eq(0)
+            ->orderBy('id_desc')
+            ->fetchAll('id');
+    }
+
+    /**
+     * Delete a template.
+     *
+     * @param  int    $templateID
+     * @access public
+     * @return void
+     */
+    public function deleteTemplate($templateID)
+    {
+        $this->dao->update(TABLE_DOC)->set('deleted')->eq('1')->where('id')->eq((int)$templateID)->exec();
+        $this->loadModel('action')->create('doc', $templateID, 'deleted', '');
+    }
+
+    /**
+     * Create a template.
+     *
+     * 只写 zt_doc + zt_doccontent，不走 create()——create() 带 removeDuplicate/图片处理/
+     * 附件保存等副作用，模板不需要（一期也不继承附件）。
+     *
+     * @param  object $data
+     * @access public
+     * @return int|bool
+     */
+    public function createTemplate($data)
+    {
+        $libID = $this->getTemplateLibID();
+        if(!$libID) return false;
+
+        $now = helper::now();
+        $doc = new stdclass();
+        $doc->product    = 0;
+        $doc->project    = 0;
+        $doc->lib        = $libID;
+        $doc->module     = isset($data->module) ? (int)$data->module : 0;
+        $doc->title      = $data->title;
+        $doc->keywords   = isset($data->keywords) ? $data->keywords : '';
+        $doc->type       = 'text';
+        $doc->views      = 0;
+        $doc->collector  = '';
+        $doc->order      = 0;
+        $doc->addedBy    = $this->app->user->account;
+        $doc->addedDate  = $now;
+        $doc->editedBy   = $this->app->user->account;
+        $doc->editedDate = $now;
+        $doc->acl        = 'open';
+        $doc->groups     = '';
+        $doc->users      = '';
+        $doc->version    = 1;
+        $doc->deleted    = '0';
+
+        $this->dao->insert(TABLE_DOC)->data($doc)->autoCheck()->exec();
+        if(dao::isError()) return false;
+
+        $docID = $this->dao->lastInsertID();
+        $this->dao->update(TABLE_DOC)->set('`order`')->eq($docID)->where('id')->eq($docID)->exec();
+
+        $content = new stdclass();
+        $content->doc     = $docID;
+        $content->title   = $doc->title;
+        $content->digest  = '';
+        $content->content = isset($data->content) ? $data->content : '';
+        $content->files   = '';
+        $content->type    = 'text';
+        $content->version = 1;
+        $this->dao->insert(TABLE_DOCCONTENT)->data($content)->exec();
+
+        $this->loadModel('action')->create('doc', $docID, 'created', '');
+        return $docID;
+    }
+
+    /**
+     * Save the doc order of one lib.
+     *
+     * @param  array  $orders  有序的文档 ID 列表
+     * @access public
+     * @return void
+     */
+    public function updateDocOrder($orders)
+    {
+        $order = 10;
+        foreach($orders as $docID)
+        {
+            if(!is_numeric($docID)) continue;
+            $this->dao->update(TABLE_DOC)->set('`order`')->eq($order)->where('id')->eq((int)$docID)->exec();
+            $order += 10;
+        }
+    }
+
+    /**
+     * Move a doc to another lib/module.
+     *
+     * @param  int    $docID
+     * @param  object $data  lib, module
+     * @access public
+     * @return bool
+     */
+    public function moveDoc($docID, $data)
+    {
+        $lib = $this->dao->select('*')->from(TABLE_DOCLIB)->where('id')->eq((int)$data->lib)->fetch();
+        if(!$lib) return false;
+
+        $this->dao->update(TABLE_DOC)
+            ->set('lib')->eq($lib->id)
+            ->set('module')->eq(isset($data->module) ? (int)$data->module : 0)
+            ->set('product')->eq($lib->product)
+            ->set('project')->eq($lib->project)
+            ->where('id')->eq((int)$docID)
+            ->exec();
+
+        return !dao::isError();
+    }
+
+    /**
+     * Copy a doc to another lib/module.
+     *
+     * 标题加"(副本)"、正文取源文档最新版、views=0、collector 清空、version=1；
+     * 一期不复制附件。
+     *
+     * @param  int    $docID
+     * @param  object $data  lib, module
+     * @access public
+     * @return int|bool  新文档 ID
+     */
+    public function copyDoc($docID, $data)
+    {
+        $source = $this->dao->select('*')->from(TABLE_DOC)->where('id')->eq((int)$docID)->fetch();
+        if(!$source) return false;
+
+        $lib = $this->dao->select('*')->from(TABLE_DOCLIB)->where('id')->eq((int)$data->lib)->fetch();
+        if(!$lib) return false;
+
+        $sourceContent = $this->dao->select('*')->from(TABLE_DOCCONTENT)
+            ->where('doc')->eq($docID)->orderBy('version_desc')->limit(1)->fetch();
+
+        $now = helper::now();
+        $doc = new stdclass();
+        $doc->product    = $lib->product;
+        $doc->project    = $lib->project;
+        $doc->lib        = $lib->id;
+        $doc->module     = isset($data->module) ? (int)$data->module : 0;
+        $doc->title      = $source->title . $this->lang->doc->copySuffix;
+        $doc->keywords   = $source->keywords;
+        $doc->type       = $source->type;
+        $doc->views      = 0;
+        $doc->collector  = '';
+        $doc->order      = 0;
+        $doc->addedBy    = $this->app->user->account;
+        $doc->addedDate  = $now;
+        $doc->editedBy   = $this->app->user->account;
+        $doc->editedDate = $now;
+        $doc->acl        = $source->acl;
+        $doc->groups     = $source->groups;
+        $doc->users      = $source->users;
+        $doc->version    = 1;
+        $doc->deleted    = '0';
+
+        $this->dao->insert(TABLE_DOC)->data($doc)->autoCheck()->exec();
+        if(dao::isError()) return false;
+
+        $newID = $this->dao->lastInsertID();
+        $this->dao->update(TABLE_DOC)->set('`order`')->eq($newID)->where('id')->eq($newID)->exec();
+
+        $content = new stdclass();
+        $content->doc     = $newID;
+        $content->title   = $doc->title;
+        $content->digest  = $sourceContent ? $sourceContent->digest : '';
+        $content->content = $sourceContent ? $sourceContent->content : '';
+        $content->files   = '';
+        $content->type    = $sourceContent ? $sourceContent->type : 'text';
+        $content->version = 1;
+        $this->dao->insert(TABLE_DOCCONTENT)->data($content)->exec();
+
+        return $newID;
+    }
+
+    /**
+     * Record a doc action (view / collect).
+     *
+     * view 动作 4 秒内重复访问不重复记录，并让 zt_doc.views 自增。
+     *
+     * @param  int    $docID
+     * @param  string $action
+     * @access public
+     * @return bool
+     */
+    public function createAction($docID, $action)
+    {
+        $doc = $this->dao->select('id,views')->from(TABLE_DOC)->where('id')->eq((int)$docID)->fetch();
+        if(!$doc) return false;
+
+        $account = $this->app->user->account;
+        $now     = helper::now();
+
+        if($action == 'view')
+        {
+            $last = $this->dao->select('*')->from(TABLE_DOCACTION)
+                ->where('doc')->eq($docID)
+                ->andWhere('actor')->eq($account)
+                ->andWhere('action')->eq('view')
+                ->orderBy('id_desc')
+                ->limit(1)
+                ->fetch();
+            if($last and (time() - strtotime($last->date)) < 4) return false;
+
+            $this->dao->update(TABLE_DOC)->set('views')->eq((int)$doc->views + 1)->where('id')->eq($docID)->exec();
+        }
+
+        $data = new stdclass();
+        $data->doc    = $docID;
+        $data->action = $action;
+        $data->actor  = $account;
+        $data->date   = $now;
+        $this->dao->insert(TABLE_DOCACTION)->data($data)->exec();
+
+        return !dao::isError();
+    }
+
+    /**
+     * Get one action of the current user on a doc.
+     *
+     * @param  int    $docID
+     * @param  string $action
+     * @access public
+     * @return object|bool
+     */
+    public function getActionByObject($docID, $action = 'view')
+    {
+        return $this->dao->select('*')->from(TABLE_DOCACTION)
+            ->where('doc')->eq((int)$docID)
+            ->andWhere('action')->eq($action)
+            ->andWhere('actor')->eq($this->app->user->account)
+            ->orderBy('id_desc')
+            ->fetch();
     }
 }

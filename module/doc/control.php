@@ -435,6 +435,9 @@ class doc extends control
         $this->view->preAndNext = $this->loadModel('common')->getPreAndNextObject('doc', $docID);
         $this->view->keTableCSS = $this->doc->extractKETableCSS($doc->content);
 
+        /* 记录浏览动作：供「最近浏览」取数，并让 views 自增（4 秒内重复不重复记）。 */
+        $this->doc->createAction($docID, 'view');
+
         $this->display();
     }
 
@@ -792,6 +795,145 @@ class doc extends control
         $this->view->object = $object;
         $this->view->from   = $from;
         $this->view->libs   = $this->doc->getLibsByObject($type, $objectID);
+        $this->display();
+    }
+
+    /**
+     * Sort the doc categories of one lib.
+     *
+     * 目录复用 zt_module，排序直接转调 tree::updateOrder（它会按 parent/grade 归一为 10 的倍数）。
+     *
+     * @access public
+     * @return void
+     */
+    public function sortCatalog()
+    {
+        if($_POST)
+        {
+            $orders = json_decode($this->post->orders, true);
+            if(!is_array($orders)) $orders = array();
+
+            $data = array();
+            foreach($orders as $moduleID => $order)
+            {
+                if(!is_numeric($moduleID) or !is_numeric($order)) continue;
+                $data[$moduleID] = $order;
+            }
+            if($data) $this->loadModel('tree')->updateOrder($data);
+            if(dao::isError()) $this->send(array('result' => 'fail', 'message' => dao::getError()));
+            $this->send(array('result' => 'success'));
+        }
+    }
+
+    /**
+     * Sort the docs of one lib.
+     *
+     * @access public
+     * @return void
+     */
+    public function sortDoc()
+    {
+        if($_POST)
+        {
+            $orders = json_decode($this->post->orders, true);
+            if(!is_array($orders)) $orders = array();
+
+            $this->doc->updateDocOrder($orders);
+            if(dao::isError()) $this->send(array('result' => 'fail', 'message' => dao::getError()));
+            $this->send(array('result' => 'success'));
+        }
+    }
+
+    /**
+     * Move a doc to another lib / module.
+     *
+     * @param  int    $docID
+     * @param  int    $libID
+     * @access public
+     * @return void
+     */
+    public function moveDoc($docID, $libID = 0)
+    {
+        if($_POST)
+        {
+            $data = fixer::input('post')->setDefault('module', 0)->get();
+            if($this->doc->moveDoc($docID, $data))
+            {
+                $this->loadModel('action')->create('doc', $docID, 'Moved', '');
+                $this->send(array('result' => 'success', 'message' => $this->lang->saveSuccess, 'closeModal' => true, 'load' => true));
+            }
+            $this->send(array('result' => 'fail', 'message' => dao::getError()));
+        }
+
+        $this->view->doc   = $this->doc->getById($docID);
+        $this->view->libID = $libID;
+        $this->view->libs  = $this->doc->getLibs('all');
+        $this->display();
+    }
+
+    /**
+     * Copy a doc to another lib / module.
+     *
+     * @param  int    $docID
+     * @param  int    $libID
+     * @access public
+     * @return void
+     */
+    public function copyDoc($docID, $libID = 0)
+    {
+        if($_POST)
+        {
+            $data = fixer::input('post')->setDefault('module', 0)->get();
+            $newID = $this->doc->copyDoc($docID, $data);
+            if($newID)
+            {
+                $this->loadModel('action')->create('doc', $newID, 'Copied', '');
+                $this->send(array('result' => 'success', 'message' => $this->lang->saveSuccess, 'closeModal' => true, 'load' => true));
+            }
+            $this->send(array('result' => 'fail', 'message' => dao::getError()));
+        }
+
+        $this->view->doc   = $this->doc->getById($docID);
+        $this->view->libID = $libID;
+        $this->view->libs  = $this->doc->getLibs('all');
+        $this->display();
+    }
+
+    /**
+     * Batch move docs.
+     *
+     * @param  string $encodeDocIdList
+     * @param  int    $libID
+     * @param  int    $moduleID
+     * @access public
+     * @return void
+     */
+    public function batchMoveDoc($encodeDocIdList, $libID = 0, $moduleID = 0)
+    {
+        if($_POST)
+        {
+            $data = fixer::input('post')->setDefault('module', 0)->get();
+            $docIdList = json_decode(base64_decode($encodeDocIdList), true);
+            if(!is_array($docIdList)) $docIdList = array();
+
+            $moved = 0;
+            foreach($docIdList as $docID)
+            {
+                if(!is_numeric($docID)) continue;
+                if($this->doc->moveDoc($docID, $data))
+                {
+                    $this->loadModel('action')->create('doc', $docID, 'Moved', '');
+                    $moved++;
+                }
+            }
+            if($moved) $this->send(array('result' => 'success', 'message' => sprintf($this->lang->doc->batchMoveResult, $moved), 'closeModal' => true, 'load' => true));
+            $this->send(array('result' => 'fail', 'message' => array('batchMove' => array($this->lang->doc->batchMoveFailed))));
+        }
+
+        $this->view->docIdList = base64_decode($encodeDocIdList);
+        $this->view->libID     = $libID;
+        $this->view->moduleID  = $moduleID;
+        $this->view->libs      = $this->doc->getLibs('all');
         $this->display();
     }
 }
