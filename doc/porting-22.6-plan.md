@@ -1012,7 +1012,7 @@ private function loadErrorLogConfig()
 
 **实施偏差（与本文原设计的差异，均经实测）**
 
-1. **未做「用例试点」重写**（§7.6 步 2 原计划把 `testcase` 导入改走 `file->parseImportFile`）。理由：该步只是验证抽象，而抽象已用更直接的证据验证（UTF-8/BOM/GBK/GBK 误标/宽松列名 5 组用例全过）；改写既有可用链路只有回归风险、无用户可见收益。`parseCSV` 未改一行，用例库既有导入零影响。
+1. **「用例试点」一开始被我跳过，后来补做——而且它是真 bug 修复，不是重构**（`c15539a`）。跳过时的理由是「只是验证抽象、改写既有可用链路无用户可见收益」，**这个判断错了**：旧实现只做列名精确匹配，带 UTF-8 BOM 的文件首列名变成 `\xEF\xBB\xBF所属模块` → 一列都匹配不上 → 落 gbk 兜底把已经是 utf-8 的内容再转一次成乱码 → 报「编码错误」。实测确认后，`testcase` 与 `testsuite` 的 import/showImport 四处都改走 `file->parseImportFile`；顺带修掉旧实现「把表头字段压成顺序列表按下标取值」的列错位隐患（用户调换列顺序会串值）。`parseCSV` 本体仍未改一行。
 2. **新增两处 parseCSV 的前置规整**（`normalizeImportCSV`/`trimImportRows`）：`parseCSV` 处理不了「行首是空引号单元格」的行（模板里空着的「编号」列正是这种），会把前两格粘成一格导致整行列错位。规整放在 `parseImportFile` 内，`parseCSV` 本身不动。
 3. **预览页做成只读**（原计划照 9.8.3 用例的「可编辑预览表单」）。只读预览同样满足验收标准第 3 条（逐行给出行号/值/错误原因，错误行不写库），且彻底避开 `suhosin`/`maxVars` 那一整类问题。
 4. **需求导入去掉「当前状态」列**：CSV 能直接写「激活」会绕过评审（§7.7 列为 🔴 高风险）。改为状态一律由 `$config->story->needReview` 决定（开启则落 `draft`），实测导入后状态为 `draft`。
@@ -1328,7 +1328,7 @@ $config-><module>->import->requiredFields = 'title,project';
 |---|---|---|
 | 0 | 冻结四对象导入字段口径与列名（写进 config 三行） | `php -l` 四个 config；字段表贴进 PR |
 | 1 | `file` 两个通用方法 + BOM | GBK/UTF-8/带 BOM 三种文件各解析 5 行，列映射命中率 100% |
-| 2 | **用例试点**：`testcase/control.php:1312/1449` 改走 `file->parseImportFile` | 与旧实现结果逐字段一致（回归）；旧 `parseCSV` 行为不变 |
+| 2 | **用例试点**：`testcase/control.php:1312/1449` 改走 `file->parseImportFile` | ✅ 已完成（`c15539a`）：无 BOM 回归逐字段一致；**带 BOM 与 GBK 均通过**（修复前带 BOM 报编码错误）；`testsuite` 四处同步；旧 `parseCSV` 行为不变 |
 | 3 | 任务导入三件套 + 权限 + 视图 | 真实项目导入 30 行；`zt_task` 字段核对；`checkdb` 通过 |
 | 4 | Bug 导入（含 `openedBuild` 多值、`steps` 多行） | 导入后 `bug|view` 渲染正常；多值往返一致 |
 | 5 | 需求导入（含 `zt_storyspec` + `setStage`） | `story|view` 显示 spec/verify；`zt_storystage` 有行；项目需求页 stats 正确 |
