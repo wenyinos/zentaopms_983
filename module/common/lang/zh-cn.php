@@ -838,3 +838,5 @@ if(isset($config->global->flow) and $config->global->flow == 'onlyTest')
     unset($lang->searchObjects['project']);
     unset($lang->searchObjects['productplan']);
 }
+/* pivot 模块（透视表）语言对象初始化，供菜单复用行使用。 */
+$lang->pivot = new stdclass();

@@ -771,6 +771,13 @@ $lang->doc->methodOrder[120] = 'editTemplateType';
 $lang->doc->methodOrder[125] = 'deleteTemplateType';
 //$lang->doc->methodOrder[55] = 'diff';
 
+$lang->resource->pivot = new stdclass();
+$lang->resource->pivot->preview = 'preview';
+$lang->resource->pivot->show    = 'show';
+
+$lang->pivot->methodOrder[0] = 'preview';
+$lang->pivot->methodOrder[5] = 'show';
+
 /* mail. */
 $lang->resource->mail = new stdclass();
 $lang->resource->mail->index  = 'index';

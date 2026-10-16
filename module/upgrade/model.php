@@ -32,6 +32,9 @@ class upgradeModel extends model
         $this->addErrorLogTables();
         $this->addErrorLogCron();
 
+        /* 9.10.0 新增：透视表三张表（幂等）。 */
+        $this->createPivotTables();
+
         /* 9.10.0 新增：文档增强（文档排序列、文档库类型列、浏览动作表、模板库种子）。 */
         $this->addDocOrderColumn();
         $this->addDoclibTypeColumn();
@@ -89,6 +92,94 @@ class upgradeModel extends model
   KEY `idx_md5` (`md5`),
   KEY `idx_createdDate` (`createdDate`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8",
+        );
+
+        foreach($tables as $suffix => $sql)
+        {
+            $tableName = $this->config->db->prefix . $suffix;
+            $exists = $this->dao->select('COUNT(*) AS count')->from('information_schema.tables')
+                ->where('table_schema')->eq($this->config->db->name)
+                ->andWhere('table_name')->eq($tableName)
+                ->fetch('count');
+            if($exists) continue;
+
+            try
+            {
+                $this->dbh->exec(sprintf($sql, $tableName));
+            }
+            catch (PDOException $e)
+            {
+                self::$errors[] = $e->getMessage() . "<p>The sql is: CREATE TABLE {$tableName}</p>";
+            }
+        }
+    }
+
+    /**
+     * Create the pivot tables (idempotent).
+     *
+     * 9.10.0 透视表：zt_pivot（定义）+ zt_pivotspec（历史版本）+ zt_pivotdrill（下钻，一期只读留桩）。
+     * 相对 22.6 原表删掉了 driver/mode/step/stage/acl/whitelist/objects 列（只支持 mysql、
+     * 无工作流、只做登录可见、不做下钻 UI）。
+     *
+     * @access public
+     * @return void
+     */
+    public function createPivotTables()
+    {
+        $tables = array(
+            'pivot' => "CREATE TABLE IF NOT EXISTS `%s` (
+  `id` mediumint(8) unsigned NOT NULL auto_increment,
+  `code` varchar(45) NOT NULL DEFAULT '',
+  `name` varchar(90) NOT NULL DEFAULT '',
+  `desc` text NOT NULL,
+  `group` varchar(45) NOT NULL DEFAULT '',
+  `sql` text NOT NULL,
+  `fields` text NOT NULL,
+  `langs` text NOT NULL,
+  `settings` text NOT NULL,
+  `filters` text NOT NULL,
+  `vars` text NOT NULL,
+  `builtin` tinyint(1) unsigned NOT NULL DEFAULT 0,
+  `version` varchar(10) NOT NULL DEFAULT '1',
+  `createdBy` varchar(30) NOT NULL DEFAULT '',
+  `createdDate` datetime NOT NULL,
+  `editedBy` varchar(30) NOT NULL DEFAULT '',
+  `editedDate` datetime NOT NULL,
+  `deleted` enum('0','1') NOT NULL DEFAULT '0',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `code` (`code`),
+  KEY `group` (`group`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8",
+            'pivotspec' => "CREATE TABLE IF NOT EXISTS `%s` (
+  `id` mediumint(8) unsigned NOT NULL auto_increment,
+  `pivot` mediumint(8) unsigned NOT NULL DEFAULT 0,
+  `version` varchar(10) NOT NULL DEFAULT '1',
+  `name` varchar(90) NOT NULL DEFAULT '',
+  `desc` text NOT NULL,
+  `sql` text NOT NULL,
+  `fields` text NOT NULL,
+  `langs` text NOT NULL,
+  `vars` text NOT NULL,
+  `settings` text NOT NULL,
+  `filters` text NOT NULL,
+  `createdDate` datetime NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `pivot` (`pivot`,`version`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8",
+            'pivotdrill' => "CREATE TABLE IF NOT EXISTS `%s` (
+  `id` mediumint(8) unsigned NOT NULL auto_increment,
+  `pivot` mediumint(8) unsigned NOT NULL DEFAULT 0,
+  `version` varchar(10) NOT NULL DEFAULT '1',
+  `field` varchar(255) NOT NULL DEFAULT '',
+  `object` varchar(40) NOT NULL DEFAULT '',
+  `whereSql` mediumtext NOT NULL,
+  `condition` mediumtext NOT NULL,
+  `status` varchar(10) NOT NULL DEFAULT 'published',
+  `account` varchar(30) NOT NULL DEFAULT '',
+  `type` varchar(10) NOT NULL DEFAULT 'manual',
+  PRIMARY KEY (`id`),
+  KEY `pivot` (`pivot`,`version`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8",
         );
 
         foreach($tables as $suffix => $sql)

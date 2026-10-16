@@ -3408,3 +3408,60 @@ CREATE TABLE IF NOT EXISTS `zt_docaction` (
   KEY `doc` (`doc`),
   KEY `actor` (`actor`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+-- DROP TABLE IF EXISTS `zt_pivot`;
+CREATE TABLE IF NOT EXISTS `zt_pivot` (
+  `id` mediumint(8) unsigned NOT NULL auto_increment,
+  `code` varchar(45) NOT NULL DEFAULT '',
+  `name` varchar(90) NOT NULL DEFAULT '',
+  `desc` text NOT NULL,
+  `group` varchar(45) NOT NULL DEFAULT '',
+  `sql` text NOT NULL,
+  `fields` text NOT NULL,
+  `langs` text NOT NULL,
+  `settings` text NOT NULL,
+  `filters` text NOT NULL,
+  `vars` text NOT NULL,
+  `builtin` tinyint(1) unsigned NOT NULL DEFAULT 0,
+  `version` varchar(10) NOT NULL DEFAULT '1',
+  `createdBy` varchar(30) NOT NULL DEFAULT '',
+  `createdDate` datetime NOT NULL,
+  `editedBy` varchar(30) NOT NULL DEFAULT '',
+  `editedDate` datetime NOT NULL,
+  `deleted` enum('0','1') NOT NULL DEFAULT '0',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `code` (`code`),
+  KEY `group` (`group`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+-- DROP TABLE IF EXISTS `zt_pivotspec`;
+CREATE TABLE IF NOT EXISTS `zt_pivotspec` (
+  `id` mediumint(8) unsigned NOT NULL auto_increment,
+  `pivot` mediumint(8) unsigned NOT NULL DEFAULT 0,
+  `version` varchar(10) NOT NULL DEFAULT '1',
+  `name` varchar(90) NOT NULL DEFAULT '',
+  `desc` text NOT NULL,
+  `sql` text NOT NULL,
+  `fields` text NOT NULL,
+  `langs` text NOT NULL,
+  `vars` text NOT NULL,
+  `settings` text NOT NULL,
+  `filters` text NOT NULL,
+  `createdDate` datetime NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `pivot` (`pivot`,`version`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+-- DROP TABLE IF EXISTS `zt_pivotdrill`;
+CREATE TABLE IF NOT EXISTS `zt_pivotdrill` (
+  `id` mediumint(8) unsigned NOT NULL auto_increment,
+  `pivot` mediumint(8) unsigned NOT NULL DEFAULT 0,
+  `version` varchar(10) NOT NULL DEFAULT '1',
+  `field` varchar(255) NOT NULL DEFAULT '',
+  `object` varchar(40) NOT NULL DEFAULT '',
+  `whereSql` mediumtext NOT NULL,
+  `condition` mediumtext NOT NULL,
+  `status` varchar(10) NOT NULL DEFAULT 'published',
+  `account` varchar(30) NOT NULL DEFAULT '',
+  `type` varchar(10) NOT NULL DEFAULT 'manual',
+  PRIMARY KEY (`id`),
+  KEY `pivot` (`pivot`,`version`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
