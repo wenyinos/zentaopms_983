@@ -2069,7 +2069,7 @@ class projectModel extends model
             }
         }
 
-        if(!$interval) $interval = floor($days / $this->config->project->maxBurnDay);
+        if(!$interval) $interval = floor($days / max(1, (int)$this->config->project->maxBurnDay));
 
         $dateList = array();
         $spaces   = (int)$interval;

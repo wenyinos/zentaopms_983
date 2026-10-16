@@ -814,7 +814,10 @@ class project extends control
 
         /* Set a space when assemble the string for english. */
         $space   = $this->app->getClientLang() == 'en' ? ' ' : '';
-        $dayList = array_fill(1, floor($project->days / $this->config->project->maxBurnDay) + 5, '');
+        /* PHP 8：工期为 0 的项目 $project->days 会被置为空串（见 projectModel::getByID），
+           空串直接参与除法会抛 TypeError，故两侧都强制转 int 并保证除数 >= 1。 */
+        $maxBurnDay = max(1, (int)$this->config->project->maxBurnDay);
+        $dayList = array_fill(1, floor((int)$project->days / $maxBurnDay) + 5, '');
         foreach($dayList as $key => $val) $dayList[$key] = $this->lang->project->interval . $space . ($key + 1) . $space . $this->lang->day;
 
         /* Assign. */
