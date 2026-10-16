@@ -58,6 +58,7 @@ $lang->reportList->test->lists[10]    = 'Bug创建表|report|bugcreate';
 $lang->reportList->test->lists[13]    = 'Bug指派表|report|bugassign';
 $lang->reportList->staff   = new stdclass();
 $lang->reportList->staff->lists[10]   = '员工负载表|report|workload';
+$lang->reportList->staff->lists[13]   = '年度总结|report|annualData';
 
 $lang->report->id            = '编号';
 $lang->report->project       = $lang->projectCommon;
@@ -106,3 +107,26 @@ $lang->report->mailTitle->testTask = " 测试版本(%s),";
 
 $lang->report->proVersion = '<a href="http://api.zentao.net/goto.php?item=proversion&from=reportpage" target="_blank">更多精彩，尽在专业版！</a>';
 $lang->report->proVersionEn = '<a href="http://api.zentao.pm/goto.php?item=proversion&from=reportpage" target="_blank">Try ZenTao Pro for more!</a>';
+
+/* 年度总结（9.10.0）。 */
+$lang->report->annualData = new stdclass();
+$lang->report->annualData->title             = '%s 年度总结';
+$lang->report->annualData->allUser           = '所有人';
+$lang->report->annualData->allDept           = '所有部门';
+$lang->report->annualData->basic             = '基本数据';
+$lang->report->annualData->contributionBlock = '贡献与能力';
+$lang->report->annualData->trendBlock        = '月度操作趋势';
+$lang->report->annualData->statusBlock       = '状态分布';
+$lang->report->annualData->logins            = '登录次数';
+$lang->report->annualData->actions           = '操作数';
+$lang->report->annualData->todoUndone        = '进行中';
+$lang->report->annualData->todoDone          = '已完成';
+$lang->report->annualData->efforts           = '工时（小时）';
+$lang->report->annualData->effortCount       = '工时记录';
+$lang->report->annualData->contributionCount = '贡献总数';
+$lang->report->annualData->radar             = '能力雷达';
+$lang->report->annualData->statusHint        = '按本年新建对象的当前状态统计';
+$lang->report->annualData->trendHint         = '按本年每月产生的动态数统计';
+$lang->report->annualData->noData            = '该年度暂无数据';
+$lang->report->annualData->radarTypes = array('product' => '产品', 'execution' => '项目', 'devel' => '研发', 'qa' => '测试', 'other' => '其它');
+$lang->report->annualData->objects    = array('story' => '需求', 'task' => '任务', 'bug' => 'Bug', 'case' => '用例');

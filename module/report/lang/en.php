@@ -58,6 +58,7 @@ $lang->reportList->test->lists[10]    = 'Bugs Reported|report|bugcreate';
 $lang->reportList->test->lists[13]    = 'Bugs Assigned|report|bugassign';
 $lang->reportList->staff   = new stdclass();
 $lang->reportList->staff->lists[10]   = 'Team Workload|report|workload';
+$lang->reportList->staff->lists[13]   = 'Annual report|report|annualData';
 
 $lang->report->id            = 'ID';
 $lang->report->project       = $lang->projectCommon;
@@ -106,3 +107,26 @@ $lang->report->mailTitle->testTask = " Test Task (%s),";
 
 $lang->report->proVersion   = '<a href="http://api.zentao.net/goto.php?item=proversion&from=reportpage" target="_blank">Try ZenTao Pro for more!</a>';
 $lang->report->proVersionEn = '<a href="http://api.zentao.pm/goto.php?item=proversion&from=reportpage" target="_blank">Try ZenTao Pro for more!</a>';
+
+/* Annual report (9.10.0). */
+$lang->report->annualData = new stdclass();
+$lang->report->annualData->title             = 'Annual report of %s';
+$lang->report->annualData->allUser           = 'All users';
+$lang->report->annualData->allDept           = 'All departments';
+$lang->report->annualData->basic             = 'Basic data';
+$lang->report->annualData->contributionBlock = 'Contributions & capability';
+$lang->report->annualData->trendBlock        = 'Monthly activities';
+$lang->report->annualData->statusBlock       = 'Status distribution';
+$lang->report->annualData->logins            = 'Logins';
+$lang->report->annualData->actions           = 'Actions';
+$lang->report->annualData->todoUndone        = 'Undone';
+$lang->report->annualData->todoDone          = 'Done';
+$lang->report->annualData->efforts           = 'Hours';
+$lang->report->annualData->effortCount       = 'Effort records';
+$lang->report->annualData->contributionCount = 'Total contributions';
+$lang->report->annualData->radar             = 'Capability radar';
+$lang->report->annualData->statusHint        = 'Status of objects opened this year';
+$lang->report->annualData->trendHint         = 'Activities per month this year';
+$lang->report->annualData->noData            = 'No data in this year';
+$lang->report->annualData->radarTypes = array('product' => 'Product', 'execution' => 'Project', 'devel' => 'Dev', 'qa' => 'QA', 'other' => 'Other');
+$lang->report->annualData->objects    = array('story' => 'Stories', 'task' => 'Tasks', 'bug' => 'Bugs', 'case' => 'Cases');

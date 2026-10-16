@@ -237,4 +237,80 @@ class report extends control
             echo "ok\n";
         }
     }
+
+    /**
+     * 年度总结（9.10.0 移植自 22.6 report|annualData）。
+     *
+     * 口径说明：工时取 zt_taskestimate（本仓记录工时的唯一落点）；
+     * 对象类型中的 execution 一律按 project 处理；无 vision/edition 分支。
+     *
+     * @param  string $year
+     * @param  int    $dept
+     * @param  string $account
+     * @access public
+     * @return void
+     */
+    public function annualData($year = '', $dept = 0, $account = '')
+    {
+        $dept  = (int)$dept;
+        $users = array('' => $this->lang->report->annualData->allUser) + $this->loadModel('dept')->getDeptUserPairs($dept);
+
+        /* 范围：指定了人则只看该人，指定了部门则看部门全员，否则看全员。 */
+        $accounts = array();
+        if($account !== '' and isset($users[$account])) $accounts = array($account);
+        elseif($dept) $accounts = array_keys($this->loadModel('dept')->getDeptUserPairs($dept));
+
+        /* 年份下拉：最早动态年份 ~ 今年；1、2 月默认落到上一年（年终报告的口径）。 */
+        $firstAction = $this->report->getFirstActionDate();
+        $currentYear = (int)date('Y');
+        $firstYear   = $firstAction ? (int)substr($firstAction, 0, 4) : $currentYear;
+
+        $years = array();
+        for($y = $firstYear; $y <= $currentYear; $y ++) $years[$y] = (string)$y;
+
+        if($year === '' or !isset($years[(int)$year]))
+        {
+            $year = $currentYear;
+            if((int)date('n') <= $this->config->report->annualData['minMonth'] and isset($years[$year - 1])) $year --;
+        }
+        $year = (int)$year;
+
+        /* 基础数据。 */
+        $data = array();
+        $data['logins']  = $this->report->getUserYearLogins($accounts, $year);
+        $data['actions'] = $this->report->getUserYearActions($accounts, $year);
+        $data['todos']   = $this->report->getUserYearTodos($accounts, $year);
+        $data['efforts'] = $this->report->getUserYearEfforts($accounts, $year);
+
+        /* 贡献明细 -> 能力雷达五轴。 */
+        $contributions = $this->report->getUserYearContributions($accounts, $year);
+        $radar = array();
+        foreach($this->config->report->annualData['radarTypes'] as $radarType) $radar[$radarType] = 0;
+        foreach($contributions as $objectType => $objectContributions)
+        {
+            foreach($objectContributions as $actionName => $count)
+            {
+                $radarTypes = isset($this->config->report->annualData['radar'][$objectType][$actionName]) ? $this->config->report->annualData['radar'][$objectType][$actionName] : array('other');
+                foreach($radarTypes as $radarType) $radar[$radarType] += $count;
+            }
+        }
+        $data['contributionCount'] = $this->report->getUserYearContributionCount($accounts, $year);
+
+        /* 各对象的状态分布与月度趋势。 */
+        $objectStat = array();
+        foreach($this->config->report->annualData['objects'] as $objectType) $objectStat[$objectType] = $this->report->getYearObjectStat($accounts, $year, $objectType);
+
+        $this->view->title      = sprintf($this->lang->report->annualData->title, $year);
+        $this->view->year       = $year;
+        $this->view->years      = $years;
+        $this->view->dept       = $dept;
+        $this->view->depts      = $this->loadModel('dept')->getOptionMenu();
+        $this->view->account    = $account;
+        $this->view->users      = $users;
+        $this->view->data       = $data;
+        $this->view->radar      = $radar;
+        $this->view->objectStat = $objectStat;
+        $this->view->months     = $this->report->getYearMonths($year);
+        $this->display();
+    }
 }

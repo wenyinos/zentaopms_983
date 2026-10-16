@@ -466,6 +466,198 @@ class reportModel extends model
             ->andWhere("(t1.status='wait' OR t1.status='doing')")
             ->fetchGroup('user');
     }
+
+    /**
+     * 最早一条动态的时间（用于"年份下拉"的起始年）。
+     *
+     * @access public
+     * @return string|false
+     */
+    public function getFirstActionDate()
+    {
+        return $this->dao->select('date')->from(TABLE_ACTION)->orderBy('date_asc')->limit(1)->fetch('date');
+    }
+
+    /**
+     * 某年的登录次数。
+     *
+     * @param  array  $accounts
+     * @param  string $year
+     * @access public
+     * @return int
+     */
+    public function getUserYearLogins($accounts, $year)
+    {
+        return $this->dao->select('COUNT(1) AS count')->from(TABLE_ACTION)
+            ->where('LEFT(date, 4)')->eq($year)
+            ->andWhere('action')->eq('login')
+            ->beginIF($accounts)->andWhere('actor')->in($accounts)->fi()
+            ->fetch('count');
+    }
+
+    /**
+     * 某年的操作数。
+     *
+     * @param  array  $accounts
+     * @param  string $year
+     * @access public
+     * @return int
+     */
+    public function getUserYearActions($accounts, $year)
+    {
+        return $this->dao->select('COUNT(1) AS count')->from(TABLE_ACTION)
+            ->where('LEFT(date, 4)')->eq($year)
+            ->beginIF($accounts)->andWhere('actor')->in($accounts)->fi()
+            ->fetch('count');
+    }
+
+    /**
+     * 某年的待办统计。
+     *
+     * 本仓 zt_todo 没有 deleted / vision 列（9.8.3 结构），且 done 与 closed 都是终态。
+     *
+     * @param  array  $accounts
+     * @param  string $year
+     * @access public
+     * @return object
+     */
+    public function getUserYearTodos($accounts, $year)
+    {
+        return $this->dao->select("COUNT(1) AS count, SUM(IF(`status` IN ('wait','doing'), 1, 0)) AS `undone`, SUM(IF(`status` IN ('done','closed'), 1, 0)) AS `done`")
+            ->from(TABLE_TODO)
+            ->where('LEFT(date, 4)')->eq($year)
+            ->beginIF($accounts)->andWhere('account')->in($accounts)->fi()
+            ->fetch();
+    }
+
+    /**
+     * 某年的工时统计（口径：工时明细累计）。
+     *
+     * 注意：本仓 zt_effort 是"我的地盘-日志"表（无 project/consumed 列），
+     * 9.8.3 记录工时的唯一落点是 zt_taskestimate。
+     *
+     * @param  array  $accounts
+     * @param  string $year
+     * @access public
+     * @return object
+     */
+    public function getUserYearEfforts($accounts, $year)
+    {
+        $effort = $this->dao->select('COUNT(1) AS count, SUM(consumed) AS consumed')->from(TABLE_TASKESTIMATE)
+            ->where('LEFT(date, 4)')->eq($year)
+            ->beginIF($accounts)->andWhere('account')->in($accounts)->fi()
+            ->fetch();
+
+        $effort->consumed = !empty($effort->consumed) ? round($effort->consumed, 2) : 0;
+        return $effort;
+    }
+
+    /**
+     * 某年的贡献明细（对象 => 动作 => 次数）。
+     *
+     * @param  array  $accounts
+     * @param  string $year
+     * @access public
+     * @return array
+     */
+    public function getUserYearContributions($accounts, $year)
+    {
+        $contributions = $this->config->report->annualData['contributions'];
+        $stmt = $this->dao->select('objectType, action')->from(TABLE_ACTION)
+            ->where('LEFT(date, 4)')->eq($year)
+            ->andWhere('objectType')->in(array_keys($contributions))
+            ->beginIF($accounts)->andWhere('actor')->in($accounts)->fi()
+            ->query();
+
+        $result = array();
+        while($action = $stmt->fetch())
+        {
+            $objectType = $action->objectType;
+            $actionName = strtolower($action->action);
+            if(!isset($contributions[$objectType][$actionName])) continue;
+            $key = $contributions[$objectType][$actionName];
+            if(!isset($result[$objectType][$key])) $result[$objectType][$key] = 0;
+            $result[$objectType][$key] += 1;
+        }
+        return $result;
+    }
+
+    /**
+     * 某年的贡献总数（口径见 config 的 contributionCount）。
+     *
+     * @param  array  $accounts
+     * @param  string $year
+     * @access public
+     * @return int
+     */
+    public function getUserYearContributionCount($accounts, $year)
+    {
+        $countTypes = $this->config->report->annualData['contributionCount'];
+        $stmt = $this->dao->select('objectType, action')->from(TABLE_ACTION)
+            ->where('LEFT(date, 4)')->eq($year)
+            ->andWhere('objectType')->in(array_keys($countTypes))
+            ->beginIF($accounts)->andWhere('actor')->in($accounts)->fi()
+            ->query();
+
+        $count = 0;
+        while($action = $stmt->fetch())
+        {
+            if(isset($countTypes[$action->objectType][strtolower($action->action)])) $count ++;
+        }
+        return $count;
+    }
+
+    /**
+     * 某年的 12 个月（用于趋势图的横轴）。
+     *
+     * @param  string $year
+     * @access public
+     * @return array
+     */
+    public function getYearMonths($year)
+    {
+        $months = array();
+        for($i = 1; $i <= 12; $i ++) $months[$i] = (int)$year . '-' . sprintf('%02d', $i);
+        return $months;
+    }
+
+    /**
+     * 某年某对象的操作月度分布与状态分布。
+     *
+     * statusStat：该年内新建的对象按当前状态分组；
+     * actionStat：该年内该对象每月产生的动态数。
+     *
+     * @param  array  $accounts
+     * @param  string $year
+     * @param  string $objectType story|task|bug|case
+     * @access public
+     * @return array
+     */
+    public function getYearObjectStat($accounts, $year, $objectType)
+    {
+        $table = $this->config->objectTables[$objectType];
+
+        $statusStat = $this->dao->select('status, COUNT(1) AS count')->from($table)
+            ->where('LEFT(openedDate, 4)')->eq($year)
+            ->beginIF($objectType == 'task')->andWhere('parent')->eq(0)->fi()
+            ->beginIF($objectType == 'story')->andWhere('product')->gt(0)->fi()
+            ->beginIF($objectType == 'task')->andWhere('project')->gt(0)->fi()
+            ->andWhere('deleted')->eq('0')
+            ->groupBy('status')
+            ->fetchPairs('status', 'count');
+
+        $actionStat = $this->dao->select('LEFT(date, 7) AS month, COUNT(1) AS count')->from(TABLE_ACTION)
+            ->where('LEFT(date, 4)')->eq($year)
+            ->andWhere('objectType')->eq($objectType)
+            ->beginIF($accounts)->andWhere('actor')->in($accounts)->fi()
+            ->groupBy('month')
+            ->fetchPairs('month', 'count');
+
+        $monthlyStat = array();
+        foreach($this->getYearMonths($year) as $month) $monthlyStat[$month] = isset($actionStat[$month]) ? (int)$actionStat[$month] : 0;
+
+        return array('statusStat' => $statusStat, 'monthlyStat' => $monthlyStat);
+    }
 }
 
 /**
