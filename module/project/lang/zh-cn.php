@@ -173,6 +173,7 @@ $lang->project->groups['pri']        = '优先级分组';
 $lang->project->groups['assignedTo'] = '指派给分组';
 $lang->project->groups['finishedBy'] = '完成者分组';
 $lang->project->groups['closedBy']   = '关闭者分组';
+$lang->project->groups['module']       = '模块分组';
 $lang->project->groups['type']       = '类型分组';
 
 $lang->project->groupFilter['story']['all']         = $lang->project->all;
@@ -272,6 +273,8 @@ $lang->project->orderList['pri_desc']   = "需求优先级倒序";
 $lang->project->orderList['stage_asc']  = "需求阶段正序";
 $lang->project->orderList['stage_desc'] = "需求阶段倒序";
 
+$lang->project->kanbanNoLane = '未分组';
+$lang->project->kanbanOrderFailed = '看板顺序保存失败，请刷新后重试。';
 $lang->project->kanban        = "看板";
 $lang->project->kanbanSetting = "看板设置";
 $lang->project->resetKanban   = "恢复默认";

@@ -2351,6 +2351,126 @@ class projectModel extends model
     }
 
     /**
+     * Get the saved card order of a kanban.
+     *
+     * 看板卡片的拖拽顺序，按泳道维度分别保存，避免切换维度后串序：
+     *   {"<type>": {"<laneKey>|<status>": ["task-12", "bug-8", ...]}}
+     * 卡片键带 task-/bug- 前缀，防止任务与 Bug 的 id 撞号。
+     *
+     * @param  int    $projectID
+     * @param  string $type
+     * @access public
+     * @return array
+     */
+    public function getKanbanOrder($projectID, $type = '')
+    {
+        $orders = $this->loadModel('setting')->getItem("owner=system&module=project&section=kanbanOrder&key=project$projectID");
+        $orders = json_decode((string)$orders, true);
+        if(!is_array($orders)) return array();
+        if($type === '') return $orders;
+        return isset($orders[$type]) && is_array($orders[$type]) ? $orders[$type] : array();
+    }
+
+    /**
+     * Save the card order of one lane dimension.
+     *
+     * @param  int    $projectID
+     * @param  string $type
+     * @param  array  $order
+     * @access public
+     * @return bool
+     */
+    public function saveKanbanOrder($projectID, $type, $order)
+    {
+        if(!is_array($order)) return false;
+
+        $orders        = $this->getKanbanOrder($projectID);
+        $orders[$type] = $order;
+
+        return $this->loadModel('setting')->setItem("system.project.kanbanOrder.project$projectID", json_encode($orders));
+    }
+
+    /**
+     * Drop cards that no longer exist from a submitted kanban order.
+     *
+     * 拖拽顺序是长期驻留的配置，必须回收已删除/已移出项目的卡片，否则会随
+     * 项目使用无限膨胀（同时限制单元格数量与被采纳的 ID 范围）。
+     *
+     * @param  int    $projectID
+     * @param  array  $order
+     * @access public
+     * @return array
+     */
+    public function filterKanbanOrder($projectID, $order)
+    {
+        $taskIDs = $this->dao->select('id')->from(TABLE_TASK)->where('project')->eq((int)$projectID)->andWhere('deleted')->eq(0)->fetchPairs('id', 'id');
+        $bugIDs  = $this->dao->select('id')->from(TABLE_BUG)->where('project')->eq((int)$projectID)->andWhere('deleted')->eq(0)->fetchPairs('id', 'id');
+
+        $filtered = array();
+        foreach($order as $cell => $items)
+        {
+            if(count($filtered) >= 200) break;              // 单元格上限
+            if(!is_array($items)) continue;
+
+            $keep = array();
+            foreach($items as $item)
+            {
+                if(count($keep) >= 500) break;              // 单格卡片上限
+                if(!preg_match('/^(task|bug)-(\d+)$/', (string)$item, $matches)) continue;
+
+                $id = (int)$matches[2];
+                if($matches[1] == 'task' and isset($taskIDs[$id])) $keep[] = $item;
+                if($matches[1] == 'bug'  and isset($bugIDs[$id]))  $keep[] = $item;
+            }
+            if(!empty($keep)) $filtered[$cell] = $keep;
+        }
+
+        return $filtered;
+    }
+
+    /**
+     * Sort kanban cards by the saved order.
+     *
+     * 未记录顺序的卡片追加在末尾（按 id 倒序，与默认排序一致）。
+     *
+     * @param  array  $kanbanGroup
+     * @param  array  $cellOrder
+     * @access public
+     * @return void
+     */
+    public function sortKanbanCards(&$kanbanGroup, $cellOrder)
+    {
+        if(empty($cellOrder)) return;
+
+        foreach($kanbanGroup as $laneKey => $group)
+        {
+            if(count(get_object_vars($group)) == 0) continue;
+
+            foreach(array('tasks' => 'task', 'bugs' => 'bug') as $kind => $prefix)
+            {
+                if(empty($group->$kind)) continue;
+
+                foreach($group->$kind as $status => $items)
+                {
+                    $key = $laneKey . '|' . $status;
+                    if(empty($cellOrder[$key])) continue;
+
+                    $order = array_flip($cellOrder[$key]);
+                    usort($items, function($a, $b) use ($order, $prefix)
+                    {
+                        $aIndex = isset($order["$prefix-{$a->id}"]) ? $order["$prefix-{$a->id}"] : PHP_INT_MAX;
+                        $bIndex = isset($order["$prefix-{$b->id}"]) ? $order["$prefix-{$b->id}"] : PHP_INT_MAX;
+                        if($aIndex == $bIndex) return $b->id <=> $a->id;
+                        return $aIndex <=> $bIndex;
+                    });
+
+                    $group->{$kind}[$status] = $items;
+                }
+            }
+        }
+    }
+
+    /**
      * Save Kanban Data.
      *
      * @param  int    $projectID

@@ -39,3 +39,10 @@
 #kanban .fix-table-copy-wrapper th.c-board {color: #eee;}
 #kanban .fix-table-copy-wrapper th.c-board .btn-link {color: #fff;}
 #kanban .group-title {word-break: break-all; line-height: 16px; padding: 3px 0; display: block;}
+
+/* 泳道折叠（M1）：点击泳道名切换，折叠状态存 localStorage */
+#kanban tr[data-lane] > td.c-side {position: relative; cursor: pointer;}
+#kanban tr[data-lane] > td.c-side:after {content: '\25BE'; position: absolute; right: 6px; top: 50%; margin-top: -8px; color: #999; font-size: 12px;}
+#kanban tr.lane-collapsed > td.c-side:after {content: '\25B8';}
+#kanban tr.lane-collapsed > td.c-boards {display: none;}
+#kanban tr.lane-collapsed > td.c-side {border-bottom-color: #ddd;}

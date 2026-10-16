@@ -89,6 +89,36 @@ $(function()
 
     var kanbanModalTrigger = new $.zui.ModalTrigger({type: 'iframe', width:800});
     var lastOperation;
+
+    /* 保存同列拖拽产生的人工顺序（跨列拖拽仍走状态流转表单）。 */
+    var saveOrder = function()
+    {
+        var order = {};
+        $kanban.find('tr[data-lane]').each(function()
+        {
+            var laneKey = $(this).data('lane');
+            $(this).find('.board').each(function()
+            {
+                var status = $(this).data('type');
+                var items  = [];
+                $(this).find('.board-item').each(function()
+                {
+                    var $item = $(this);
+                    items.push($item.data('type') + '-' + $item.data('id'));
+                });
+                if(items.length) order[laneKey + '|' + status] = items;
+            });
+        });
+
+        $.post($.createLink('project', 'kanbanOrder', 'projectID=' + projectID),
+            {type: kanbanType, order: JSON.stringify(order)},
+            function(data)
+            {
+                if(!data || data.result != 'success') $.zui.messager.danger(kanbanOrderFailed);
+            },
+            'json');
+    };
+
     var dropTo = function(id, from, to, type)
     {
         if(statusMap[type][from] && statusMap[type][from][to])
@@ -112,12 +142,14 @@ $(function()
             var itemType = $ele.data('type');
             var $board = $ele.closest('.board');
             var type = $board.data('type');
-            return $board.siblings('.board').filter(function()
+            var $targets = $board.siblings('.board').filter(function()
             {
                 var typeMap = statusMap[itemType];
                 var actionMap = typeMap && typeMap[type];
                 return !!actionMap && actionMap[$(this).data('type')];
             });
+            /* 允许落回自身所在的列，用于同列内排序。 */
+            return $targets.add($board);
         },
         start: function(e)
         {
@@ -138,10 +170,22 @@ $(function()
         },
         drop: function(e)
         {
-            var result = dropTo(e.element.data('id'), e.element.closest('.board').data('type'), e.target.data('type'), e.element.data('type'));
+            var $item = e.element;
+            var $from = $item.closest('.board');
+            var $to   = e.target;
+
+            /* 同列拖拽：只调整顺序并落库，不触发状态流转。 */
+            if($from[0] === $to[0])
+            {
+                $item.insertBefore($to.find('.board-drag-holder'));
+                saveOrder();
+                return;
+            }
+
+            var result = dropTo($item.data('id'), $from.data('type'), $to.data('type'), $item.data('type'));
             if(result !== false)
             {
-                e.element.insertBefore(e.target.find('.board-drag-holder'));
+                $item.insertBefore($to.find('.board-drag-holder'));
             }
         },
         finish: function()
@@ -149,6 +193,34 @@ $(function()
             $kanban.removeClass('dragging').find('.can-drop-in').removeClass('can-drop-in');
             $kanban.find('.dragging').removeClass('dragging');
         }
+    });
+
+    /* 泳道折叠：点击泳道名切换，折叠状态只存 localStorage（不落库、不影响他人）。 */
+    var laneCollapseKey = 'kanbanLanes.' + projectID + '.' + kanbanType;
+    var collapsedLanes  = {};
+    try { collapsedLanes = JSON.parse(localStorage.getItem(laneCollapseKey) || '{}') || {}; } catch(e) { collapsedLanes = {}; }
+
+    var applyCollapsedLanes = function()
+    {
+        $kanban.find('tr[data-lane]').each(function()
+        {
+            $(this).toggleClass('lane-collapsed', !!collapsedLanes[$(this).data('lane')]);
+        });
+    };
+    applyCollapsedLanes();
+
+    $kanban.on('click', 'td.c-side', function(e)
+    {
+        if($(e.target).closest('a').length) return;       // 点泳道内的链接不触发折叠
+
+        var $tr     = $(this).closest('tr[data-lane]');
+        var laneKey = String($tr.data('lane'));
+
+        if(collapsedLanes[laneKey]) delete collapsedLanes[laneKey];
+        else collapsedLanes[laneKey] = 1;
+
+        try { localStorage.setItem(laneCollapseKey, JSON.stringify(collapsedLanes)); } catch(e) {}
+        applyCollapsedLanes();
     });
 
     $kanban.on('click', '.kanbaniframe', function(e)

@@ -1350,18 +1350,37 @@ class project extends control
 
         $this->project->setMenu($this->projects, $projectID);
         $project = $this->loadModel('project')->getById($projectID);
+
+        /* 泳道维度白名单（story 为历史默认值，finishedBy 保留兼容）。 */
+        $laneTypes = array('story', 'module', 'assignedTo', 'pri', 'finishedBy');
+        if(!in_array($type, $laneTypes)) $type = 'story';
+
         $tasks   = $this->project->getKanbanTasks($projectID, "id");
         $bugs    = $this->loadModel('bug')->getProjectBugs($projectID);
         $stories = $this->loadModel('story')->getProjectStories($projectID, $orderBy);
 
-        $kanbanGroup   = $this->project->getKanbanGroupData($stories, $tasks, $bugs, $type);
+        $kanbanGroup = $this->project->getKanbanGroupData($stories, $tasks, $bugs, $type);
+
+        /* 应用拖拽保存的人工顺序（未记录的卡片按 id 倒序追加在末尾）。 */
+        $cellOrder = $this->project->getKanbanOrder($projectID, $type);
+        if(!empty($cellOrder)) $this->project->sortKanbanCards($kanbanGroup, $cellOrder);
+
         $kanbanSetting = $this->project->getKanbanSetting($projectID);
+
+        /* 泳道名称：story 维度由视图用需求对象渲染，其余维度在此统一给出。 */
+        $laneNames = array('' => $lang->task->noAssigned);
+        if($type == 'module')     $laneNames = $this->loadModel('tree')->getOptionMenu($projectID, 'task');
+        if($type == 'pri')        $laneNames = $lang->task->priList;
+        if($type == 'assignedTo') $laneNames = array('' => $lang->task->noAssigned) + $this->loadModel('user')->getPairs('noletter');
+        if($type == 'finishedBy') $laneNames = array('' => $lang->task->noAssigned) + $this->loadModel('user')->getPairs('noletter');
 
         $this->view->title       = $this->lang->project->kanban;
         $this->view->position[]  = html::a($this->createLink('project', 'browse', "projectID=$projectID"), $project->name);
         $this->view->position[]  = $this->lang->project->kanban;
         $this->view->stories     = $stories;
         $this->view->realnames   = $this->loadModel('user')->getPairs('noletter');
+        $this->view->laneNames   = $laneNames;
+        $this->view->laneTypes   = $laneTypes;
         $this->view->storyOrder  = $orderBy;
         $this->view->orderBy     = 'id_asc';
         $this->view->projectID   = $projectID;
@@ -1373,6 +1392,33 @@ class project extends control
         $this->view->colorList   = $kanbanSetting->colorList;
 
         $this->display();
+    }
+
+    /**
+     * Save the card order of a kanban (ajax).
+     *
+     * 只保存同列拖拽产生的人工顺序；跨列拖拽仍走各对象的动作表单，
+     * 以免绕过状态机（工时/日期/父任务汇总都会丢）。
+     *
+     * @param  int    $projectID
+     * @access public
+     * @return void
+     */
+    public function kanbanOrder($projectID)
+    {
+        if(!$_POST) $this->send(array('result' => 'fail'));
+
+        $laneTypes = array('story', 'module', 'assignedTo', 'pri', 'finishedBy');
+        $type      = isset($_POST['type']) ? (string)$_POST['type'] : 'story';
+        if(!in_array($type, $laneTypes)) $type = 'story';
+
+        $order = isset($_POST['order']) ? json_decode((string)$_POST['order'], true) : array();
+        if(!is_array($order)) $order = array();
+
+        $order = $this->project->filterKanbanOrder($projectID, $order);
+        $this->project->saveKanbanOrder($projectID, $type, $order);
+
+        $this->send(array('result' => 'success'));
     }
 
     /**

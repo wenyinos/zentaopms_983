@@ -173,6 +173,7 @@ $lang->project->groups['pri']        = 'By Priority';
 $lang->project->groups['assignedTo'] = 'By AssignedTo';
 $lang->project->groups['finishedBy'] = 'By FinishedBy';
 $lang->project->groups['closedBy']   = 'By ClosedBy';
+$lang->project->groups['module']       = 'By Module';
 $lang->project->groups['type']       = 'By Type';
 
 $lang->project->groupFilter['story']['all']         = $lang->project->all;
@@ -272,6 +273,8 @@ $lang->project->orderList['pri_desc']   = "Priority Desc";
 $lang->project->orderList['stage_asc']  = "Phase Asc";
 $lang->project->orderList['stage_desc'] = "Phase Desc";
 
+$lang->project->kanbanNoLane = 'Ungrouped';
+$lang->project->kanbanOrderFailed = 'Failed to save the kanban order, please refresh and try again.';
 $lang->project->kanban        = "Kanban";
 $lang->project->kanbanSetting = "Kanban Setting";
 $lang->project->resetKanban   = "Reset Setting";
