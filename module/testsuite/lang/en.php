@@ -20,6 +20,7 @@ $lang->testsuite->linkVersion      = "Version";
 $lang->testsuite->unlinkCase       = "Unlink";
 $lang->testsuite->batchUnlinkCases = "Batch unlink cases";
 $lang->testsuite->deleted          = 'deleted';
+$lang->testsuite->exportCase = 'Export Cases';
 $lang->testsuite->exportTemplet    = 'Export template';
 $lang->testsuite->batchCreateCase  = 'Batch create cases';
 $lang->testsuite->import           = 'Import';

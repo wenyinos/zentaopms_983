@@ -656,6 +656,7 @@ $lang->resource->testsuite->delete           = 'delete';
 $lang->resource->testsuite->linkCase         = 'linkCase';
 $lang->resource->testsuite->unlinkCase       = 'unlinkCase';
 $lang->resource->testsuite->batchUnlinkCases = 'batchUnlinkCases';
+$lang->resource->testsuite->exportCase   = 'exportCase';
 
 $lang->testsuite->methodOrder[0]  = 'index';
 $lang->testsuite->methodOrder[5]  = 'browse';
@@ -666,6 +667,7 @@ $lang->testsuite->methodOrder[25] = 'delete';
 $lang->testsuite->methodOrder[30] = 'linkCase';
 $lang->testsuite->methodOrder[35] = 'unlinkCase';
 $lang->testsuite->methodOrder[40] = 'batchUnlinkCases';
+$lang->testsuite->methodOrder[45] = 'exportCase';
 
 $lang->resource->caselib = new stdclass();
 $lang->resource->caselib->library          = 'library';
@@ -675,10 +677,12 @@ $lang->resource->caselib->createCase       = 'createCase';
 $lang->resource->caselib->libView          = 'libView';
 $lang->resource->caselib->batchCreateCase  = 'batchCreateCase';
 $lang->resource->caselib->exportTemplet    = 'exportTemplet';
+$lang->resource->caselib->exportCase       = 'exportCase';
 $lang->resource->caselib->import           = 'import';
 $lang->resource->caselib->showImport       = 'showImport';
 
 $lang->caselib->methodOrder[0]  = 'library';
+$lang->caselib->methodOrder[1]  = 'exportCase';
 $lang->caselib->methodOrder[5]  = 'createLib';
 $lang->caselib->methodOrder[10] = 'edit';
 $lang->caselib->methodOrder[15] = 'createCase';

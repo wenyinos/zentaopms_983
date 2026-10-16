@@ -86,6 +86,7 @@ $filter->testcase->groupcase     = new stdclass();
 $filter->testreport->default     = new stdclass();
 $filter->testsuite->default      = new stdclass();
 $filter->testsuite->library      = new stdclass();
+$filter->testsuite->exportcase   = new stdclass();
 $filter->testtask->default       = new stdclass();
 $filter->testtask->browse        = new stdclass();
 $filter->testtask->cases         = new stdclass();
@@ -162,6 +163,7 @@ $filter->testsuite->default->cookie['lastProduct']   = 'int';
 $filter->testsuite->default->cookie['preProductID']  = 'int';
 $filter->testsuite->library->cookie['libCaseModule'] = 'int';
 $filter->testsuite->library->cookie['preCaseLibID']  = 'int';
+$filter->testsuite->exportcase->cookie['checkedItem'] = 'reg::checked';
 
 $filter->testtask->browse->cookie['preBranch']     = 'int';
 $filter->testtask->cases->cookie['preProductID']   = 'int';

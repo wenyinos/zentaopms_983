@@ -734,6 +734,133 @@ class testsuite extends control
     }
 
     /**
+     * Export cases of a case library.
+     *
+     * 按当前浏览条件（或勾选项）导出用例 CSV。字段与导入模板同构
+     * （stepDesc/stepExpect 成对），因此支持"导出 → 修改 → 再导入"闭环。
+     * 只做 CSV，不引入 Excel 读写依赖。
+     *
+     * @param  int    $libID
+     * @param  string $orderBy
+     * @param  string $browseType
+     * @access public
+     * @return void
+     */
+    public function exportCase($libID, $orderBy = 'id_desc', $browseType = 'all')
+    {
+        $this->loadModel('testcase');
+
+        if($_POST)
+        {
+            $caseLang = $this->lang->testcase;
+
+            /* 字段清单：支持在对话框里自定义导出列。 */
+            $fields = $this->post->exportFields ? $this->post->exportFields : explode(',', $this->config->testsuite->exportFields);
+            foreach($fields as $key => $fieldName)
+            {
+                $fieldName = trim($fieldName);
+                $fields[$fieldName] = isset($caseLang->$fieldName) ? $caseLang->$fieldName : $fieldName;
+                unset($fields[$key]);
+            }
+
+            $cases = $this->testsuite->getCasesToExport($libID, $this->post->exportType, $orderBy);
+
+            $moduleIdList = array();
+            foreach($cases as $case) $moduleIdList[$case->module] = $case->module;
+
+            $modules = $this->dao->select('id,name')->from(TABLE_MODULE)->where('id')->in($moduleIdList)->fetchPairs();
+            $users   = $this->loadModel('user')->getPairs('noletter');
+            $steps   = $this->dao->select('*')->from(TABLE_CASESTEP)
+                ->where('`case`')->in(array_keys($cases))
+                ->orderBy('version desc,id')
+                ->fetchGroup('case', 'id');
+
+            /* 附件：CSV 里用"标题: 绝对地址"纯文本（导出视图会 strip_tags，HTML 链接会丢地址）。 */
+            $fileList = $this->dao->select('id,objectID,title')->from(TABLE_FILE)
+                ->where('objectType')->eq('testcase')
+                ->andWhere('objectID')->in(array_keys($cases))
+                ->fetchGroup('objectID');
+
+            $sysURL = common::getSysURL();
+            foreach($cases as $case)
+            {
+                /* 步骤合并为两列：两级编号、同一版本，与导入模板一致。 */
+                $case->stepDesc = $case->stepExpect = '';
+                if(isset($steps[$case->id]))
+                {
+                    $i = $childId = 0;
+                    foreach($steps[$case->id] as $step)
+                    {
+                        if($step->version != $case->version) continue;
+
+                        if($step->type == 'group' or $step->type == 'step')
+                        {
+                            $i++;
+                            $childId = 0;
+                            $stepId  = $i;
+                        }
+                        else
+                        {
+                            $stepId = $i . '.' . $childId;
+                        }
+
+                        $case->stepDesc   .= $stepId . '. ' . $step->desc . "\n";
+                        $case->stepExpect .= $stepId . '. ' . $step->expect . "\n";
+                        $childId++;
+                    }
+                    $case->stepDesc   = trim($case->stepDesc);
+                    $case->stepExpect = trim($case->stepExpect);
+                }
+
+                $case->module = isset($modules[$case->module]) ? $modules[$case->module] . "(#$case->module)" : '';
+
+                $stageList = array();
+                foreach(explode(',', (string)$case->stage) as $stage)
+                {
+                    $stage = trim($stage);
+                    if($stage === '') continue;
+                    $stageList[] = zget($caseLang->stageList, $stage, $stage);
+                }
+                $case->stage = join(',', $stageList);
+
+                $case->type = zget($caseLang->typeList, $case->type, $case->type);
+                $case->pri  = zget($caseLang->priList, $case->pri, $case->pri);
+
+                $case->openedBy     = zget($users, $case->openedBy, $case->openedBy);
+                $case->lastEditedBy = zget($users, $case->lastEditedBy, $case->lastEditedBy);
+
+                $case->files = '';
+                if(isset($fileList[$case->id]))
+                {
+                    $fileLines = array();
+                    foreach($fileList[$case->id] as $file) $fileLines[] = $file->title . ': ' . $sysURL . $this->createLink('file', 'download', "fileID={$file->id}");
+                    $case->files = join("\n", $fileLines);
+                }
+            }
+
+            $this->post->set('fields', $fields);
+            $this->post->set('kind', 'testcase');
+            $this->post->set('rows', $cases);
+            $this->fetch('file', 'export2' . $this->post->fileType, $_POST);
+        }
+
+        /* 导出对话框按当前模块（testsuite）取字段标签，用例字段标签来自 testcase，这里桥接过来。 */
+        $this->app->loadLang('testcase');
+        foreach(explode(',', $this->config->testsuite->exportFields) as $field)
+        {
+            $field = trim($field);
+            if(isset($this->lang->testcase->$field) and !isset($this->lang->testsuite->$field)) $this->lang->testsuite->$field = $this->lang->testcase->$field;
+        }
+
+        $this->view->allExportFields = $this->config->testsuite->exportFields;
+        $this->view->customExport    = true;
+        $this->view->libID           = $libID;
+        $this->view->orderBy         = $orderBy;
+        $this->view->browseType      = $browseType;
+        $this->display();
+    }
+
+    /**
      * Import case csv file.
      * 
      * @param  int    $libID 

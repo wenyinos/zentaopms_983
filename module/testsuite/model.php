@@ -479,6 +479,51 @@ class testsuiteModel extends model
     }
 
     /**
+     * Get cases to export from a case library.
+     *
+     * 取数复用列表页保存的查询条件（library() 里的 saveQueryCondition），
+     * 因此"导出当前筛选结果"与列表页所见一致；exportType=selected 时只导出勾选项。
+     *
+     * @param  int    $libID
+     * @param  string $exportType
+     * @param  string $orderBy
+     * @param  int    $limit
+     * @access public
+     * @return array
+     */
+    public function getCasesToExport($libID, $exportType = 'all', $orderBy = 'id_desc', $limit = 0)
+    {
+        $queryCondition = trim((string)$this->session->testcaseQueryCondition);
+        if($queryCondition === '') $queryCondition = "`lib` = " . (int)$libID . " AND `product` = 0 AND `deleted` = '0'";
+
+        if($exportType == 'selected')
+        {
+            /* checkedItem 来自 cookie，逐项转 int 后拼接，避免注入。 */
+            $checkedIDs = array();
+            foreach(explode(',', (string)$this->cookie->checkedItem) as $checkedID)
+            {
+                $checkedID = (int)$checkedID;
+                if($checkedID) $checkedIDs[] = $checkedID;
+            }
+            if($checkedIDs) $queryCondition .= ' AND `id` IN (' . implode(',', $checkedIDs) . ')';
+        }
+
+        /* 排序字段白名单：这里是 raw query，不能直接拼请求参数。 */
+        if(!preg_match('/^[a-zA-Z0-9_]+_(asc|desc)$/', (string)$orderBy)) $orderBy = 'id_desc';
+        $orderField = str_replace(array('_asc', '_desc'), '', $orderBy);
+        $orderDir   = substr($orderBy, -4) === 'desc' ? 'DESC' : 'ASC';
+
+        $sql = 'SELECT * FROM ' . TABLE_CASE . ' WHERE ' . $queryCondition . " ORDER BY `{$orderField}` {$orderDir}";
+        if($limit > 0) $sql .= ' LIMIT ' . (int)$limit;
+
+        $cases = array();
+        $stmt  = $this->dbh->query($sql);
+        while($case = $stmt->fetch()) $cases[$case->id] = $case;
+
+        return $cases;
+    }
+
+    /**
      * Get lib cases.
      *
      * @param  int    $libID

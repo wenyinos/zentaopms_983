@@ -46,12 +46,17 @@ js::set('flow',          $config->global->flow);
   </div>
   <div class='btn-toolbar pull-right'>
     <div class='btn-group'>
+     <?php if(common::hasPriv('testsuite', 'exportCase')) common::printLink('testsuite', 'exportCase', "libID=$libID&orderBy=$orderBy&browseType=$browseType", "<i class='icon icon-export muted'> </i>" . $lang->testsuite->exportCase, '', "class='btn btn-link iframe export' data-width='700'");?>
      <?php common::printLink('testsuite', 'exportTemplet', "libID=$libID", "<i class='icon icon-export muted'> </i>" . $lang->testsuite->exportTemplet, '', "class='btn btn-link export'");?>
      <?php common::printLink('testsuite', 'import', "libID=$libID", "<i class='icon muted icon-import'> </i>" . $lang->testcase->importFile, '', "class='btn btn-link export'");?>
     </div>
     <?php $params = "libID=$libID&moduleID=" . (isset($moduleID) ? $moduleID : 0);?>
     <?php common::printLink('testsuite', 'batchCreateCase', $params, "<i class='icon-plus'></i>" . $lang->testcase->batchCreate, '', "class='btn btn-secondary'");?>
     <?php common::printLink('testsuite', 'createCase', $params, "<i class='icon-plus'></i>" . $lang->testcase->create, '', "class='btn btn-primary'");?>
+    <?php echo "<div class='btn-group'>";?>
+    <?php common::printIcon('testsuite', 'edit',   "libID=$libID");?>
+    <?php common::printIcon('testsuite', 'delete', "libID=$libID", '', 'button', '', 'hiddenwin');?>
+    <?php echo "</div>";?>
   </div>
 </div>
 <?php endif;?>
