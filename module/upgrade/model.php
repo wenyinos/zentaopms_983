@@ -78,14 +78,21 @@ class upgradeModel extends model
      * 官方版本（9.8.3 及以下、10.x 等）不在升级支持范围：本版本业务核心取自
      * 9.8.3、界面取自 10.1，与任何单个官方发布版都不完全一致，直接升级可能损坏数据。
      *
+     * 允许的两条自研序列：
+     *   9.8.3_<n>        首个社区定制版起的定制序列
+     *   9.9.x 与 9.10.x+ 自研版本号（中段为 9 或两位数及以上）
+     *
+     * 拒绝的关键：官方 9.x 的中段是 0-8（如 9.8.3），官方 10.x 写作 10.x 而不是 9.10.x，
+     * 所以 `9.` 开头且中段为 `9` 或 `>= 10` 即必然是自研版本。
+     *
      * @param  string $version
      * @access public
      * @return bool
      */
     public function isWenyinVersion($version)
     {
-        if(preg_match('/^9\.8\.3_\d+$/', (string)$version)) return true;    // WenYinOS 定制序列（9.8.3_1 起）
-        if(preg_match('/^9\.9\.\d+$/', (string)$version))   return true;    // 9.9.0 起的自研版本号（官方无 9.9.x 发布号）
+        if(preg_match('/^9\.8\.3_\d+$/', (string)$version))            return true;    // WenYinOS 定制序列（9.8.3_1 起）
+        if(preg_match('/^9\.(?:9|[1-9]\d+)\.\d+$/', (string)$version)) return true;    // 9.9.x 与 9.10.x 起的自研序列
         return false;
     }
 
@@ -137,7 +144,7 @@ body{font-family:-apple-system,'Segoe UI','PingFang SC','Microsoft YaHei',sans-s
 <div class='box'>
   <h3>无法升级</h3>
   <p>检测到当前数据库版本为 <strong>{$installedVersion}</strong>，它不属于本社区版（WenYinOS ZenTaoPMS）支持的升级来源，升级已被拒绝。</p>
-  <p>本项目仅支持从 <strong>9.8.3_1</strong>（首个社区定制版）及后续自研版本（9.9.x）升级。官方禅道版本（9.8.3 及以下、10.x 等）不在兼容范围内——本版本业务核心取自 9.8.3、界面取自 10.1，与任何单个官方发布版都不完全一致，直接升级可能造成数据损坏。</p>
+  <p>本项目仅支持从 <strong>9.8.3_1</strong>（首个社区定制版）及后续自研版本（<strong>9.9.x</strong>、<strong>9.10.x 及以上</strong>）升级。官方禅道版本（9.8.3 及以下、10.x 等）不在兼容范围内——本版本业务核心取自 9.8.3、界面取自 10.1，与任何单个官方发布版都不完全一致，直接升级可能造成数据损坏。</p>
   <p class='tip'>如果你正在使用官方禅道，请先通过官方升级流程升级到官方最新版，或联系维护者评估迁移方案。</p>
   <a href='index.php'>返回首页</a>
 </div>
