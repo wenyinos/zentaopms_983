@@ -196,6 +196,42 @@ class baseRouter
     public $methodName;
 
     /**
+     * 本次请求的唯一标识（错误日志用，避免依赖额外的 HTTP 头）。
+     * The request id for error logging.
+     *
+     * @var string
+     * @access public
+     */
+    public $requestID = '';
+
+    /**
+     * 错误落库的重入保护。
+     * Re-entry guard while saving an error to database.
+     *
+     * @var bool
+     * @access public
+     */
+    public $savingErrorLog = false;
+
+    /**
+     * 已写入错误本体的 md5（同一请求内去重）。
+     * md5 list of error bodies already saved in this request.
+     *
+     * @var array
+     * @access public
+     */
+    public $savedErrorLogBodies = array();
+
+    /**
+     * 已写入的 requestID|md5 组合（同一请求同错只记一次）。
+     * requestID|md5 pairs already saved in this request.
+     *
+     * @var array
+     * @access public
+     */
+    public $savedErrorLogRecords = array();
+
+    /**
      * 当前方法的扩展文件。
      * The action extension file of current method.
      * 
@@ -2209,6 +2245,11 @@ class baseRouter
      */
     public function saveError($level, $message, $file, $line)
     {
+        /* 错误落库与 debug 开关解耦：无论是否记录文件日志都要入库（由 errorlog 配置控制）。
+           用 error_reporting() 过滤，尊重 @ 抑制与运行期掩码，避免 notice/deprecated 打满表。
+           注意：此处只新增调用，文件日志分支一行未动。 */
+        if(error_reporting() & $level) $this->saveErrorLog($level, $message, $file, $line);
+
         if(empty($this->config->debug))  return true;
         if(!is_dir($this->logRoot))      return true;
         if(!is_writable($this->logRoot)) return true;
@@ -2284,6 +2325,123 @@ class baseRouter
             $htmlError  = "<html><head><meta http-equiv='Content-Type' content='text/html; charset=utf-8' /></head>";
             $htmlError .= "<body>" . nl2br($errorLog) . "</body></html>";
             die($htmlError);
+        }
+    }
+
+    /**
+     * Save an error into database (independent of the debug switch).
+     *
+     * 把运行时错误落库，供后台「错误日志」查看。设计要点（均为实测结论，见移植计划 §5）：
+     *   - 与 debug 开关解耦：由 errorlog 配置的 enabled/levels 控制；
+     *   - 任何失败一律吞掉：错误发生时数据库可能已不可用，在 set_error_handler 内再抛错
+     *     会导致整站白屏（实测：不带 try/catch 时 Uncaught PDOException 直接致命）；
+     *   - 重入保护 + 防自噬：errorlog 模块自身报错不再入库；
+     *   - 不使用 $this->dao：dao 出错会再次走到 saveError 造成递归，这里用 PDO 原生绑定。
+     *
+     * @param  int    $level
+     * @param  string $message
+     * @param  string $file
+     * @param  int    $line
+     * @param  string $trace
+     * @access public
+     * @return void
+     */
+    public function saveErrorLog($level, $message, $file, $line, $trace = '')
+    {
+        if(!defined('TABLE_ERRORLOG') or !defined('TABLE_ERRORLOGREQ')) return;   // 老库未升级
+        if($this->savingErrorLog)           return;                               // 重入保护
+        if($this->moduleName == 'errorlog') return;                               // 防自噬
+        if(empty($this->dbh))               return;                               // 构造函数先注册句柄、后连库
+
+        $this->loadErrorLogConfig();
+        if(empty($this->config->errorlog->enabled))     return;
+        if(!($level & $this->config->errorlog->levels)) return;
+
+        if(empty($this->requestID)) $this->requestID = 'req-' . md5(uniqid('', true));
+
+        /* 路径脱敏。 */
+        $basePath = $this->getBasePath();
+        if($basePath)
+        {
+            $message = str_replace($basePath, '', (string)$message);
+            $file    = str_replace($basePath, '', (string)$file);
+            $trace   = str_replace($basePath, '', (string)$trace);
+        }
+
+        /* 消息净化：框架 triggerError() 会先 htmlspecialchars 再拼 <p>，落库前还原为纯文本。 */
+        $dbMessage = strip_tags(htmlspecialchars_decode((string)$message));
+        if(!mb_check_encoding($dbMessage, 'UTF-8')) $dbMessage = helper::convertEncoding($dbMessage, 'GBK', 'UTF-8');
+
+        /* 堆栈裁剪：致命错误的消息自带 Stack trace:，切出来并只保留前 20 帧。 */
+        if($trace === '' and strpos($dbMessage, 'Stack trace:') !== false)
+        {
+            $parts     = explode('Stack trace:', $dbMessage, 2);
+            $dbMessage = rtrim($parts[0]);
+            $trace     = preg_replace('/\s+thrown\s*$/', '', trim($parts[1]));
+        }
+        if($trace === '') $trace = (new Exception())->getTraceAsString();
+        $trace     = implode("\n", array_slice(explode("\n", (string)$trace), 0, 20));
+        $dbMessage = mb_substr($dbMessage, 0, 8000);
+        $trace     = mb_substr($trace, 0, 8000);
+
+        $md5       = md5(implode("\n", array($file, (string)$line, (string)$level, $dbMessage)));
+        $recordKey = $this->requestID . '|' . $md5;
+        if(isset($this->savedErrorLogRecords[$recordKey])) return;                // 同请求同错只写一次
+
+        $account = isset($_SESSION['user']->account) ? $_SESSION['user']->account : '';
+
+        $this->savingErrorLog = true;
+        try
+        {
+            if(!isset($this->savedErrorLogBodies[$md5]))
+            {
+                $sql  = 'INSERT INTO ' . TABLE_ERRORLOG . ' (`md5`,`file`,`line`,`level`,`message`,`trace`) VALUES (?,?,?,?,?,?) ON DUPLICATE KEY UPDATE `md5` = `md5`';
+                $stmt = $this->dbh->prepare($sql);
+                $stmt->execute(array($md5, mb_substr((string)$file, 0, 255), (int)$line, (int)$level, $dbMessage, $trace));
+                $this->savedErrorLogBodies[$md5] = true;
+            }
+
+            $sql  = 'INSERT IGNORE INTO ' . TABLE_ERRORLOGREQ . ' (`requestID`,`md5`,`module`,`method`,`account`,`url`,`createdDate`) VALUES (?,?,?,?,?,?,?)';
+            $stmt = $this->dbh->prepare($sql);
+            $stmt->execute(array($this->requestID, $md5, (string)$this->moduleName, (string)$this->methodName, $account, mb_substr((string)$this->getURI(), 0, 255), helper::now()));
+            $this->savedErrorLogRecords[$recordKey] = true;
+        }
+        catch(Throwable $e)
+        {
+            /* 库不可用/表缺失等：一律静默跳过，绝不再抛错。 */
+        }
+        finally
+        {
+            $this->savingErrorLog = false;
+        }
+    }
+
+    /**
+     * Load the errorlog config on demand.
+     *
+     * 错误处理路径上不能依赖语言对象：本方法只读/写 $config，模块的 config.php 也不得写 $lang
+     * （错误句柄在 loadLang('common') 之前就已注册，此时污染 $lang 会导致语言加载整体错乱）。
+     *
+     * @access private
+     * @return void
+     */
+    private function loadErrorLogConfig()
+    {
+        if(isset($this->config->errorlog->levels)) return;
+
+        global $config;
+        $configFile = $this->getModulePath('', 'errorlog') . 'config.php';
+        try { if(is_file($configFile)) include $configFile; } catch(Throwable $e) {}
+
+        if(!isset($config->errorlog->levels))
+        {
+            /* 兜底默认值：刻意排除 E_NOTICE/E_DEPRECATED/E_STRICT —— 9.8.3 内核在 PHP 8.5 下
+               notice/deprecated 极多，默认收录会让错误表迅速打满。 */
+            $config->errorlog = new stdclass();
+            $config->errorlog->enabled     = true;
+            $config->errorlog->levels      = E_ERROR | E_PARSE | E_CORE_ERROR | E_COMPILE_ERROR | E_USER_ERROR | E_RECOVERABLE_ERROR | E_WARNING | E_USER_WARNING | E_CORE_WARNING | E_COMPILE_WARNING;
+            $config->errorlog->saveDays    = 7;
+            $config->errorlog->maxSaveDays = 30;
         }
     }
 

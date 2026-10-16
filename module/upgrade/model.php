@@ -28,15 +28,122 @@ class upgradeModel extends model
         /* 补充 9.9.0 新增的文档收藏字段（幂等：旧库用旧版 zentao.sql 安装时缺 collector 列）。 */
         $this->addCollectorColumns();
 
+        /* 9.10.0 新增：错误日志两张表 + 清理定时任务（幂等，任意来源版本都会补齐）。 */
+        $this->addErrorLogTables();
+        $this->addErrorLogCron();
+
         switch($fromVersion)
         {
             case '9_8_3_1':
-                /* 9.9.0 相对 9.8.3_1 无其他数据库结构变更。 */
+            case '9_9_0':
+            case '9_9_1':
+                /* 本版新增的库结构由上方幂等方法按需补齐（支持跨版本跳跃升级，见计划 §1.4）。 */
                 break;
         }
 
         $this->deletePatch();
         $this->clearModelCache();
+    }
+
+    /**
+     * Create the errorlog tables (idempotent).
+     *
+     * 9.10.0 新增：错误本体 zt_errorlog + 请求上下文 zt_errorlogreq。
+     * 用 information_schema 探测 + CREATE TABLE IF NOT EXISTS 双保险；可重复执行。
+     * 注意：本仓库允许跨版本跳跃升级（缺省来源版本不执行 case 分支），
+     * 故 DDL 一律放在 execute() 顶部按需补齐，见计划 §1.4。
+     *
+     * @access public
+     * @return void
+     */
+    public function addErrorLogTables()
+    {
+        $tables = array(
+            'errorlog' => "CREATE TABLE IF NOT EXISTS `%s` (
+  `md5` char(32) NOT NULL DEFAULT '',
+  `file` varchar(255) NOT NULL DEFAULT '',
+  `line` int unsigned NOT NULL DEFAULT '0',
+  `level` smallint unsigned NOT NULL DEFAULT '0',
+  `message` text,
+  `trace` text,
+  PRIMARY KEY (`md5`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8",
+            'errorlogreq' => "CREATE TABLE IF NOT EXISTS `%s` (
+  `id` bigint unsigned NOT NULL AUTO_INCREMENT,
+  `requestID` varchar(64) NOT NULL DEFAULT '',
+  `md5` char(32) NOT NULL DEFAULT '',
+  `module` varchar(30) NOT NULL DEFAULT '',
+  `method` varchar(100) NOT NULL DEFAULT '',
+  `account` varchar(30) NOT NULL DEFAULT '',
+  `url` varchar(255) NOT NULL DEFAULT '',
+  `createdDate` datetime DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_requestID_md5` (`requestID`,`md5`),
+  KEY `idx_requestID` (`requestID`),
+  KEY `idx_md5` (`md5`),
+  KEY `idx_createdDate` (`createdDate`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8",
+        );
+
+        foreach($tables as $suffix => $sql)
+        {
+            $tableName = $this->config->db->prefix . $suffix;
+            $exists = $this->dao->select('COUNT(*) AS count')->from('information_schema.tables')
+                ->where('table_schema')->eq($this->config->db->name)
+                ->andWhere('table_name')->eq($tableName)
+                ->fetch('count');
+            if($exists) continue;
+
+            try
+            {
+                $this->dbh->exec(sprintf($sql, $tableName));
+            }
+            catch (PDOException $e)
+            {
+                self::$errors[] = $e->getMessage() . "<p>The sql is: CREATE TABLE {$tableName}</p>";
+            }
+        }
+    }
+
+    /**
+     * Register the errorlog cleanup cron (idempotent).
+     *
+     * lastTime 必须是 '0000-00-00 00:00:00'：cron 模块的 checkChange() 以此为"新任务"判据，
+     * 否则运行中的常驻进程不会重载任务列表（见 module/cron/model.php）。
+     *
+     * @access public
+     * @return void
+     */
+    public function addErrorLogCron()
+    {
+        $command = 'moduleName=errorlog&methodName=deleteLog';
+
+        $exists = $this->dao->select('COUNT(*) AS count')->from(TABLE_CRON)
+            ->where('command')->eq($command)
+            ->fetch('count');
+        if($exists) return;
+
+        $cron = new stdclass();
+        $cron->m         = '*/5';
+        $cron->h         = '*';
+        $cron->dom       = '*';
+        $cron->mon       = '*';
+        $cron->dow       = '*';
+        $cron->command   = $command;
+        $cron->remark    = '删除过期错误日志';
+        $cron->type      = 'zentao';
+        $cron->buildin   = 1;
+        $cron->status    = 'normal';
+        $cron->lastTime  = '0000-00-00 00:00:00';
+
+        try
+        {
+            $this->dao->insert(TABLE_CRON)->data($cron)->exec();
+        }
+        catch (PDOException $e)
+        {
+            self::$errors[] = $e->getMessage() . '<p>The sql is: insert errorlog cron</p>';
+        }
     }
 
     /**

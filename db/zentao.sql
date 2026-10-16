@@ -893,6 +893,33 @@ CREATE TABLE IF NOT EXISTS `zt_webhookdatas` (
   PRIMARY KEY `id` (`id`),
   UNIQUE KEY `uniq` (`webhook`, `action`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+-- DROP TABLE IF EXISTS `zt_errorlog`;
+CREATE TABLE IF NOT EXISTS `zt_errorlog` (
+  `md5` char(32) NOT NULL DEFAULT '',
+  `file` varchar(255) NOT NULL DEFAULT '',
+  `line` int unsigned NOT NULL DEFAULT '0',
+  `level` smallint unsigned NOT NULL DEFAULT '0',
+  `message` text,
+  `trace` text,
+  PRIMARY KEY (`md5`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+-- DROP TABLE IF EXISTS `zt_errorlogreq`;
+CREATE TABLE IF NOT EXISTS `zt_errorlogreq` (
+  `id` bigint unsigned NOT NULL AUTO_INCREMENT,
+  `requestID` varchar(64) NOT NULL DEFAULT '',
+  `md5` char(32) NOT NULL DEFAULT '',
+  `module` varchar(30) NOT NULL DEFAULT '',
+  `method` varchar(100) NOT NULL DEFAULT '',
+  `account` varchar(30) NOT NULL DEFAULT '',
+  `url` varchar(255) NOT NULL DEFAULT '',
+  `createdDate` datetime DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_requestID_md5` (`requestID`,`md5`),
+  KEY `idx_requestID` (`requestID`),
+  KEY `idx_md5` (`md5`),
+  KEY `idx_createdDate` (`createdDate`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
 -- DROP TABLE IF EXISTS `zt_log`;
 CREATE TABLE IF NOT EXISTS `zt_log` (
   `id` mediumint(8) unsigned NOT NULL AUTO_INCREMENT,
@@ -935,6 +962,7 @@ INSERT INTO `zt_cron` (`m`, `h`, `dom`, `mon`, `dow`, `command`, `remark`, `type
 ('*/5',  '*',    '*',    '*',    '*',    'moduleName=mail&methodName=asyncSend',      '异步发信',        'zentao', 1, 'normal', '0000-00-00 00:00:00'),
 ('*/5',  '*',    '*',    '*',    '*',    'moduleName=webhook&methodName=asyncSend',   '异步发送Webhook', 'zentao', 1, 'normal', '0000-00-00 00:00:00'),
 ('*/5',  '*',    '*',    '*',    '*',    'moduleName=admin&methodName=deleteLog',     '删除过期日志',    'zentao', 1, 'normal', '0000-00-00 00:00:00'),
+('*/5', '*', '*', '*', '*', 'moduleName=errorlog&methodName=deleteLog', '删除过期错误日志', 'zentao', 1, 'normal', '0000-00-00 00:00:00'),
 ('1',    '1',    '*',    '*',    '*',    'moduleName=todo&methodName=createCycle',    '生成周期性待办',  'zentao', 1, 'normal', '0000-00-00 00:00:00');
 
 INSERT INTO `zt_group` (`id`, `name`, `role`, `desc`) VALUES
