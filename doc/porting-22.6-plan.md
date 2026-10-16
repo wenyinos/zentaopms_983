@@ -17,7 +17,7 @@
 | **热修** | 燃尽图 500（工期为 0 的项目 `days` 为空串 → PHP 8 TypeError；9.9.0 既有缺陷，非本批引入） | 1h | ✅ **已发布 9.9.1**（2026-10-16） | main `e7d8a4b`（cherry-pick）+ `b131fc1`（升版）→ tag `v9.9.1` → Actions 全绿；包内三处版本 9.9.1 且零分支内容泄漏 |
 | **M0** | §1 前置 + §18.1 四个 spike + 两个既有缺陷 | 29h | ✅ **已完成并推送**（2026-10-16） | 分支 `feat/port-22.6-m0` 5 个提交：版本号规则放开 `5828ccd` · helper 补 6 个 `bd5670e` · 两项缺陷修复 `00daca1` · eCharts 5.5.1 入库 `b664aab` · 计划 v1.2 `50dc4e7` |
 | **M1** | 功能 1 看板升级 + 功能 6-2 用例库增量 | 91h | ✅ **已完成并推送**（2026-10-16） | 分支 `feat/port-22.6-m0` 2 个提交：看板升级 `1365ecf` · 用例库导出 `e65f0e9`（均带 `task #77` 并已同步禅道） |
-| **M2** | 功能 4 错误日志 + 功能 3-1 年度总结 | 83h | 待开始（**下一步**） | — |
+| **M2** | 功能 4 错误日志 + 功能 3-1 年度总结 | 83h | 🚧 进行中：**错误日志已完成**（框架层+数据层+后台页面，实测通过）；年度总结待做 | `07360b9`/`44ea806`/`cae27cd` |
 | **M3** | 功能 6-1 CSV + 功能 6-3 需求矩阵 | 137h | 待开始 | — |
 | **M4** | 功能 3-2 pivot + 功能 5 文档增强 | 110h | 待开始 | — |
 
@@ -1754,6 +1754,11 @@ UPDATE `zt_doc` SET `order` = `id` WHERE `order` = 0;
 3. **父级必须先显式初始化为对象**：`$filter->testsuite->exportcase->cookie['x'] = '...'` 之前必须 `$filter->testsuite->exportcase = new stdclass();`（同文件 87-88 行对 `default`/`library` 的写法），否则触发致命错误 `Attempt to modify property "cookie" on null`，**整站 500**（M1 实测踩到，已修复）。
 
 **对后续里程碑的影响**：M2 的 errorlog（读 `saveDays` 走 setting，不涉及 cookie）不受影响；但任何新增的列表页/导出页若要用 cookie 传参，必须同步 `config/filter.php`。建议在 §16 的 DoD 第 3 条（权限）后加一条"若方法读写 cookie，检查 filter.php 规则与键名大小写"。
+
+### 14.15 🟡 **M2 实测又踩两个框架坑（都已修，记此备查）**
+
+1. **新模块必须先在 `module/common/lang/<lang>.php` 的初始化块里 `new stdclass()`**：该文件末尾有一段"菜单复用"（`$lang->xxx->menu = $lang->admin->menu;`），它要求 `$lang->xxx` 已存在——初始化块（`$lang->cron = new stdclass();` 那一片）在前面。只加菜单复用行而漏了初始化，会触发 `Attempt to assign property "menu" on null` → **整站致命错误**（`loadLang('common')` 在每次请求都会跑到）。三语都要改。
+2. **`control::send()` 的 fail 分支要求 `message` 是嵌套结构**：`framework/base/control.class.php` 的 `send()` 对非 ajax 的失败响应会执行 `foreach((array)$message as $item => $errors) $message->$item = implode(',', $errors)` —— `message` 必须是 `array('字段' => array('错误文案'))`。传**裸字符串**会触发 `TypeError: implode(): Argument #2 ($array) must be of type ?array, string given`。`dao::getError()` 天然符合（field => [msg]），自定义校验文案要自己包一层。
 
 ---
 
