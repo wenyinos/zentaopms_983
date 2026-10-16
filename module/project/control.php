@@ -552,7 +552,7 @@ class project extends control
      * @access public
      * @return void
      */
-    public function story($projectID = 0, $orderBy = 'order_desc', $type = 'byModule', $param = 0, $recTotal = 0, $recPerPage = 50, $pageID = 1)
+    public function story($projectID = 0, $orderBy = '', $type = 'byModule', $param = 0, $recTotal = 0, $recPerPage = 50, $pageID = 1)
     {
         /* Load these models. */
         $this->loadModel('story');
@@ -564,8 +564,8 @@ class project extends control
         /* Save session. */
         $this->app->session->set('storyList', $this->app->getURI(true));
 
-        /* Process the order by field. */
-        if(!$orderBy) $orderBy = $this->cookie->projectStoryOrder ? $this->cookie->projectStoryOrder : 'pri';
+        /* Process the order by field. 默认值留空才能真正落到 cookie 记忆上（此前签名默认 order_desc 让本行恒不触发）。 */
+        if(!$orderBy) $orderBy = $this->cookie->projectStoryOrder ? $this->cookie->projectStoryOrder : 'order_desc';
         setcookie('projectStoryOrder', $orderBy, $this->config->cookieLife, $this->config->webRoot);
 
         /* Append id for secend sort. */
