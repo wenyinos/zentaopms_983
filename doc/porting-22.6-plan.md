@@ -15,8 +15,8 @@
 | 里程碑 | 内容 | 预估 | 状态 | 交付物 |
 |---|---|---|---|---|
 | **M0** | §1 前置 + §18.1 四个 spike + 两个既有缺陷 | 29h | ✅ **已完成并推送**（2026-10-16） | 分支 `feat/port-22.6-m0` 5 个提交：版本号规则放开 `5828ccd` · helper 补 6 个 `bd5670e` · 两项缺陷修复 `00daca1` · eCharts 5.5.1 入库 `b664aab` · 计划 v1.2 `50dc4e7` |
-| **M1** | 功能 1 看板升级 + 功能 6-2 用例库增量 | 91h | 🚧 进行中 | — |
-| **M2** | 功能 4 错误日志 + 功能 3-1 年度总结 | 83h | 待开始 | — |
+| **M1** | 功能 1 看板升级 + 功能 6-2 用例库增量 | 91h | ✅ **已完成并推送**（2026-10-16） | 分支 `feat/port-22.6-m0` 2 个提交：看板升级 `1365ecf` · 用例库导出 `e65f0e9`（均带 `task #77` 并已同步禅道） |
+| **M2** | 功能 4 错误日志 + 功能 3-1 年度总结 | 83h | 待开始（**下一步**） | — |
 | **M3** | 功能 6-1 CSV + 功能 6-3 需求矩阵 | 137h | 待开始 | — |
 | **M4** | 功能 3-2 pivot + 功能 5 文档增强 | 110h | 待开始 | — |
 
@@ -1732,6 +1732,16 @@ UPDATE `zt_doc` SET `order` = `id` WHERE `order` = 0;
 
 **教训（值得写进后续流程）**：计划里的"必改 Bug"必须先做**根因验证**再动刀——本项若按原计划直接改 `tree/model.php`，会改错地方、还会引入偏离上游的长期维护成本。
 
+### 14.14 🟡 **M1 实测新发现的两个框架级坑（filter.php）**
+
+新增带 cookie 读取的方法时，**除了写代码还必须改 `config/filter.php`**，否则 cookie 会被静默丢弃：
+
+1. **`filterParam = 2` 会丢弃没有匹配规则的 cookie**：`framework/base/router.class.php:1685` 在 `$config->framework->filterParam == 2`（本仓 `config/config.php:100` 即此值）时调用 `validater::filterParam($_COOKIE, 'cookie')`，而 `filterParam`（`lib/base/filter/filter.class.php:688`）对**没有规则**的 cookie 执行 `checkByRule($value, '') === false` → `unset($var[$key])`。⇒ 新增方法若依赖 cookie（如 `checkedItem`、`preProductID`），必须在 `config/filter.php` 补一条规则。M1 实测：未补规则时"导出所选"静默导出全部记录（无任何报错），补后才生效。
+2. **规则键必须用全小写方法名**：`$app->getMethodName()` 返回的是 **`exportcase`**（全小写），而规则按 `$filter-><module>-><method>->cookie[...]` 查找。写成驼峰 `exportCase` 不会匹配（`config/filter.php` 里既有规则全是小写方法名，正是这个原因）。M1 实测用调试打印确认 `methodName: "exportcase"` 而 `$filter->testsuite` 的键是 `exportCase` → 不命中。
+3. **父级必须先显式初始化为对象**：`$filter->testsuite->exportcase->cookie['x'] = '...'` 之前必须 `$filter->testsuite->exportcase = new stdclass();`（同文件 87-88 行对 `default`/`library` 的写法），否则触发致命错误 `Attempt to modify property "cookie" on null`，**整站 500**（M1 实测踩到，已修复）。
+
+**对后续里程碑的影响**：M2 的 errorlog（读 `saveDays` 走 setting，不涉及 cookie）不受影响；但任何新增的列表页/导出页若要用 cookie 传参，必须同步 `config/filter.php`。建议在 §16 的 DoD 第 3 条（权限）后加一条"若方法读写 cookie，检查 filter.php 规则与键名大小写"。
+
 ---
 
 ## 15. 发布与升级流程（本仓库专用）
@@ -1804,6 +1814,7 @@ sudo -u www /www/server/php/85/bin/php bin/ztcli 'http://dev.wenyinos.com/upgrad
 1. **代码**：`php -l` 通过；全量 lint（排除两个部分类体 ext 文件与 `tmp/`、`www/data/`）通过。
 2. **数据**：新增表/列在"全新安装"与"9.8.3_1 升级""9.9.x 升级"三条路径都存在；升级脚本重复执行不报错。
 3. **权限**：新增方法有权限位（`module/group/lang/resource.php` + `methodOrder`）；用**非 admin 账号**验证入口显隐正确（§14.4）。
+3b. **cookie**：若方法读写 cookie，必须在 `config/filter.php` 补规则，且**键名用全小写方法名**、父级先 `new stdclass()` 初始化（§14.14）。
 4. **语言**：`zh-cn`/`en`/`zh-tw` 三语键齐备（`array_keys` 对比）。
 5. **界面**：10.1 视图 + ZUI 1.8.1；三主题（wenyin/lightblue/blackberry）可用；440px 窄屏不溢出。
 6. **状态机**：所有状态流转走既有 model 方法，**零 `UPDATE ... SET status`**。
@@ -1873,5 +1884,5 @@ sudo -u www /www/server/php/85/bin/php bin/ztcli 'http://dev.wenyinos.com/upgrad
 4. **对照索引**：22.6 参照位置已逐条列出，含"不可复用"清单（zin 模板、8 张 `zt_kanban*` 表、加密模块）。
 5. **升级与发布依据**：§1.4（升级机制的两条硬约束）+ §15（版本号三处同步、覆盖部署 → 跑升级 → 验证 → 回退）。
 
-**版本**：v1.3（2026-10-16，§13 决策落地 + §14–§18 自审补充 + M0 交付。M0 的 5 个提交已推送至 `origin/feat/port-22.6-m0`，主人已确认）
-**下一步**：**M1 进行中**（看板升级 52h + 用例库增量 39h，零表结构变更）。
+**版本**：v1.4（2026-10-16，M0 + M1 均已交付并推送至 `origin/feat/port-22.6-m0`；§14.14 记录 M1 实测的两个 filter.php 框架坑）
+**下一步**：**M2**（错误日志 21h + 年度总结 62h；首次引入新增表 `zt_errorlog`/`zt_errorlogreq`，需按 §1.4 的升级约定做幂等建表）。
