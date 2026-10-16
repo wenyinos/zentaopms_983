@@ -116,6 +116,7 @@ $lang->report->annualData->allDept           = '所有部门';
 $lang->report->annualData->basic             = '基本数据';
 $lang->report->annualData->contributionBlock = '贡献与能力';
 $lang->report->annualData->trendBlock        = '月度操作趋势';
+$lang->report->annualData->status          = '状态';
 $lang->report->annualData->statusBlock       = '状态分布';
 $lang->report->annualData->logins            = '登录次数';
 $lang->report->annualData->actions           = '操作数';

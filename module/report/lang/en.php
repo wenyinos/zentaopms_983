@@ -116,6 +116,7 @@ $lang->report->annualData->allDept           = 'All departments';
 $lang->report->annualData->basic             = 'Basic data';
 $lang->report->annualData->contributionBlock = 'Contributions & capability';
 $lang->report->annualData->trendBlock        = 'Monthly activities';
+$lang->report->annualData->status          = 'Status';
 $lang->report->annualData->statusBlock       = 'Status distribution';
 $lang->report->annualData->logins            = 'Logins';
 $lang->report->annualData->actions           = 'Actions';

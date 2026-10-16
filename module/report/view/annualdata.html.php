@@ -53,7 +53,7 @@
         <div class='panel-heading'><strong><?php echo $lang->report->annualData->statusBlock;?></strong> <span class='text-muted small'><?php echo $lang->report->annualData->statusHint;?></span></div>
         <div class='panel-body'>
           <table class='table table-data table-bordered'>
-            <thead><tr><th></th><th><?php echo $lang->report->status;?></th><th class='w-80px'><?php echo $lang->report->value;?></th></tr></thead>
+            <thead><tr><th></th><th><?php echo $lang->report->annualData->status;?></th><th class='w-80px'><?php echo $lang->report->value;?></th></tr></thead>
             <tbody>
               <?php $hasStatus = false;?>
               <?php foreach($objectStat as $objectType => $stat):?>
@@ -61,7 +61,8 @@
               <?php $hasStatus = true;?>
               <tr>
                 <td><?php echo $lang->report->annualData->objects[$objectType];?></td>
-                <td><?php echo zget($lang->$objectType->statusList, $status, $status);?></td>
+                <?php $langModule = $objectType == 'case' ? 'testcase' : $objectType; /* 用例的语言对象是 testcase */ ?>
+                <td><?php echo zget($lang->$langModule->statusList, $status, $status);?></td>
                 <td><?php echo (int)$count;?></td>
               </tr>
               <?php endforeach;?>
