@@ -177,6 +177,7 @@ jobs:
           - 修复页面左上角切换器（项目/产品/分支/用例库/模块）点击无响应且错位的问题：改用 10.1 的 ZUI `dropdown + search-list` 机制（ajax 加载 + 即时过滤），并清理 `compat.css` 中冲突的旧 `#dropMenu`/`#currentItem` 规则。
           - 修复产品页、用例库页切换器整块缺失的问题（旧实现注入的菜单键在 10.1 语言包中已不存在）。
           - 修复用例库切换器的 ajax 下拉报「The param 'extra' should pass value」（`testsuite`/`tree` 的 `ajaxGetDropMenu` 补默认参数）。
+          - **修复燃尽图 500（9.9.0 既有缺陷）**：工期为 0 的项目 `$project->days` 被置为空串，直接参与除法在 PHP 8 抛 `TypeError: Unsupported operand types: string / string`；两侧强制 int 并保证除数 ≥ 1。
 
           ---
 
