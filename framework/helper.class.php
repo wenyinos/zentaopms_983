@@ -132,6 +132,127 @@ class helper extends baseHelper
         $end    = $begin > $end ? $end + 5 : $end;
         return $double * 5 + $end - $begin;
     }
+
+    /**
+     * Send a cookie.
+     *
+     * 对齐禅道 22.6 的 helper::setcookie（移植 22.6 模块时不必逐个改写 setcookie 调用）。
+     * 相比 22.6 去掉两条本仓不存在的分支：测试运行模式（本仓无 isRunMode）与
+     * RoadRunner worker（本仓无 zand 运行时）。$config->cookieSecure 本仓未定义，取 false 兜底。
+     *
+     * @param  string          $name
+     * @param  string|int|bool $value
+     * @param  int|null        $expire
+     * @param  string|null     $path
+     * @param  string          $domain
+     * @param  bool|null       $secure
+     * @param  bool            $httponly
+     * @static
+     * @access public
+     * @return bool
+     */
+    public static function setcookie($name, $value = '', $expire = null, $path = null, $domain = '', $secure = null, $httponly = true)
+    {
+        global $config;
+        if($expire === null) $expire = $config->cookieLife;
+        if($path   === null) $path   = $config->webRoot;
+        if($secure === null) $secure = isset($config->cookieSecure) ? $config->cookieSecure : false;
+
+        $value          = (string)$value;
+        $_COOKIE[$name] = $value;
+        return setcookie($name, $value, $expire, $path, $domain, $secure, $httponly);
+    }
+
+    /**
+     * Verify that the system has opened on the feature.
+     *
+     * 本仓不移植 22.6 的 $config->featureGroup（那是一份商业版功能分组清单）；
+     * 改为"默认全部开启、由 $config->disabledFeatures 显式关闭"的简化语义，
+     * 使移植自 22.6 的代码不必逐处改写 hasFeature() 调用。
+     *
+     * @param  string $feature
+     * @static
+     * @access public
+     * @return bool
+     */
+    public static function hasFeature($feature)
+    {
+        global $config;
+        $disabled = isset($config->disabledFeatures) ? (string)$config->disabledFeatures : '';
+        if($disabled === '') return true;
+        return strpos(",{$disabled},", ",{$feature},") === false;
+    }
+
+    /**
+     * Returns the values from a single column of the input array.
+     *
+     * 对齐 22.6：PHP >= 7 直接使用系统 array_column（本仓运行于 PHP 8.x）。
+     *
+     * @param  array      $input
+     * @param  string|int $columnKey
+     * @param  string|int $indexKey
+     * @static
+     * @access public
+     * @return array
+     */
+    public static function arrayColumn($input, $columnKey, $indexKey = null)
+    {
+        if(!is_array($input)) return array();
+        return array_column($input, $columnKey, $indexKey);
+    }
+
+    /**
+     * Format hours, strip the trailing zeros.
+     *
+     * @param  float|string $hours
+     * @param  int          $decimals
+     * @param  string       $characters
+     * @static
+     * @access public
+     * @return string
+     */
+    public static function formatHours($hours = '', $decimals = 2, $characters = '.')
+    {
+        return rtrim(rtrim(number_format((float)$hours, $decimals, $characters, ''), '0'), $characters);
+    }
+
+    /**
+     * Whether current request is an API request.
+     *
+     * 本仓的 api 入口已在 nginx 安全基线中封禁，此处仅保留 RUN_MODE 判定，
+     * 供移植代码调用时不报错。
+     *
+     * @static
+     * @access public
+     * @return bool
+     */
+    public static function isApiRequest()
+    {
+        return defined('RUN_MODE') and RUN_MODE == 'api';
+    }
+
+    /**
+     * pathinfo for multi-byte filenames.
+     *
+     * Aligns with ZenTao 22.6 helper::mbPathinfo.
+     *
+     * @param  string $filepath
+     * @static
+     * @access public
+     * @return array
+     */
+    public static function mbPathinfo($filepath)
+    {
+        $ret = array('dirname' => '', 'basename' => '', 'extension' => '', 'filename' => '');
+        preg_match('%^(.*?)[\\\\/]*(([^/\\\\]*?)(\.([^\.\\\\/]+?)|))[\\\\/\.]*$%im', $filepath, $m);
+
+        $ret['dirname']   = !empty($m[1]) ? $m[1] : '';
+        $ret['basename']  = !empty($m[2]) ? $m[2] : '';
+        $ret['extension'] = !empty($m[5]) ? $m[5] : '';
+        $ret['filename']  = !empty($m[3]) ? $m[3] : '';
+
+        return $ret;
+    }
 }
 
 /**
