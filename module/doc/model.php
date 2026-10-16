@@ -514,10 +514,14 @@ class docModel extends model
      */
     public function getPrivDocs($libID = 0, $module = 0)
     {
+        /* 仅在指定目录时才按 module 过滤（对齐 22.6 的 beginIF(!empty($modules)) 写法）。
+           10.1 是无条件 andWhere('module')->in($module)；当 $module = 0 时 SQL 退化为
+           module IN ('0')，导致三个问题：目录内的文档在"全部"视图不显示、删除目录后彻底不可达、
+           getStatisticInfo() 的"所有文档"少算目录内文档。 */
         $stmt = $this->dao->select('*')->from(TABLE_DOC)
             ->where('deleted')->eq(0)
             ->beginIF($libID)->andWhere('lib')->in($libID)->fi()
-            ->andWhere('module')->in($module)
+            ->beginIF(!empty($module))->andWhere('module')->in($module)->fi()
             ->query();
 
 

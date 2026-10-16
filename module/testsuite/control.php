@@ -216,9 +216,14 @@ class testsuite extends control
      */
     public function delete($suiteID, $confirm = 'no')
     {
+        /* 先取对象：原实现只在 else 分支引用未定义的 $suite，PHP 8 下会报 "Attempt to read property on null"。 */
+        $suite = $this->testsuite->getById($suiteID);
+        if(!$suite) die(js::error($this->lang->notFound) . js::locate('back'));
+
         if($confirm == 'no')
         {
-            die(js::confirm($this->lang->testsuite->libraryDelete, inlink('delete', "suiteID=$suiteID&confirm=yes")));
+            $confirmTip = $suite->type == 'library' ? $this->lang->testsuite->libraryDelete : $this->lang->testsuite->confirmDelete;
+            die(js::confirm($confirmTip, inlink('delete', "suiteID=$suiteID&confirm=yes")));
         }
         else
         {
