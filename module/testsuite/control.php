@@ -751,6 +751,10 @@ class testsuite extends control
             $fileName = $this->file->savePath . $this->file->getSaveName($file['pathname']);
             move_uploaded_file($file['tmpname'], $fileName);
 
+            /* Excel 另存为 CSV 默认带 UTF-8 BOM，会让首列名匹配不上、进而被误判为 GBK 编码。 */
+            $content = file_get_contents($fileName);
+            if(substr($content, 0, 3) === "\xEF\xBB\xBF") file_put_contents($fileName, substr($content, 3));
+
             $rows     = $this->file->parseCSV($fileName);
             $fields   = $this->testcase->getImportFields($productID);
             $fields   = array_flip($fields);

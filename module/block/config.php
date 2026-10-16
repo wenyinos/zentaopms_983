@@ -14,6 +14,10 @@ $config->block->version = 2;   // UI 10.1：仪表盘区块布局版本（initVe
 $config->block->editor = new stdclass();
 $config->block->editor->set = array('id' => 'html', 'tools' => 'simple');
 
+/* 10.1 仪表盘的产品统计块依赖该配置（界面移植时漏搬）。 */
+$config->statistic = new stdclass();
+$config->statistic->storyStages = array('wait', 'planned', 'developing', 'testing', 'released');
+
 $config->block->gridOptions[6]  = '1/2';
 $config->block->gridOptions[4]  = '1/3';
 $config->block->gridOptions[8]  = '2/3';

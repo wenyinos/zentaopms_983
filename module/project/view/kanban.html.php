@@ -14,7 +14,8 @@
     <?php echo html::a($this->createLink('project', 'ajaxKanbanSetting', "projectID=$projectID"), "<i class='icon-cog muted'></i> " . $lang->project->kanbanSetting, '', "class='iframe btn btn-link'");?>
     <?php if(common::hasPriv('project', 'printKanban')) echo html::a($this->createLink('project', 'printKanban', "projectID=$projectID"), "<i class='icon-printer muted'></i> " . $lang->project->printKanban, '', "class='iframe btn btn-link' id='printKanban' title='{$lang->project->printKanban}' data-width='500'");?>
     <?php 
-    $link = $this->createLink('task', 'export', "project=$projectID&orderBy=$orderBy&type=$browseType");
+    /* 原写 $browseType（本页签名里没有该参数，恒为空）→ 导出链接 type 空、order_asc 还会撞 zt_task 无 order 列；固定为 id_asc + all。 */
+    $link = $this->createLink('task', 'export', "project=$projectID&orderBy=id_asc&type=all");
     if(common::hasPriv('task', 'export')) echo html::a($link, "<i class='icon-import muted'></i> " . $lang->task->export, '', "class='btn btn-link iframe' data-width='700'");
     ?>
     <div class='btn-group'>
