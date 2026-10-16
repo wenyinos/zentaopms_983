@@ -1371,11 +1371,11 @@ class project extends control
         $kanbanSetting = $this->project->getKanbanSetting($projectID);
 
         /* 泳道名称：story 维度由视图用需求对象渲染，其余维度在此统一给出。 */
-        $laneNames = array('' => $lang->task->noAssigned);
+        $laneNames = array('' => $this->lang->task->noAssigned);
         if($type == 'module')     $laneNames = $this->loadModel('tree')->getOptionMenu($projectID, 'task');
-        if($type == 'pri')        $laneNames = $lang->task->priList;
-        if($type == 'assignedTo') $laneNames = array('' => $lang->task->noAssigned) + $this->loadModel('user')->getPairs('noletter');
-        if($type == 'finishedBy') $laneNames = array('' => $lang->task->noAssigned) + $this->loadModel('user')->getPairs('noletter');
+        if($type == 'pri')        $laneNames = $this->lang->task->priList;
+        if($type == 'assignedTo') $laneNames = array('' => $this->lang->task->noAssigned) + $this->loadModel('user')->getPairs('noletter');
+        if($type == 'finishedBy') $laneNames = array('' => $this->lang->task->noAssigned) + $this->loadModel('user')->getPairs('noletter');
 
         $this->view->title       = $this->lang->project->kanban;
         $this->view->position[]  = html::a($this->createLink('project', 'browse', "projectID=$projectID"), $project->name);

@@ -14,7 +14,7 @@
     <?php echo html::a($this->createLink('project', 'ajaxKanbanSetting', "projectID=$projectID"), "<i class='icon-cog muted'></i> " . $lang->project->kanbanSetting, '', "class='iframe btn btn-link'");?>
     <?php if(common::hasPriv('project', 'printKanban')) echo html::a($this->createLink('project', 'printKanban', "projectID=$projectID"), "<i class='icon-printer muted'></i> " . $lang->project->printKanban, '', "class='iframe btn btn-link' id='printKanban' title='{$lang->project->printKanban}' data-width='500'");?>
     <?php 
-    $link = $this->createLink('task', 'export', "project=$projectID&orderBy=$orderBy&type=$browseType");
+    $link = $this->createLink('task', 'export', "project=$projectID&orderBy=id_asc&type=all");
     if(common::hasPriv('task', 'export')) echo html::a($link, "<i class='icon-import muted'></i> " . $lang->task->export, '', "class='btn btn-link iframe' data-width='700'");
     ?>
     <div class='btn-group'>
