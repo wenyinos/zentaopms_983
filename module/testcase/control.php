@@ -438,7 +438,10 @@ class testcase extends control
      */
     public function createBug($productID, $branch = 0, $extras = '')
     {
-        parse_str(str_replace(array(',', ' '), array('&', ''), $extras));
+        /* parse_str() 的单参形式在 PHP 8 已移除（原写法靠自动注入当前作用域）；
+           显式接出数组再 extract，保持与旧行为一致。 */
+        parse_str(str_replace(array(',', ' '), array('&', ''), $extras), $parsedExtras);
+        extract($parsedExtras);
 
         $this->loadModel('testtask');
         $case = '';
