@@ -733,6 +733,13 @@ $lang->resource->doc->sortDoc = 'sortDoc';
 $lang->resource->doc->moveDoc = 'moveDoc';
 $lang->resource->doc->copyDoc = 'copyDoc';
 $lang->resource->doc->batchMoveDoc = 'batchMoveDoc';
+$lang->resource->doc->browseTemplate = 'browseTemplate';
+$lang->resource->doc->createTemplate = 'createTemplate';
+$lang->resource->doc->editTemplate = 'editTemplate';
+$lang->resource->doc->deleteTemplate = 'deleteTemplate';
+$lang->resource->doc->addTemplateType = 'addTemplateType';
+$lang->resource->doc->editTemplateType = 'editTemplateType';
+$lang->resource->doc->deleteTemplateType = 'deleteTemplateType';
 $lang->resource->doc->collect    = 'collect';
 //$lang->resource->doc->diff       = 'diff';
 
@@ -755,6 +762,13 @@ $lang->doc->methodOrder[75] = 'sortDoc';
 $lang->doc->methodOrder[80] = 'moveDoc';
 $lang->doc->methodOrder[85] = 'copyDoc';
 $lang->doc->methodOrder[90] = 'batchMoveDoc';
+$lang->doc->methodOrder[95] = 'browseTemplate';
+$lang->doc->methodOrder[100] = 'createTemplate';
+$lang->doc->methodOrder[105] = 'editTemplate';
+$lang->doc->methodOrder[110] = 'deleteTemplate';
+$lang->doc->methodOrder[115] = 'addTemplateType';
+$lang->doc->methodOrder[120] = 'editTemplateType';
+$lang->doc->methodOrder[125] = 'deleteTemplateType';
 //$lang->doc->methodOrder[55] = 'diff';
 
 /* mail. */

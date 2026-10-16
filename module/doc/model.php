@@ -1941,4 +1941,55 @@ class docModel extends model
             ->orderBy('id_desc')
             ->fetch();
     }
+
+    /**
+     * Update a template.
+     *
+     * 正文变更时写新版本 zt_doccontent（与文档编辑同构，只做模板需要的最小子集）。
+     *
+     * @param  int    $templateID
+     * @param  object $data
+     * @access public
+     * @return bool
+     */
+    public function updateTemplate($templateID, $data)
+    {
+        $template = $this->dao->select('*')->from(TABLE_DOC)->where('id')->eq((int)$templateID)->fetch();
+        if(!$template) return false;
+
+        $now = helper::now();
+        $this->dao->update(TABLE_DOC)
+            ->set('title')->eq($data->title)
+            ->set('keywords')->eq(isset($data->keywords) ? $data->keywords : '')
+            ->set('module')->eq(isset($data->module) ? (int)$data->module : 0)
+            ->set('editedBy')->eq($this->app->user->account)
+            ->set('editedDate')->eq($now)
+            ->where('id')->eq((int)$templateID)
+            ->exec();
+        if(dao::isError()) return false;
+
+        $content = isset($data->content) ? $data->content : '';
+        if($content !== '')
+        {
+            $latest = $this->dao->select('*')->from(TABLE_DOCCONTENT)
+                ->where('doc')->eq((int)$templateID)->orderBy('version_desc')->limit(1)->fetch();
+            if(!$latest or $latest->content !== $content)
+            {
+                $newVersion = $latest ? (int)$latest->version + 1 : 1;
+                $row = new stdclass();
+                $row->doc     = $templateID;
+                $row->title   = $data->title;
+                $row->digest  = '';
+                $row->content = $content;
+                $row->files   = '';
+                $row->type    = $latest ? $latest->type : 'text';
+                $row->version = $newVersion;
+                $this->dao->insert(TABLE_DOCCONTENT)->data($row)->exec();
+                $this->dao->update(TABLE_DOC)->set('version')->eq($newVersion)->where('id')->eq((int)$templateID)->exec();
+            }
+        }
+
+        $this->loadModel('action')->create('doc', $templateID, 'edited', '');
+        return true;
+    }
 }

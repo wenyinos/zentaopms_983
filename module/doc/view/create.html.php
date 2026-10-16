@@ -32,11 +32,11 @@
           </tr>  
           <tr>
             <th><?php echo $lang->doc->title;?></th>
-            <td colspan='2'><?php echo html::input('title', '', "class='form-control' autocomplete='off' required");?></td>
+            <td colspan='2'><?php echo html::input('title', $template ? $template->title : '', "class='form-control' autocomplete='off' required");?></td>
           </tr> 
           <tr>
             <th><?php echo $lang->doc->keywords;?></th>
-            <td colspan='2'><?php echo html::input('keywords', '', "class='form-control' autocomplete='off'");?></td>
+            <td colspan='2'><?php echo html::input('keywords', $template ? $template->keywords : '', "class='form-control' autocomplete='off'");?></td>
           </tr>  
           <tr>
             <th><?php echo $lang->doc->type;?></th>
@@ -45,7 +45,7 @@
           <tr id='contentBox'>
             <th><?php echo $lang->doc->content;?></th>
             <td colspan='2'>
-              <div class='contenthtml'><?php echo html::textarea('content', '', "style='width:100%;height:200px'");?></div>
+              <div class='contenthtml'><?php echo html::textarea('content', $template ? $template->content : '', "style='width:100%;height:200px'");?></div>
               <div class='contentmarkdown hidden'><?php echo html::textarea('contentMarkdown', '', "style='width:100%;height:200px'");?></div>
               <?php echo html::hidden('contentType', 'html');?>
             </td>

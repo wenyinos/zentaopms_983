@@ -48,6 +48,7 @@
         if(common::hasPriv('doc', 'deleteLib')) echo '<li>' . html::a(inlink('deleteLib', "rootID=$libID"), $lang->doc->deleteLib, 'hiddenwin') . '</li>';
         if(common::hasPriv('doc', 'sortCatalog')) echo '<li>' . html::a('javascript:setSortMode("catalog")', $lang->doc->sortCatalog) . '</li>';
         if(common::hasPriv('doc', 'sortDoc'))     echo '<li>' . html::a('javascript:setSortMode("doc")', $lang->doc->sortDoc) . '</li>';
+        if(common::hasPriv('doc', 'browseTemplate')) echo '<li>' . html::a(inlink('browseTemplate', "libID=$libID&moduleID=$moduleID"), $lang->doc->browseTemplate) . '</li>';
         ?>
         <?php else:?>
         <?php
