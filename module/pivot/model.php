@@ -1393,81 +1393,6 @@ class pivotModel extends model
     }
 
     /**
-     * 把列配置编译成 22.6 的列设置结构。
-     * Compile column settings into the 22.6 column setting structure.
-     *
-     * 22.6 里「取值字段」与「横向展开维度」是分开表达的两个键（见 22.6 设计器落库形状：
-     * array('field' => <数值取值字段>, 'stat' => 'sum', 'slice' => <展开维度|noSlice>, ...)），
-     * 本仓内置配置（module/pivot/config.php）把 columns 简写成字段名数组，这里幂等升级：
-     *   - 已带 stat 或 slice 的列设置：原样保留（22.6 形态，无损）；
-     *   - 只给一个「非 number 型字段名」（维度）：把它当切片维度，对每个 number 型取值字段
-     *     各生成一列，即 array('field' => <数值字段>, 'stat' => 'sum', 'slice' => <维度>)，
-     *     于是该维度的每个不同取值都会横向展开成一个子列；
-     *   - 只给一个 number 型字段名：普通取值列，stat=sum、不切片；
-     *   - columns 为空：为每个 number 型取值字段生成一个不切片的取值列。
-     * 取值字段 = fields 里 type 为 number 且没有被用作行分组（group1/group2/group3）的字段。
-     *
-     * @param  array $fields
-     * @param  array $settings
-     * @access private
-     * @return array
-     */
-    private function compileColumnSettings($fields, $settings)
-    {
-        if(!isset($settings['columns']) || !is_array($settings['columns'])) return $settings;
-
-        $groups      = $this->getGroupsFromSettings($settings);
-        $valueFields = array();
-        foreach($fields as $field => $fieldSetting)
-        {
-            if(in_array($field, $groups)) continue;
-            if(!isset($fieldSetting['type']) || $fieldSetting['type'] != 'number') continue;
-            $valueFields[] = $field;
-        }
-
-        $columns = array();
-        foreach($settings['columns'] as $column)
-        {
-            /* 22.6 形态的列设置：原样保留。 */
-            /* Keep the 22.6 column setting as is. */
-            if(is_array($column) && (isset($column['stat']) || isset($column['slice'])))
-            {
-                $columns[] = $column;
-                continue;
-            }
-
-            $field = is_array($column) ? zget($column, 'field', '') : (is_string($column) ? $column : '');
-            if($field === '') continue;
-
-            $isValueField = isset($fields[$field]['type']) && $fields[$field]['type'] == 'number';
-            if(!$isValueField)
-            {
-                /* 维度：作为切片，对每个数值取值字段展开一组子列。 */
-                /* Dimension: use it as the slice and expand one group of sub columns per value field. */
-                foreach($valueFields as $valueField)
-                {
-                    $columns[] = array('field' => $valueField, 'stat' => 'sum', 'slice' => $field, 'showMode' => 'default', 'showTotal' => 'noShow', 'monopolize' => 0);
-                }
-            }
-            else
-            {
-                $columns[] = array('field' => $field, 'stat' => 'sum', 'slice' => 'noSlice', 'showMode' => 'default', 'showTotal' => 'noShow', 'monopolize' => 0);
-            }
-        }
-
-        if(empty($columns))
-        {
-            foreach($valueFields as $valueField)
-            {
-                $columns[] = array('field' => $valueField, 'stat' => 'sum', 'slice' => 'noSlice', 'showMode' => 'default', 'showTotal' => 'noShow', 'monopolize' => 0);
-            }
-        }
-
-        $settings['columns'] = $columns;
-        return $settings;
-    }
-
-    /**
      * 生成透视表。
      * Gen sheet.
      *
@@ -1492,8 +1417,6 @@ class pivotModel extends model
         $data->drills = array();
 
         if(!isset($settings['columns'])) return array($data, array());
-
-        $settings = $this->compileColumnSettings($fields, $settings);
 
         $filters = $this->processQueryFilterDefaults($filters);
         /* Replace the variable with the default value. */

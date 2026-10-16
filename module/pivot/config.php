@@ -24,7 +24,9 @@ $config->pivot->drivers = array('mysql');
    - sql      取数 SQL，列名即 field 键
    - fields   列类型：object 型可把 id 渲染成名称；user 型翻译成真实姓名；number 型参与汇总
    - langs    列显示名
-   - settings group1/group2/group3 是行分组层级；columns 是横向展开的维度；
+   - settings group1/group2/group3 是行分组层级；columns 每项是
+              array('field' => 取值字段, 'stat' => sum|count|avg|min|max|distinct,
+                    'slice' => 横向展开的维度字段（省略则不展开，只出一列）)；
               columnTotal(sum|noShow) + columnPosition(bottom|row|all)；summary 打开汇总
 */
 $config->pivot->builtins = array();
@@ -53,7 +55,7 @@ $config->pivot->builtins['bugsassign'] = array(
         'group1'         => 'user',
         'group2'         => '',
         'group3'         => '',
-        'columns'        => array(array('field' => 'product')),
+        'columns'        => array(array('field' => 'total', 'stat' => 'sum', 'slice' => 'product')),
         'columnTotal'    => 'sum',
         'columnPosition' => 'bottom',
         'summary'        => true,
@@ -93,7 +95,12 @@ $config->pivot->builtins['bugscreate'] = array(
         'group1'         => 'user',
         'group2'         => '',
         'group3'         => '',
-        'columns'        => array(),
+        'columns'        => array(
+            array('field' => 'total',     'stat' => 'sum'),
+            array('field' => 'resolved',  'stat' => 'sum'),
+            array('field' => 'fixed',     'stat' => 'sum'),
+            array('field' => 'postponed', 'stat' => 'sum'),
+        ),
         'columnTotal'    => 'sum',
         'columnPosition' => 'bottom',
         'summary'        => true,
@@ -130,7 +137,11 @@ $config->pivot->builtins['projectdeviation'] = array(
         'group1'         => 'project',
         'group2'         => '',
         'group3'         => '',
-        'columns'        => array(),
+        'columns'        => array(
+            array('field' => 'estimate',  'stat' => 'sum'),
+            array('field' => 'consumed',  'stat' => 'sum'),
+            array('field' => 'deviation', 'stat' => 'sum'),
+        ),
         'columnTotal'    => 'sum',
         'columnPosition' => 'bottom',
         'summary'        => true,
@@ -169,7 +180,7 @@ $config->pivot->builtins['productsummary'] = array(
         'group1'         => 'product',
         'group2'         => 'planName',
         'group3'         => '',
-        'columns'        => array(array('field' => 'status')),
+        'columns'        => array(array('field' => 'total', 'stat' => 'sum', 'slice' => 'status')),
         'columnTotal'    => 'sum',
         'columnPosition' => 'all',
         'summary'        => true,
@@ -210,7 +221,11 @@ $config->pivot->builtins['workload'] = array(
         'group1'         => 'user',
         'group2'         => '',
         'group3'         => '',
-        'columns'        => array(array('field' => 'project')),
+        'columns'        => array(
+            array('field' => 'estimate', 'stat' => 'sum', 'slice' => 'project'),
+            array('field' => 'consumed', 'stat' => 'sum', 'slice' => 'project'),
+            array('field' => 'left',     'stat' => 'sum', 'slice' => 'project'),
+        ),
         'columnTotal'    => 'sum',
         'columnPosition' => 'bottom',
         'summary'        => true,
