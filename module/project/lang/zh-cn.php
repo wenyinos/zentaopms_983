@@ -275,6 +275,8 @@ $lang->project->orderList['stage_desc'] = "需求阶段倒序";
 
 $lang->project->kanbanNoLane = '未分组';
 $lang->project->kanbanOrderFailed = '看板顺序保存失败，请刷新后重试。';
+$lang->project->track           = '需求矩阵';
+$lang->project->trackIteration  = '所属迭代';
 $lang->project->kanban        = "看板";
 $lang->project->kanbanSetting = "看板设置";
 $lang->project->resetKanban   = "恢复默认";

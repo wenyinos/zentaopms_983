@@ -32,6 +32,7 @@
   <div class="btn-toolbar pull-left">
     <?php if(common::hasPriv('project', 'story')) echo html::a($this->createLink('project', 'story', "projectID=$project->id"), "<span class='text'>{$lang->story->allStories}</span> <span class='label label-light label-badge'>{$pager->recTotal}</span>", '', "class='btn btn-link btn-active-text'");?>
     <?php if(common::hasPriv('project', 'storykanban')) echo html::a($this->createLink('project', 'storykanban', "projectID=$project->id"), "<span class='text'>{$lang->project->kanban}</span>", '', "class='btn btn-link'");?>
+    <?php if(common::hasPriv('project', 'track')) echo html::a($this->createLink('project', 'track', "projectID=$project->id"), "<span class='text'>{$lang->project->track}</span>", '', "class='btn btn-link'");?>
     <a class="btn btn-link querybox-toggle" id='bysearchTab'><i class="icon icon-search muted"></i> <?php echo $lang->product->searchStory;?></a>
   </div>
   <div class="btn-toolbar pull-right">
@@ -229,6 +230,94 @@
               echo html::commonButton($lang->close, "data-form-action='$actionLink'");
           }
           ?>
+          <?php if(common::hasPriv('story', 'batchReview')):?>
+          <div class="btn-group dropup">
+            <button data-toggle="dropdown" type="button" class="btn"><?php echo $lang->story->review;?> <span class="caret"></span></button>
+            <ul class='dropdown-menu'>
+              <?php
+              unset($lang->story->reviewResultList['']);
+              unset($lang->story->reviewResultList['revert']);
+              foreach($lang->story->reviewResultList as $key => $result)
+              {
+                  $actionLink = $this->createLink('story', 'batchReview', "result=$key");
+                  if($key == 'reject')
+                  {
+                      echo "<li class='dropdown-submenu'>";
+                      echo html::a('#', $result, '', "id='rejectItem'");
+                      echo "<ul class='dropdown-menu'>";
+                      unset($lang->story->reasonList['']);
+                      unset($lang->story->reasonList['subdivided']);
+                      unset($lang->story->reasonList['duplicate']);
+                      foreach($lang->story->reasonList as $reasonKey => $reason)
+                      {
+                          $rejectLink = $this->createLink('story', 'batchReview', "result=reject&reason=$reasonKey");
+                          echo '<li>' . html::a('#', $reason, '', "onclick=\"setFormAction('$rejectLink','hiddenwin')\"") . '</li>';
+                      }
+                      echo '</ul></li>';
+                  }
+                  else
+                  {
+                      echo '<li>' . html::a('#', $result, '', "onclick=\"setFormAction('$actionLink','hiddenwin')\"") . '</li>';
+                  }
+              }
+              ?>
+            </ul>
+          </div>
+          <?php endif;?>
+          <?php if(common::hasPriv('story', 'batchAssignTo')):?>
+          <div class="btn-group dropup">
+            <button data-toggle="dropdown" type="button" class="btn"><?php echo $lang->story->assignedTo;?> <span class="caret"></span></button>
+            <div class="dropdown-menu search-list" data-ride="searchList">
+              <?php
+              $withSearch = count($users) > 10;
+              $actionLink = $this->createLink('story', 'batchAssignTo', "productID=0");
+              echo html::select('assignedTo', $users, '', 'class="hidden"');
+              ?>
+              <?php if($withSearch):?>
+              <div class="input-control search-box has-icon-left has-icon-right search-example">
+                <input id="userSearchBox" type="search" autocomplete="off" class="form-control search-input">
+                <label for="userSearchBox" class="input-control-icon-left search-icon"><i class="icon icon-search"></i></label>
+                <a class="input-control-icon-right search-clear-btn"><i class="icon icon-close icon-sm"></i></a>
+              </div>
+              <?php endif;?>
+              <div class="list-group">
+                <?php foreach($users as $key => $value):?>
+                <?php
+                if(empty($key) or $key == 'closed') continue;
+                echo html::a("javascript:$('#assignedTo').val('$key');setFormAction('$actionLink', 'hiddenwin')", $value);
+                ?>
+                <?php endforeach;?>
+              </div>
+            </div>
+          </div>
+          <?php endif;?>
+          <?php if(common::hasPriv('story', 'batchChangePlan')):?>
+          <div class="btn-group dropup">
+            <button data-toggle="dropdown" type="button" class="btn"><?php echo $lang->story->planAB;?> <span class="caret"></span></button>
+            <div class="dropdown-menu search-list" data-ride="searchList">
+              <?php
+              unset($allPlans['']);
+              $planList   = array(0 => $lang->null) + $allPlans;
+              $withSearch = count($planList) > 8;
+              ?>
+              <?php if($withSearch):?>
+              <div class="input-control search-box has-icon-left has-icon-right search-example">
+                <input id="planSearchBox" type="search" autocomplete="off" class="form-control search-input">
+                <label for="planSearchBox" class="input-control-icon-left search-icon"><i class="icon icon-search"></i></label>
+                <a class="input-control-icon-right search-clear-btn"><i class="icon icon-close icon-sm"></i></a>
+              </div>
+              <?php endif;?>
+              <div class="list-group">
+                <?php foreach($planList as $planID => $planName):?>
+                <?php
+                $actionLink = $this->createLink('story', 'batchChangePlan', "planID=$planID");
+                echo html::a('#', $planName, '', "onclick=\"setFormAction('$actionLink', 'hiddenwin')\"");
+                ?>
+                <?php endforeach;?>
+              </div>
+            </div>
+          </div>
+          <?php endif;?>
           <?php if(common::hasPriv('story', 'batchChangeStage')):?>
           <div class="btn-group dropup">
             <button data-toggle="dropdown" type="button" class="btn"><?php echo $lang->story->stageAB;?> <span class="caret"></span></button>

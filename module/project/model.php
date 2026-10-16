@@ -2868,4 +2868,53 @@ class projectModel extends model
         }
         return $html;
     }
+
+    /**
+     * 需求跟踪矩阵的数据（project|track）。
+     *
+     * 一次批量取回，避免逐需求查询（N+1）：需求 ↔ 迭代/任务/Bug/用例。
+     * 注意：本仓 zt_projectstory 无 branch 列（22.6 才有），故不做分支维度。
+     *
+     * @param  array  $stories
+     * @param  int    $projectID
+     * @access public
+     * @return array
+     */
+    public function getStoryTrackData($stories, $projectID)
+    {
+        $storyIdList = array_keys($stories);
+        $track = array('projects' => array(), 'tasks' => array(), 'bugs' => array(), 'cases' => array());
+        if(empty($storyIdList)) return $track;
+
+        /* 需求被哪些迭代/项目关联（含本项目与子项目）。 */
+        $track['projects'] = $this->dao->select('t1.story, t1.project, t2.name')->from(TABLE_PROJECTSTORY)->alias('t1')
+            ->leftJoin(TABLE_PROJECT)->alias('t2')->on('t1.project = t2.id')
+            ->where('t1.story')->in($storyIdList)
+            ->andWhere('t2.deleted')->eq('0')
+            ->orderBy('t1.project')
+            ->fetchGroup('story', 'project');
+
+        /* 任务。 */
+        $track['tasks'] = $this->dao->select('id, story, project, name, status, assignedTo, deadline')->from(TABLE_TASK)
+            ->where('story')->in($storyIdList)
+            ->andWhere('deleted')->eq('0')
+            ->orderBy('id')
+            ->fetchGroup('story', 'id');
+
+        /* Bug。 */
+        $track['bugs'] = $this->dao->select('id, story, project, title, status, pri')->from(TABLE_BUG)
+            ->where('story')->in($storyIdList)
+            ->andWhere('deleted')->eq('0')
+            ->orderBy('id')
+            ->fetchGroup('story', 'id');
+
+        /* 用例。zt_case 无 project 列（9.8.3 结构），归属走 product。 */
+        $track['cases'] = $this->dao->select('id, story, product, title, status, lastRunResult')->from(TABLE_CASE)
+            ->where('story')->in($storyIdList)
+            ->andWhere('deleted')->eq('0')
+            ->orderBy('id')
+            ->fetchGroup('story', 'id');
+
+        return $track;
+    }
 }

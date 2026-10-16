@@ -2435,4 +2435,71 @@ class project extends control
         }
         die(js::locate(helper::createLink('project', 'story', 'projectID=' . $projectID), 'parent'));
     }
+
+    /**
+     * 需求跟踪矩阵：需求 × 迭代 × 任务/Bug/用例 的交叉跟踪视图。
+     *
+     * 与需求列表同源取数（同一 getProjectStories 与分页），便于两页互相切换；
+     * 迭代列取需求关联的（子）项目；任务/Bug/用例按需求批量取回（避免 N+1）。
+     *
+     * @param  int    $projectID
+     * @param  string $orderBy
+     * @param  string $type
+     * @param  int    $param
+     * @param  int    $recTotal
+     * @param  int    $recPerPage
+     * @param  int    $pageID
+     * @access public
+     * @return void
+     */
+    public function track($projectID = 0, $orderBy = 'pri_asc', $type = 'byModule', $param = 0, $recTotal = 0, $recPerPage = 50, $pageID = 1)
+    {
+        $this->loadModel('story');
+        $this->loadModel('user');
+        $this->app->loadLang('testcase');
+        $this->app->loadLang('bug');
+        $this->app->loadLang('task');
+
+        $this->project->getLimitedProject();
+
+        /* Save session. */
+        $this->app->session->set('storyList', $this->app->getURI(true));
+
+        /* Process the order by field. */
+        if(!$orderBy) $orderBy = $this->cookie->projectTrackOrder ? $this->cookie->projectTrackOrder : 'pri_asc';
+        setcookie('projectTrackOrder', $orderBy, $this->config->cookieLife, $this->config->webRoot);
+
+        /* Append id for secend sort. */
+        $sort = $this->loadModel('common')->appendOrder($orderBy);
+
+        /* Set menu. */
+        $project   = $this->commonAction($projectID);
+        $projectID = $project->id;
+
+        /* Load pager. */
+        $this->app->loadClass('pager', $static = true);
+        $pager = new pager($recTotal, $recPerPage, $pageID);
+
+        $stories = $this->story->getProjectStories($projectID, $sort, $type, $param, $pager);
+        $this->loadModel('common')->saveQueryCondition($this->dao->get(), 'story', false);
+
+        $track = $this->project->getStoryTrackData($stories, $projectID);
+
+        $title      = $project->name . $this->lang->colon . $this->lang->project->track;
+        $position[] = html::a($this->createLink('project', 'browse', "projectID=$projectID"), $project->name);
+        $position[] = $this->lang->project->track;
+
+        $this->view->title    = $title;
+        $this->view->position = $position;
+        $this->view->project  = $project;
+        $this->view->stories  = $stories;
+        $this->view->track    = $track;
+        $this->view->users    = $this->user->getPairs('noletter');
+        $this->view->orderBy  = $orderBy;
+        $this->view->type     = $type;
+        $this->view->param    = $param;
+        $this->view->pager    = $pager;
+        $this->view->tabID    = 'story';
+        $this->display();
+    }
 }

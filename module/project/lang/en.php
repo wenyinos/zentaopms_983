@@ -275,6 +275,8 @@ $lang->project->orderList['stage_desc'] = "Phase Desc";
 
 $lang->project->kanbanNoLane = 'Ungrouped';
 $lang->project->kanbanOrderFailed = 'Failed to save the kanban order, please refresh and try again.';
+$lang->project->track           = 'Requirement Matrix';
+$lang->project->trackIteration  = 'Iteration';
 $lang->project->kanban        = "Kanban";
 $lang->project->kanbanSetting = "Kanban Setting";
 $lang->project->resetKanban   = "Reset Setting";
