@@ -1,7 +1,7 @@
 <?php
 class mcpModel extends model
 {
-    public $authAccount = '';    // 本次请求通过校验的密钥归属账号（空 = 使用团队共享密钥）
+    public $authAccount = '';    // 本次请求通过校验的个人密钥归属账号（单通道：只认个人密钥）
 
     public function getEnv($key)
     {
@@ -24,29 +24,17 @@ class mcpModel extends model
         if($actor !== '')
         {
             $secret = $this->getUserSecret($actor);
-            if($secret !== '')
-            {
-                if(!$this->verifyToken($token, $query, $secret)) return false;
-                $this->authAccount = $actor;
-                return true;
-            }
-            /* 账号未生成个人密钥：过渡模式放行共享密钥，严格模式直接拒绝。 */
-            if($this->isStrict()) return false;
-        }
-        else
-        {
-            /* 无 actor 的请求（读操作）：接受任一已生成的个人密钥。 */
-            $account = $this->matchPersonalToken($token, $query);
-            if($account !== '')
-            {
-                $this->authAccount = $account;
-                return true;
-            }
+            if($secret === '') return false;    /* 该账号尚未生成个人密钥 —— 无共享密钥可退，直接拒绝 */
+            if(!$this->verifyToken($token, $query, $secret)) return false;
+            $this->authAccount = $actor;
+            return true;
         }
 
-        $secret = $this->getEnv('MCP_SECRET');
-        if($secret === '') return false;
-        return $this->verifyToken($token, $query, $secret);
+        /* 无 actor 的请求（读操作）：命中任一已生成的个人密钥才放行。 */
+        $account = $this->matchPersonalToken($token, $query);
+        if($account === '') return false;
+        $this->authAccount = $account;
+        return true;
     }
 
     public function verifyToken($token, $query, $secret)
@@ -88,11 +76,6 @@ class mcpModel extends model
         return dao::isError() ? '' : $secret;
     }
 
-    public function isStrict()
-    {
-        return $this->getEnv('MCP_STRICT') === '1';
-    }
-
     public function getQueryParam($key)
     {
         parse_str($this->server->query_string, $query);
@@ -126,7 +109,7 @@ class mcpModel extends model
     {
         $dir = $this->app->getTmpRoot() . 'mcp';
         if(!is_dir($dir)) @mkdir($dir, 0755, true);
-        $auth = $this->authAccount === '' ? 'shared' : 'personal:' . $this->authAccount;
+        $auth = $this->authAccount === '' ? 'none' : 'personal:' . $this->authAccount;
         $line = date('Y-m-d H:i:s') . "\t" . $this->server->remote_addr . "\t" . $action . "\t" . $auth . "\t" . trim($summary) . "\n";
         @file_put_contents($dir . '/access-' . date('Ymd') . '.log', $line, FILE_APPEND);
     }

@@ -11,9 +11,6 @@
   <?php if(!empty($error)):?>
   <div class='alert alert-danger'><?php echo $error;?></div>
   <?php endif;?>
-  <?php if(!$hasSharedSecret):?>
-  <div class='text-danger'><?php echo $lang->my->mcpNoShared;?></div>
-  <?php endif;?>
   <div class='alert alert-info'><?php printf($lang->my->mcpIntro, $account);?></div>
   <form class='form-condensed' method='post'>
     <input type='hidden' name='generate' value='1' />
@@ -64,7 +61,7 @@
           <ul class='m-b-0'>
             <li><?php echo $lang->my->mcpRulePersonal;?></li>
             <li><?php echo $lang->my->mcpRuleRead;?></li>
-            <li><?php echo $strict ? $lang->my->mcpRuleStrictOn : $lang->my->mcpRuleStrictOff;?></li>
+            <li><?php echo $lang->my->mcpRuleNoShared;?></li>
           </ul>
         </td>
       </tr>

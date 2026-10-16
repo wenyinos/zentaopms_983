@@ -78,7 +78,7 @@ WenYinOS 禅道项目管理系统基于经典 ZenTao 单体架构，采用 PHP +
 本项目内置 MCP（Model Context Protocol）服务，AI agent 可依据 git 提交记录直接维护禅道项目管理——提交关联任务 / 需求 / Bug、驱动任务状态流转与工时记录。
 
 - 客户端：[`zentao-mcp-py/`](./zentao-mcp-py/) — 单文件 Python 客户端（仅标准库；只需 `python3` 与 `git`），兼容任意 stdio MCP 客户端（Qoder、Claude Desktop、Cursor 等）。
-- 服务端：[`module/mcp/`](./module/mcp/) — 自包含签名鉴权端点（双层 MD5 签名 + 时效校验 ±300 秒，不经用户会话）。密钥两级：团队共享密钥 + 各账号在禅道「我的地盘 → MCP密钥」自助生成的个人密钥（写操作须用本人密钥验签，无法冒用他人账号）。每台客户端自带账号与 git 作者映射（署名随人走）；仓库同步点与提交日志组装在服务端。可选 `MCP_STRICT` / `MCP_READONLY` / `MCP_IPS` 加固。
+- 服务端：[`module/mcp/`](./module/mcp/) — 自包含签名鉴权端点（双层 MD5 签名 + 时效校验 ±300 秒，不经用户会话）。**只认个人密钥（单通道）**：每个账号在禅道「我的地盘 → MCP密钥」自助生成自己的密钥（存 `zt_config`），填进本机客户端的 `MCP_SECRET`。读写都必须用个人密钥签名，写操作须用其声明的 `actor` 账号本人的密钥验签（无法冒用他人），未生成密钥的账号无法使用 MCP。**不提供团队共享密钥，也没有 `MCP_STRICT` 开关**。每台客户端自带账号与 git 作者映射（署名随人走）；仓库同步点与提交日志组装在服务端。可选 `MCP_READONLY` / `MCP_IPS` 加固。
 - 接入配置与完整工具清单（63 个）：见 [`zentao-mcp-py/README.md`](./zentao-mcp-py/README.md)、[`zentao-mcp-py/AGENT-GUIDE.md`](./zentao-mcp-py/AGENT-GUIDE.md) 与 [`AGENTS.md`](./AGENTS.md)。
 
 ## 安装（官方 install.php 向导）

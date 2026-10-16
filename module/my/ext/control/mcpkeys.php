@@ -27,8 +27,6 @@ class my extends control
         $this->view->account         = $account;
         $this->view->realname        = $this->app->user->realname;
         $this->view->secret          = $secret;
-        $this->view->strict          = $mcp->isStrict();
-        $this->view->hasSharedSecret = $mcp->getEnv('MCP_SECRET') !== '';
         $this->view->envText         = $this->buildEnvText($secret, $account);
         $this->view->position[]      = $this->lang->my->mcpkeys;
         $this->display();
