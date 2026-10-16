@@ -1761,7 +1761,9 @@ UPDATE `zt_doc` SET `order` = `id` WHERE `order` = 0;
 | `config/config.php` | `$config->version = '9.9.1';` |
 | git tag | `v9.9.1`（推送 `v9.*` 触发 Actions） |
 
-**M0/M1 的用户可见改动（✅ 2026-10-16 已写入分支的 release.yml「问题修复/功能特性」段，随 9.10.0 发布）**：
+**发布说明的新约定（2026-10-16 起，主人要求）**：发布页只描述**本次版本增量**（上一个版本 → 本版本），按版本维护在 **`doc/release-notes/<版本>.md`**（仓库内唯一来源，main 与分支同构）；`release.yml` 的 Publish 步骤拼装「抬头 + 该文件 + 通用尾段」，**缺文件直接失败**，杜绝再出现"把历史特性又列一遍"。已落地：`9.9.0.md`（历史增量）、`9.9.1.md`（热修）、`9.10.0.md`（本批交付项，随 M2–M4 继续补充）。⇒ **每个里程碑发版前，先补 `doc/release-notes/<版本>.md`**。
+
+**M0/M1 的用户可见改动（✅ 已写入 `doc/release-notes/9.10.0.md`，随 9.10.0 发布）**：
 - 修复用例库删除时报 `Attempt to read property on null`（`module/testsuite/control.php:217`，控制层未取 `$suite` 对象）；
 - 修复文档可见性：目录内的文档在文档库"全部"视图不显示、`getStatisticInfo()` 的"所有文档"少算（`module/doc/model.php:515`，对齐 22.6 写法）；
 - 版本号规则放开为支持 `9.10.0` 形式（仍拒绝官方禅道版本）。
