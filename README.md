@@ -21,6 +21,28 @@ Themes registered in this build: **WenYin** (purple, default), **LightBlue**, **
 - Document and knowledge management
 - User, organization, and daily collaboration support
 
+## What's New (9.9.1 → 9.10.0)
+
+> This release is the **22.6 feature-port batch**. It **adds database tables and columns** — run the upgrade (see [Upgrade](#upgrade)). All upgrade steps are idempotent.
+
+### Features
+- **Kanban upgrade**: swimlanes by story / module / assignee / priority, drag-to-reorder within a column (order persisted per lane dimension in `zt_config`, no schema change), collapsible lanes.
+- **Test-suite export**: export cases by current browse condition or by selection, sharing the import template's field set so "export → edit → import" round-trips.
+- **Error log**: an `errorlog` admin page (per-request trace id grouping all errors of one request, level filter, 7-day auto cleanup). Hooked into the framework's `saveError()`; failures to log are swallowed so they never affect the response.
+- **Annual summary**: `report|annualData` — logins, actions, todos, effort and contribution radar plus monthly trends.
+- **Story track matrix**: a project story page listing each story's iterations and linked tasks/bugs/cases (folded at 3+), plus batch review (with reject reasons), batch assign and batch change-plan on the story list.
+- **CSV import/export** for tasks, bugs and stories: download template → import → preview with per-row error reasons → only valid rows are written, with a success/failure summary. UTF-8 exports now carry a BOM (no more mojibake in Excel) and attachment columns emit a plain "title + URL".
+- **Docs/knowledge base**: drag-to-sort for both categories and documents, move/copy a document, a "recently visited" list, and **document templates** (category tree, template CRUD, "create document from this template").
+- **Pivot tables (read-only)**: five built-ins (bug assign / bug create / project deviation / product summary / staff workload) rendered with rowspan and two-level headers; the legacy report pages remain available.
+
+### Fixes
+- Case import and case-library import **could not read UTF-8 files with a BOM**; both now go through the shared CSV layer (BOM stripping, encoding detection, exact + loose column matching), which also removes a latent column-misalignment bug when column order differs.
+- Fixed the doc list "All" view hiding documents that live in a category, and the "all documents" statistic undercounting them.
+- Fixed the burn-down chart 500 on projects with no working days (shipped separately as 9.9.1).
+
+### Platform
+- All upgrades are now **idempotent** (information_schema probe + `CREATE TABLE IF NOT EXISTS`, conditional seed rows), so jumping versions and re-running the upgrade are both safe.
+
 ## What's New (9.8.3_1 → 9.9.0)
 
 ### Interface (ported from ZenTao 10.1)
