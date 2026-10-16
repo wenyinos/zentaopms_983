@@ -2452,7 +2452,7 @@ class project extends control
      * @access public
      * @return void
      */
-    public function track($projectID = 0, $orderBy = 'pri_asc', $type = 'byModule', $param = 0, $recTotal = 0, $recPerPage = 50, $pageID = 1)
+    public function track($projectID = 0, $orderBy = '', $type = 'byModule', $param = 0, $recTotal = 0, $recPerPage = 50, $pageID = 1)
     {
         $this->loadModel('story');
         $this->loadModel('user');
@@ -2465,7 +2465,7 @@ class project extends control
         /* Save session. */
         $this->app->session->set('storyList', $this->app->getURI(true));
 
-        /* Process the order by field. */
+        /* 默认值留空，才能真正落到 cookie 记忆上（与 project::story 同构）。 */
         if(!$orderBy) $orderBy = $this->cookie->projectTrackOrder ? $this->cookie->projectTrackOrder : 'pri_asc';
         setcookie('projectTrackOrder', $orderBy, $this->config->cookieLife, $this->config->webRoot);
 
