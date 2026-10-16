@@ -58,3 +58,10 @@ $lang->pivot->columnTotalList['sum']    = 'Sum';
 $lang->pivot->error = new stdclass();
 $lang->pivot->error->noPivot    = 'Pivot not found.';
 $lang->pivot->error->queryFail  = 'Pivot query failed.';
+
+$lang->pivot->stepDesign->total = 'Total';
+$lang->pivot->stepDesign->showModeList = array();
+$lang->pivot->stepDesign->showModeList['default'] = 'Default (value)';
+$lang->pivot->stepDesign->showModeList['total']   = 'Percent of total';
+$lang->pivot->stepDesign->showModeList['row']     = 'Percent of row';
+$lang->pivot->stepDesign->showModeList['column']  = 'Percent of column';

@@ -60,3 +60,10 @@ $lang->pivot->columnTotalList['sum']    = '求和';
 $lang->pivot->error = new stdclass();
 $lang->pivot->error->noPivot    = '没找到该透视表。';
 $lang->pivot->error->queryFail  = '透视表取数失败。';
+
+$lang->pivot->stepDesign->total = '总计';
+$lang->pivot->stepDesign->showModeList = array();
+$lang->pivot->stepDesign->showModeList['default'] = '默认（数值）';
+$lang->pivot->stepDesign->showModeList['total']   = '总计百分比';
+$lang->pivot->stepDesign->showModeList['row']     = '行汇总百分比';
+$lang->pivot->stepDesign->showModeList['column']  = '列汇总百分比';
