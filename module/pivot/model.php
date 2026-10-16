@@ -1493,7 +1493,7 @@ class pivotModel extends model
 
         if(!isset($settings['columns'])) return array($data, array());
 
-        $settings = $this->normalizeColumnSettings($fields, $settings);
+        $settings = $this->compileColumnSettings($fields, $settings);
 
         $filters = $this->processQueryFilterDefaults($filters);
         /* Replace the variable with the default value. */
