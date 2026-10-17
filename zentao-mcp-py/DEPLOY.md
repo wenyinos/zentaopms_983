@@ -6,7 +6,7 @@
 > 请以 `module/mcp/.env.example` 与 `zentao-mcp-py/README.md` 的当前描述为准；
 > 服务端 `module/mcp/.env` 只需保留可选项 `MCP_READONLY` / `MCP_IPS`（若要用）。
 
-AI agent 依据 git 提交记录维护禅道项目管理：提交关联任务 / 需求 / Bug、任务状态流转、工时记录，并可创建/维护项目/产品/需求/计划/发布/测试/文档等，共 63 个 MCP 工具（填写规范见 `AGENT-GUIDE.md`）。
+AI agent 依据 git 提交记录维护禅道项目管理：提交关联任务 / 需求 / Bug、任务状态流转、工时记录，并可创建/维护项目/产品/需求/计划/发布/测试/文档等，共 68 个 MCP 工具（填写规范见 `AGENT-GUIDE.md`）。
 
 发布包含**两个独立附件**，归属不同、请勿混淆：
 

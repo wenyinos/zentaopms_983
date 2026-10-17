@@ -285,11 +285,27 @@
   "copyFrom": 9, "products": [10] }   // create_project：复制来源项目团队 + 直接关联产品
 ```
 
+### 删除（v0.6.2 新增，5 个 · 软删除）
+```json
+{ "taskID": 27, "confirm": "yes" }      // delete_task
+{ "bugID": 6,   "confirm": "yes" }      // delete_bug
+{ "storyID": 20,"confirm": "yes" }      // delete_story
+{ "caseID": 2,  "confirm": "yes" }      // delete_testcase
+{ "docID": 1,   "confirm": "yes" }      // delete_doc
+```
+- **`confirm: "yes"` 是必填**（不是可选项）：不传或传别的值 → 403 `CONFIRM_REQUIRED`。客户端会先拦一次，服务端也独立校验（硬门）。
+- **软删除**：等价于界面删除 —— 只把 `deleted` 置 1，**行仍在库中**（管理员可恢复），并写入一条 `deleted` 操作记录。MCP 不提供物理删除，也不提供恢复。
+- **删除前先查**：拿不准 ID 就先 `get_task`/`get_bug`/`get_story` 确认对象与 `status`，避免删错；已删对象再删返回 403 `*_ALREADY_DELETED`，ID 不存在返回 `*_NOT_FOUND`。
+- **依赖联动**（与服务端控制层一致）：删任务会连带软删其**子任务**，并回写父任务聚合状态、清空来源 Bug 的 `toTask`、重算所属需求阶段；返回体 `data.children` 给出连带删除的子任务数。删 Bug **不会**动它转出的任务（`data.linkedTask` 给出该任务 ID，需要时另行处理）。
+- **删后自查**：`get_task`/`get_bug`/`get_story` 返回体带 `deleted` 字段（1 = 已删）。列表工具始终过滤已删对象，"列表里查不到"不能当判据 —— 请看 `deleted`。
+- **写入审计**：每次删除记入 `tmp/mcp/access-YYYYMMDD.log`，署名 `personal:<account>`；只读模式（`MCP_READONLY=1`）下一律 403 `READONLY_MODE`。
+- 删除不可撤销（MCP 侧无恢复工具）：**只有明确要求清理时才调用，不要作为"重试用"手段**（重复执行写工具本来就可能产生脏数据，删了也一样）。
+
 ### 批量操作建议
 批量场景（批量建任务/Bug 等）请**循环调用单条目工具**（每次调用独立校验、错误定位清晰）；服务端不做批量接口。
 
 ## 八、已知边界
 
-- **无删除**：任务/需求/Bug 的删除不在 MCP 范围（保持安全边界，请走界面人工操作）；施工类纠错可用 `delete_effort` 与状态流转工具。
+- **删除只做软删**：5 个删除工具均为软删除（`deleted=1`，行保留），无物理删除与恢复工具；彻底清除或恢复请走界面/管理员操作。`delete_effort` 是唯一删除工时明细的工具。
 - **禅道 9.8.3 限制**：Bug 编辑必须能确定所属模块；需求的描述/验收标准按版本存储（读回时 `get_story` 返回当前版本内容）。
 - **同步点**：`sync_commits` 的增量游标由服务端维护，多客户端共享；换机器同步同一仓库建议显式传 `repoPath`。

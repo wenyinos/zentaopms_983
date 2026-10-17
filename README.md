@@ -79,7 +79,7 @@ This build ships an MCP (Model Context Protocol) service that lets AI agents mai
 
 - Client: [`zentao-mcp-py/`](./zentao-mcp-py/) — a single-file Python client (standard library only; requires just `python3` and `git`). Works with any stdio MCP host (Qoder, Claude Desktop, Cursor, ...).
 - Server side: [`module/mcp/`](./module/mcp/) — self-contained signed endpoints (double MD5 + timestamp freshness ±300s, no user session). **Personal keys only (single channel)**: every account generates its own key in-app at **My → MCP Key** ([`module/my/ext/`](./module/my/ext/), stored in `zt_config`) and puts it in its client's `MCP_SECRET`. All requests — reads and writes — must be signed with a personal key, writes must use the key of the account they claim as `actor` (so no one can impersonate another account), and an account without a key simply cannot use MCP. There is **no shared/team key and no `MCP_STRICT` switch**. Each client keeps its own account and git-author mapping for attribution; per-repo sync state and commit-log assembly live server-side. Optional `MCP_READONLY` / `MCP_IPS` hardening.
-- Setup and the full tool list (63 tools): see [`zentao-mcp-py/README.md`](./zentao-mcp-py/README.md), [`zentao-mcp-py/AGENT-GUIDE.md`](./zentao-mcp-py/AGENT-GUIDE.md) and [`AGENTS.md`](./AGENTS.md).
+- Setup and the full tool list (68 tools): see [`zentao-mcp-py/README.md`](./zentao-mcp-py/README.md), [`zentao-mcp-py/AGENT-GUIDE.md`](./zentao-mcp-py/AGENT-GUIDE.md) and [`AGENTS.md`](./AGENTS.md).
 
 ## Installation (via official install.php wizard)
 

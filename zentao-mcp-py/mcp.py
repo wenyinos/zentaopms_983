@@ -16,7 +16,7 @@ from urllib.error import HTTPError, URLError
 from urllib.parse import quote_plus
 from urllib.request import Request, urlopen
 
-VERSION = '0.6.1'
+VERSION = '0.6.2'
 
 
 def load_env():
@@ -558,6 +558,24 @@ def zt_tool_result(name, args):
         zt_actor_params(params, args)
         return zt_call('deleteEffort', params)
 
+    # ---- 删除（软删除，须显式 confirm=yes）----
+    zt_delete_tools = {
+        'zentao_delete_task': ('deleteTask', 'taskID'),
+        'zentao_delete_bug': ('deleteBug', 'bugID'),
+        'zentao_delete_story': ('deleteStory', 'storyID'),
+        'zentao_delete_testcase': ('deleteTestcase', 'caseID'),
+        'zentao_delete_doc': ('deleteDoc', 'docID'),
+    }
+    if name in zt_delete_tools:
+        method, id_key = zt_delete_tools[name]
+        if not args.get(id_key):
+            raise RuntimeError('%s 必填' % id_key)
+        if str(args.get('confirm', '')).strip().lower() != 'yes':
+            raise RuntimeError('confirm 必须显式传 yes（软删除：行保留在库中，deleted=1）')
+        params = {id_key: int(args[id_key]), 'confirm': 'yes'}
+        zt_actor_params(params, args)
+        return zt_call(method, params)
+
     # ---- 发布 / 测试 / 文档 ----
     if name == 'zentao_create_release':
         if not args.get('productID'):
@@ -855,6 +873,7 @@ def zt_tool_result(name, args):
 ACTOR_PROP = {'type': 'string', 'description': '操作人禅道账号（可选，默认配置账号；多人协作时传对应开发者账号）'}
 TASKID_PROP = {'type': 'integer', 'description': '任务 ID'}
 COMMENT_PROP = {'type': 'string', 'description': '备注（可选）'}
+CONFIRM_PROP = {'type': 'string', 'enum': ['yes'], 'description': '显式确认，必须为 yes（软删除：行保留在库中，deleted=1，可由管理员恢复）'}
 
 
 def zt_tool_schema(name, description, properties=None, required=None):
@@ -1192,6 +1211,37 @@ def build_tools():
             'estimateID': {'type': 'integer', 'description': '工时记录 ID（可从 get_task_estimates 获取）'},
             'actor': ACTOR_PROP,
         }, ['estimateID']),
+
+        # ---- 删除（软删除，须显式 confirm=yes；删除后可用 get_task/get_bug/get_story 看 deleted 字段确认）----
+        zt_tool_schema('zentao_delete_task', '软删除任务（置 deleted=1，行保留在库中；连带软删子任务，并回写父任务状态、来源 Bug 的 toTask、需求阶段）。必须传 confirm=yes。', {
+            'taskID': TASKID_PROP,
+            'confirm': CONFIRM_PROP,
+            'actor': ACTOR_PROP,
+        }, ['taskID', 'confirm']),
+
+        zt_tool_schema('zentao_delete_bug', '软删除 Bug（置 deleted=1，行保留在库中）。若 Bug 已转任务，返回值 linkedTask 会给出关联任务 ID（任务不会被删除）。必须传 confirm=yes。', {
+            'bugID': {'type': 'integer', 'description': 'Bug ID'},
+            'confirm': CONFIRM_PROP,
+            'actor': ACTOR_PROP,
+        }, ['bugID', 'confirm']),
+
+        zt_tool_schema('zentao_delete_story', '软删除需求（置 deleted=1，行保留在库中）。必须传 confirm=yes。', {
+            'storyID': {'type': 'integer', 'description': '需求 ID'},
+            'confirm': CONFIRM_PROP,
+            'actor': ACTOR_PROP,
+        }, ['storyID', 'confirm']),
+
+        zt_tool_schema('zentao_delete_testcase', '软删除测试用例（置 deleted=1，行保留在库中）。必须传 confirm=yes。', {
+            'caseID': {'type': 'integer', 'description': '用例 ID'},
+            'confirm': CONFIRM_PROP,
+            'actor': ACTOR_PROP,
+        }, ['caseID', 'confirm']),
+
+        zt_tool_schema('zentao_delete_doc', '软删除文档（置 deleted=1，行保留在库中）。必须传 confirm=yes。', {
+            'docID': {'type': 'integer', 'description': '文档 ID'},
+            'confirm': CONFIRM_PROP,
+            'actor': ACTOR_PROP,
+        }, ['docID', 'confirm']),
 
         # ---- 发布 / 测试 / 文档 ----
         zt_tool_schema('zentao_create_release', '创建产品发布（可用于 git tag/版本发布登记）。不传 build 时会自动创建同名版本（build）记录。', {

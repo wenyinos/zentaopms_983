@@ -57,6 +57,16 @@ class mcp extends control
         $_POST = array_intersect_key($_POST, array_flip($fields));
     }
 
+    private function requireConfirm($mcp)
+    {
+        if(strtolower(trim((string)$mcp->getQueryParam('confirm'))) !== 'yes') $this->deny('CONFIRM_REQUIRED: pass confirm=yes (soft delete, the row is kept with deleted=1)');
+    }
+
+    private function getRow($table, $id, $fields)
+    {
+        return $this->dao->select($fields)->from($table)->where('id')->eq((int)$id)->fetch();
+    }
+
     /* ============ 基础 ============ */
 
     public function ping()
@@ -928,6 +938,118 @@ class mcp extends control
         if($changes) $this->loadModel('action')->logHistory($actionID, $changes);
         $mcp->auditLog('deleteEffort', "estimate#$estimateID task#" . $estimate->task);
         $this->ok('deleted');
+    }
+
+    /* ============ 删除（软删除：model::delete 置 deleted=1 并写 action；须显式 confirm=yes） ============ */
+
+    public function deleteTask()
+    {
+        $this->writeGuard();
+        $mcp = $this->actor();
+        $this->requireConfirm($mcp);
+
+        $taskID = $this->requireTaskID($mcp);
+        $task   = $this->getRow(TABLE_TASK, $taskID, 'id,name,parent,fromBug,story,deleted');
+        if(empty($task))           $this->deny('TASK_NOT_FOUND');
+        if(!empty($task->deleted)) $this->deny('TASK_ALREADY_DELETED');
+
+        $children  = $this->dao->select('id,story')->from(TABLE_TASK)->where('parent')->eq($taskID)->andWhere('deleted')->eq('0')->fetchAll();
+        $taskModel = $this->loadModel('task');
+
+        $taskModel->delete(TABLE_TASK, $taskID);
+        if(!empty($task->parent))  $taskModel->updateParentStatus($task->id);
+        if(!empty($task->fromBug)) $this->dao->update(TABLE_BUG)->set('toTask')->eq(0)->where('id')->eq($task->fromBug)->exec();
+        if(!empty($task->story))   $this->loadModel('story')->setStage($task->story);
+        foreach($children as $child)
+        {
+            $taskModel->delete(TABLE_TASK, $child->id);
+            if(!empty($child->story)) $this->loadModel('story')->setStage($child->story);
+        }
+        if(dao::isError()) $this->daoFail();
+
+        $mcp->auditLog('deleteTask', "task#$taskID " . $task->name . " children=" . count($children));
+        $this->ok(array('deleted' => 'task', 'id' => $taskID, 'name' => $task->name, 'children' => count($children), 'soft' => true));
+    }
+
+    public function deleteBug()
+    {
+        $this->writeGuard();
+        $mcp = $this->actor();
+        $this->requireConfirm($mcp);
+
+        $bugID = (int)$mcp->getQueryParam('bugID');
+        if(!$bugID) $this->deny('bugID required');
+
+        $bug = $this->getRow(TABLE_BUG, $bugID, 'id,title,toTask,deleted');
+        if(empty($bug))            $this->deny('BUG_NOT_FOUND');
+        if(!empty($bug->deleted))  $this->deny('BUG_ALREADY_DELETED');
+
+        $this->loadModel('bug')->delete(TABLE_BUG, $bugID);
+        if(dao::isError()) $this->daoFail();
+
+        $mcp->auditLog('deleteBug', "bug#$bugID " . $bug->title);
+        $this->ok(array('deleted' => 'bug', 'id' => $bugID, 'name' => $bug->title, 'linkedTask' => (int)$bug->toTask, 'soft' => true));
+    }
+
+    public function deleteStory()
+    {
+        $this->writeGuard();
+        $mcp = $this->actor();
+        $this->requireConfirm($mcp);
+
+        $storyID = (int)$mcp->getQueryParam('storyID');
+        if(!$storyID) $this->deny('storyID required');
+
+        $story = $this->getRow(TABLE_STORY, $storyID, 'id,title,deleted');
+        if(empty($story))           $this->deny('STORY_NOT_FOUND');
+        if(!empty($story->deleted)) $this->deny('STORY_ALREADY_DELETED');
+
+        $this->loadModel('story')->delete(TABLE_STORY, $storyID);
+        if(dao::isError()) $this->daoFail();
+
+        $mcp->auditLog('deleteStory', "story#$storyID " . $story->title);
+        $this->ok(array('deleted' => 'story', 'id' => $storyID, 'name' => $story->title, 'soft' => true));
+    }
+
+    public function deleteTestcase()
+    {
+        $this->writeGuard();
+        $mcp = $this->actor();
+        $this->requireConfirm($mcp);
+
+        $caseID = (int)$mcp->getQueryParam('caseID');
+        if(!$caseID) $this->deny('caseID required');
+
+        $case = $this->getRow(TABLE_CASE, $caseID, 'id,title,deleted');
+        if(empty($case))            $this->deny('TESTCASE_NOT_FOUND');
+        if(!empty($case->deleted))  $this->deny('TESTCASE_ALREADY_DELETED');
+
+        $this->loadModel('testcase')->delete(TABLE_CASE, $caseID);
+        if(dao::isError()) $this->daoFail();
+
+        $mcp->auditLog('deleteTestcase', "case#$caseID " . $case->title);
+        $this->ok(array('deleted' => 'testcase', 'id' => $caseID, 'name' => $case->title, 'soft' => true));
+    }
+
+    public function deleteDoc()
+    {
+        $this->writeGuard();
+        $mcp = $this->actor();
+        $this->requireConfirm($mcp);
+
+        $docID = (int)$mcp->getQueryParam('docID');
+        if(!$docID) $this->deny('docID required');
+
+        /* 直接读表，避免 doc::getById 内的 checkPrivDoc 在无会话下 die 掉 JSON 响应。 */
+        $doc = $this->getRow(TABLE_DOC, $docID, 'id,title,lib,deleted');
+        if(empty($doc))             $this->deny('DOC_NOT_FOUND');
+        if(!empty($doc->deleted))   $this->deny('DOC_ALREADY_DELETED');
+
+        $this->loadModel('doc')->delete(TABLE_DOC, $docID);
+        if(dao::isError()) $this->daoFail();
+
+        $mcp->auditLog('deleteDoc', "doc#$docID " . $doc->title);
+        $this->ok(array('deleted' => 'doc', 'id' => $docID, 'name' => $doc->title, 'lib' => (int)$doc->lib, 'soft' => true));
     }
 
     /* ============ 发布 / 测试 / 文档 ============ */

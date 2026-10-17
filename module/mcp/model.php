@@ -132,7 +132,7 @@ class mcpModel extends model
         $task = $this->loadModel('task')->getById($taskID);
         if(empty($task)) return null;
 
-        $fields = array('id', 'name', 'status', 'pri', 'assignedTo', 'openedBy', 'finishedBy', 'project', 'story', 'estimate', 'consumed', 'left', 'deadline', 'realStarted', 'finishedDate', 'desc');
+        $fields = array('id', 'name', 'status', 'pri', 'assignedTo', 'openedBy', 'finishedBy', 'project', 'story', 'estimate', 'consumed', 'left', 'deadline', 'realStarted', 'finishedDate', 'desc', 'deleted');
         $data   = new stdclass();
         foreach($fields as $field) $data->$field = isset($task->$field) ? $task->$field : null;
         return $data;
@@ -231,7 +231,7 @@ class mcpModel extends model
         $story = $this->loadModel('story')->getById($storyID);
         if(empty($story)) return null;
 
-        $fields = array('id', 'title', 'status', 'stage', 'pri', 'estimate', 'product', 'openedBy', 'assignedTo', 'version', 'closedReason', 'spec', 'verify');
+        $fields = array('id', 'title', 'status', 'stage', 'pri', 'estimate', 'product', 'openedBy', 'assignedTo', 'version', 'closedReason', 'spec', 'verify', 'deleted');
         $data   = new stdclass();
         foreach($fields as $field) $data->$field = isset($story->$field) ? $story->$field : null;
         return $data;
@@ -254,7 +254,7 @@ class mcpModel extends model
         $bug = $this->loadModel('bug')->getById($bugID);
         if(empty($bug)) return null;
 
-        $fields = array('id', 'title', 'status', 'severity', 'pri', 'type', 'product', 'openedBy', 'assignedTo', 'resolvedBy', 'resolution', 'openedBuild', 'resolvedBuild', 'closedBy', 'steps');
+        $fields = array('id', 'title', 'status', 'severity', 'pri', 'type', 'product', 'openedBy', 'assignedTo', 'resolvedBy', 'resolution', 'openedBuild', 'resolvedBuild', 'closedBy', 'steps', 'deleted');
         $data   = new stdclass();
         foreach($fields as $field) $data->$field = isset($bug->$field) ? $bug->$field : null;
         return $data;
